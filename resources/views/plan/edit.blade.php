@@ -126,6 +126,120 @@
                 <label class="custom-control-label form-label" for="enable_production">{{__('Production')}}</label>
             </div>
         </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" name="enable_integrations" id="enable_integrations" {{ ($plan['integrations'] ?? 0) == 1 ? 'checked="checked"' : '' }}>
+                <label class="custom-control-label form-label" for="enable_integrations">{{__('Integrations')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" name="enable_sales" id="enable_sales" {{ ($plan['sales'] ?? 0) == 1 ? 'checked="checked"' : '' }}>
+                <label class="custom-control-label form-label" for="enable_sales">{{__('Sales')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" name="enable_wms" id="enable_wms" {{ ($plan['wms'] ?? 0) == 1 ? 'checked="checked"' : '' }}>
+                <label class="custom-control-label form-label" for="enable_wms">{{__('WMS')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" name="enable_mrp" id="enable_mrp" {{ ($plan['mrp'] ?? 0) == 1 ? 'checked="checked"' : '' }}>
+                <label class="custom-control-label form-label" for="enable_mrp">{{__('MRP')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" name="enable_quality" id="enable_quality" {{ ($plan['quality'] ?? 0) == 1 ? 'checked="checked"' : '' }}>
+                <label class="custom-control-label form-label" for="enable_quality">{{__('Quality')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" name="enable_maintenance" id="enable_maintenance" {{ ($plan['maintenance'] ?? 0) == 1 ? 'checked="checked"' : '' }}>
+                <label class="custom-control-label form-label" for="enable_maintenance">{{__('Maintenance')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" name="enable_enterprise_accounting" id="enable_enterprise_accounting" {{ ($plan['enterprise_accounting'] ?? 0) == 1 ? 'checked="checked"' : '' }}>
+                <label class="custom-control-label form-label" for="enable_enterprise_accounting">{{__('Enterprise Accounting')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" name="enable_approvals" id="enable_approvals" {{ ($plan['approvals'] ?? 0) == 1 ? 'checked="checked"' : '' }}>
+                <label class="custom-control-label form-label" for="enable_approvals">{{__('Approvals')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" name="enable_hr_ops" id="enable_hr_ops" {{ ($plan['hr_ops'] ?? 0) == 1 ? 'checked="checked"' : '' }}>
+                <label class="custom-control-label form-label" for="enable_hr_ops">{{__('HR Ops')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" name="enable_saas" id="enable_saas" {{ ($plan['saas'] ?? 0) == 1 ? 'checked="checked"' : '' }}>
+                <label class="custom-control-label form-label" for="enable_saas">{{__('SaaS')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" name="enable_hotel" id="enable_hotel" {{ ($plan['hotel'] ?? 0) == 1 ? 'checked="checked"' : '' }}>
+                <label class="custom-control-label form-label" for="enable_hotel">{{__('Hotel')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" name="enable_traceability" id="enable_traceability" {{ ($plan['traceability'] ?? 0) == 1 ? 'checked="checked"' : '' }}>
+                <label class="custom-control-label form-label" for="enable_traceability">{{__('Traceability')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" name="enable_crop_planning" id="enable_crop_planning" {{ ($plan['crop_planning'] ?? 0) == 1 ? 'checked="checked"' : '' }}>
+                <label class="custom-control-label form-label" for="enable_crop_planning">{{__('Crop Planning')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" name="enable_cooperative" id="enable_cooperative" {{ ($plan['cooperative'] ?? 0) == 1 ? 'checked="checked"' : '' }}>
+                <label class="custom-control-label form-label" for="enable_cooperative">{{__('Cooperative')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" name="enable_hedging" id="enable_hedging" {{ ($plan['hedging'] ?? 0) == 1 ? 'checked="checked"' : '' }}>
+                <label class="custom-control-label form-label" for="enable_hedging">{{__('Hedging')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" name="enable_btp_site_tracking" id="enable_btp_site_tracking" {{ ($plan['btp_site_tracking'] ?? 0) == 1 ? 'checked="checked"' : '' }}>
+                <label class="custom-control-label form-label" for="enable_btp_site_tracking">{{__('BTP Site Tracking')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" name="enable_btp_subcontractors" id="enable_btp_subcontractors" {{ ($plan['btp_subcontractors'] ?? 0) == 1 ? 'checked="checked"' : '' }}>
+                <label class="custom-control-label form-label" for="enable_btp_subcontractors">{{__('BTP Subcontractors')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" name="enable_btp_price_breakdowns" id="enable_btp_price_breakdowns" {{ ($plan['btp_price_breakdowns'] ?? 0) == 1 ? 'checked="checked"' : '' }}>
+                <label class="custom-control-label form-label" for="enable_btp_price_breakdowns">{{__('BTP Price Breakdown')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" name="enable_btp_equipment_control" id="enable_btp_equipment_control" {{ ($plan['btp_equipment_control'] ?? 0) == 1 ? 'checked="checked"' : '' }}>
+                <label class="custom-control-label form-label" for="enable_btp_equipment_control">{{__('BTP Equipment Control')}}</label>
+            </div>
+        </div>
 
     </div>
     </div>

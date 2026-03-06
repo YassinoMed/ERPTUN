@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/chatgpt",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\ChatGpt\\": "",
+            "Modules\\ChatGpt\\Database\\Factories\\": "database/factories/",
+            "Modules\\ChatGpt\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\ChatGpt\\Tests\\": "tests/"
+        }
+    }
+}

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AddTransactionLine;
 use App\Models\BankAccount;
+use App\Models\Budget;
 use App\Models\Bill;
 use App\Models\BillPayment;
 use App\Models\BillProduct;
@@ -267,6 +268,21 @@ class ExpenseController extends Controller
                 $contact = $user->contact;
             }
 
+            $budgetWarningMessage = '';
+            $budgetBreach = Budget::expenseBudgetAlert(\Auth::user()->creatorId(), $expense->category_id, $expense->bill_date, (float)$expensePayment->amount);
+            if($budgetBreach)
+            {
+                $overAmount = $budgetBreach['actual_amount'] - $budgetBreach['budget_amount'];
+                $expenseCategory = ProductServiceCategory::find($expense->category_id);
+                $categoryName = !empty($expenseCategory) ? $expenseCategory->name : __('Category');
+                $budgetWarningMessage = __('Budget exceeded for :category (:period :year) by :amount', [
+                    'category' => $categoryName,
+                    'period' => $budgetBreach['period_key'],
+                    'year' => $budgetBreach['year'],
+                    'amount' => \Auth::user()->priceFormat($overAmount),
+                ]);
+            }
+
             $bill_products = BillProduct::where('bill_id', $expense->id)->get();
             foreach ($bill_products as $bill_product) {
                 $product = ProductService::find($bill_product->product_id);
@@ -360,13 +376,13 @@ class ExpenseController extends Controller
                 $status = Utility::WebhookCall($webhook['url'], $parameter, $webhook['method']);
 
                 if ($status == true) {
-                    return redirect()->route('expense.index', $expense->id)->with('success', __('Expense successfully created.'));
+                    return redirect()->route('expense.index', $expense->id)->with('success', __('Expense successfully created.') . (!empty($budgetWarningMessage) ? '<br> <span class="text-danger">' . $budgetWarningMessage . '</span>' : ''));
                 } else {
                     return redirect()->back()->with('error', __('Expense successfully created, Webhook call failed.'));
                 }
             }
 
-            return redirect()->route('expense.index', $expense->id)->with('success', __('Expense successfully created.'));
+            return redirect()->route('expense.index', $expense->id)->with('success', __('Expense successfully created.') . (!empty($budgetWarningMessage) ? '<br> <span class="text-danger">' . $budgetWarningMessage . '</span>' : ''));
         } else {
             return redirect()->back()->with('error', __('Permission denied.'));
         }

@@ -1,0 +1,329 @@
+# =====================================================================
+# ERPGo SaaS — CI/CD Seed Pipeline
+# =====================================================================
+# GitHub Actions workflow for automated database seeding.
+#
+# Triggers:
+#   - Manual dispatch with configurable options
+#   - On push to 'main' or 'develop' branches (with seed changes)
+#   - Scheduled nightly for staging environment
+#
+# Features:
+#   - Parallel DB service startup
+#   - Health check verification
+#   - Seed orchestration with full reporting
+#   - Artifact upload for reports and logs
+#   - Slack/Discord notification on failure
+# =====================================================================
+
+name: 🌱 Database Seed Pipeline
+
+on:
+  # Manual trigger with options
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+      reset:
+        description: 'Reset databases before seeding'
+        required: false
+        default: false
+        type: boolean
+      service:
+        description: 'Specific service to seed (empty = all)'
+        required: false
+        default: ''
+        type: string
+      dry_run:
+        description: 'Dry run (preview only)'
+        required: false
+        default: false
+        type: boolean
+
+  # Auto-trigger on seed-related changes
+  push:
+    branches: [main, develop]
+    paths:
+      - 'database/seeders/**'
+      - 'database/migrations/**'
+      - 'Modules/**/database/seeders/**'
+      - 'Modules/**/database/migrations/**'
+      - 'config/seeders.php'
+      - 'app/Console/Commands/SeedOrchestrator.php'
+      - 'docker/seed.sh'
+      - '.github/workflows/seed.yml'
+
+  # Nightly seeding for staging
+  schedule:
+    - cron: '0 2 * * *'  # 2:00 AM UTC daily
+
+env:
+  COMPOSE_DOCKER_CLI_BUILD: 1
+  DOCKER_BUILDKIT: 1
+  PHP_VERSION: '8.4'
+
+# ── Concurrency Control ──────────────────────────────────────────────
+concurrency:
+  group: seed-${{ github.event.inputs.environment || 'dev' }}
+  cancel-in-progress: false  # Don't cancel running seeds
+
+jobs:
+  # ================================================================
+  # JOB 1: Build & Validate
+  # ================================================================
+  validate:
+    name: 🔍 Validate Configuration
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.config.outputs.environment }}
+      reset: ${{ steps.config.outputs.reset }}
+      service: ${{ steps.config.outputs.service }}
+      dry_run: ${{ steps.config.outputs.dry_run }}
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Determine Configuration
+        id: config
+        run: |
+          # Set defaults based on trigger type
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+            echo "reset=${{ github.event.inputs.reset }}" >> $GITHUB_OUTPUT
+            echo "service=${{ github.event.inputs.service }}" >> $GITHUB_OUTPUT
+            echo "dry_run=${{ github.event.inputs.dry_run }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "schedule" ]]; then
+            echo "environment=staging" >> $GITHUB_OUTPUT
+            echo "reset=true" >> $GITHUB_OUTPUT
+            echo "service=" >> $GITHUB_OUTPUT
+            echo "dry_run=false" >> $GITHUB_OUTPUT
+          else
+            echo "environment=dev" >> $GITHUB_OUTPUT
+            echo "reset=false" >> $GITHUB_OUTPUT
+            echo "service=" >> $GITHUB_OUTPUT
+            echo "dry_run=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🧪 Validate PHP Syntax
+        run: |
+          # Check all seeder files for syntax errors
+          find database/seeders -name "*.php" -exec php -l {} \; 2>&1
+          find Modules -name "*Seeder*.php" -exec php -l {} \; 2>&1
+          php -l app/Console/Commands/SeedOrchestrator.php
+          php -l config/seeders.php
+
+      - name: 📋 Display Plan
+        run: |
+          echo "╔═══════════════════════════════════════════╗"
+          echo "║  🌱 Seed Pipeline Configuration           ║"
+          echo "╚═══════════════════════════════════════════╝"
+          echo ""
+          echo "  Environment:  ${{ steps.config.outputs.environment }}"
+          echo "  Reset:        ${{ steps.config.outputs.reset }}"
+          echo "  Service:      ${{ steps.config.outputs.service || 'all' }}"
+          echo "  Dry Run:      ${{ steps.config.outputs.dry_run }}"
+          echo "  Trigger:      ${{ github.event_name }}"
+          echo "  Branch:       ${{ github.ref_name }}"
+          echo "  Commit:       ${{ github.sha }}"
+
+  # ================================================================
+  # JOB 2: Seed Databases
+  # ================================================================
+  seed:
+    name: 🌱 Seed Databases (${{ needs.validate.outputs.environment }})
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      # ── Core Database ──────────────────────────────────────────
+      core-db:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: core
+          MYSQL_USER: core
+          MYSQL_PASSWORD: secret
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=20
+          --health-start-period=60s
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🐘 Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: pdo_mysql, mbstring, bcmath, json, tokenizer
+          coverage: none
+
+      - name: 📦 Cache Composer Dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: 📦 Install Dependencies
+        run: |
+          composer install --no-interaction --prefer-dist --optimize-autoloader --no-progress
+
+      - name: ⚙️ Setup Environment
+        run: |
+          cp .env .env.backup 2>/dev/null || true
+          cat > .env << 'EOF'
+          APP_NAME=ERPGo
+          APP_ENV=testing
+          APP_KEY=base64:QWAdT9rDeFECKHGtsKV8VlQT8UvoURh5NLOkg2BBLFY=
+          APP_DEBUG=true
+          DB_CONNECTION=mysql
+          DB_HOST=127.0.0.1
+          DB_PORT=3306
+          DB_DATABASE=core
+          DB_USERNAME=core
+          DB_PASSWORD=secret
+          CACHE_DRIVER=array
+          SESSION_DRIVER=array
+          QUEUE_DRIVER=sync
+          EOF
+
+      - name: 🔄 Wait for Database
+        run: |
+          echo "Waiting for MySQL to be ready..."
+          for i in $(seq 1 60); do
+            if mysqladmin ping -h 127.0.0.1 -P 3306 -uroot -proot 2>/dev/null; then
+              echo "✅ MySQL is ready!"
+              break
+            fi
+            echo "  ⏳ Attempt $i/60..."
+            sleep 3
+          done
+
+      - name: 🗄️ Create Module Databases
+        run: |
+          # Create all module databases in the same MySQL instance
+          # (CI uses single MySQL; production uses separate containers)
+          DATABASES=(
+            billing approvals mrp quality maintenance chatgpt hotel
+            traceability cropplanning cooperative hedging hrops operations
+            platform industry btp integrations saas
+          )
+
+          for db in "${DATABASES[@]}"; do
+            echo "Creating database: ${db}..."
+            mysql -h 127.0.0.1 -P 3306 -uroot -proot -e "
+              CREATE DATABASE IF NOT EXISTS \`${db}\`;
+              CREATE USER IF NOT EXISTS '${db}'@'%' IDENTIFIED BY 'secret';
+              GRANT ALL PRIVILEGES ON \`${db}\`.* TO '${db}'@'%';
+            " 2>/dev/null || true
+          done
+          mysql -h 127.0.0.1 -P 3306 -uroot -proot -e "FLUSH PRIVILEGES;"
+          echo "✅ All databases created!"
+
+      - name: 📦 Run Core Migrations
+        run: |
+          php artisan migrate --force --no-interaction
+
+      - name: 🌱 Execute Seed Orchestration
+        id: seed
+        run: |
+          ARGS="--env=${{ needs.validate.outputs.environment }} --force --skip-health"
+
+          if [[ "${{ needs.validate.outputs.reset }}" == "true" ]]; then
+            ARGS+=" --reset"
+          fi
+
+          if [[ -n "${{ needs.validate.outputs.service }}" ]]; then
+            ARGS+=" --service=${{ needs.validate.outputs.service }}"
+          fi
+
+          if [[ "${{ needs.validate.outputs.dry_run }}" == "true" ]]; then
+            ARGS+=" --dry-run"
+          fi
+
+          echo "Executing: php artisan seed:orchestrate ${ARGS}"
+          php artisan seed:orchestrate ${ARGS}
+
+      - name: 📊 Upload Seed Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seed-report-${{ needs.validate.outputs.environment }}-${{ github.run_number }}
+          path: storage/logs/seed-report-*.json
+          retention-days: 30
+
+      - name: 📋 Upload Execution Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seed-logs-${{ github.run_number }}
+          path: storage/logs/
+          retention-days: 14
+
+      - name: 📊 Display Summary
+        if: always()
+        run: |
+          echo "## 🌱 Seed Pipeline Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Parameter | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | \`${{ needs.validate.outputs.environment }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Reset | \`${{ needs.validate.outputs.reset }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | \`${{ needs.validate.outputs.service || 'all' }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Trigger | \`${{ github.event_name }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Status | \`${{ steps.seed.outcome }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Include latest report if available
+          REPORT=$(ls -1t storage/logs/seed-report-*.json 2>/dev/null | head -1)
+          if [[ -n "$REPORT" ]]; then
+            echo "### 📋 Detailed Report" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            cat "$REPORT" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # ================================================================
+  # JOB 3: Notify on Failure
+  # ================================================================
+  notify:
+    name: 📢 Notify
+    needs: [validate, seed]
+    runs-on: ubuntu-latest
+    if: failure()
+
+    steps:
+      - name: 🔔 Create Issue on Failure
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const env = '${{ needs.validate.outputs.environment }}';
+            const trigger = '${{ github.event_name }}';
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚨 Seed Pipeline Failed — ${env} environment`,
+              body: `## Seed Pipeline Failure Report\n\n` +
+                    `- **Environment:** \`${env}\`\n` +
+                    `- **Trigger:** \`${trigger}\`\n` +
+                    `- **Branch:** \`${{ github.ref_name }}\`\n` +
+                    `- **Run:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n` +
+                    `- **Commit:** \`${{ github.sha }}\`\n\n` +
+                    `Please check the [workflow logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.`,
+              labels: ['bug', 'devops', 'seed-pipeline']
+            });

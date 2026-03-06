@@ -285,6 +285,7 @@
             </div>
         </div>
     </div>
+    @include('partials.admin.copilot')
     @include('partials.admin.footer')
     @include('Chatify::layouts.footerLinks')
 

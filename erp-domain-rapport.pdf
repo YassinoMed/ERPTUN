@@ -1,0 +1,39 @@
+%PDF-1.4
+1 0 obj<< /Type /Catalog /Pages 2 0 R >>endobj
+2 0 obj<< /Type /Pages /Kids [3 0 R] /Count 1 >>endobj
+3 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources<< /Font<< /F1 5 0 R >> >> >>endobj
+4 0 obj<< /Length 1346 >>stream
+1 0 0 1 50 770 Tm (Rapport de domaines ERP) Tj
+1 0 0 1 50 756 Tm (Date UTC: 2026-02-22T18:08:17Z) Tj
+1 0 0 1 50 742 Tm () Tj
+1 0 0 1 50 728 Tm (Tableau comparatif \(top 10 par score\):) Tj
+1 0 0 1 50 714 Tm (erpquanta.app        | .app | 9  | 9  | disponible   | 13.98) Tj
+1 0 0 1 50 700 Tm (erplume.app          | .app | 7  | 8  | disponible   | 13.98) Tj
+1 0 0 1 50 686 Tm (erpvanta.app         | .app | 8  | 8  | disponible   | 13.98) Tj
+1 0 0 1 50 672 Tm (erploom.app          | .app | 7  | 8  | disponible   | 13.98) Tj
+1 0 0 1 50 658 Tm (erplogiq.app         | .app | 8  | 8  | disponible   | 13.98) Tj
+1 0 0 1 50 644 Tm (erpzen.app           | .app | 6  | 8  | disponible   | 13.98) Tj
+1 0 0 1 50 630 Tm (erpwise.app          | .app | 7  | 7  | disponible   | 13.98) Tj
+1 0 0 1 50 616 Tm (erpstack.app         | .app | 8  | 7  | disponible   | 13.98) Tj
+1 0 0 1 50 602 Tm (erpspark.app         | .app | 8  | 7  | disponible   | 13.98) Tj
+1 0 0 1 50 588 Tm (erpprime.app         | .app | 8  | 7  | disponible   | 13.98) Tj
+1 0 0 1 50 574 Tm () Tj
+1 0 0 1 50 560 Tm (Recommandations:) Tj
+1 0 0 1 50 546 Tm (- Aucun .com disponible parmi les vérifications RDAP effectuées.) Tj
+1 0 0 1 50 532 Tm (- Produit SaaS: privilégier .app \(erpquanta.app, erplogiq.app\).) Tj
+1 0 0 1 50 518 Tm (- Image premium/tech: erpvanta.app ou erploom.app.) Tj
+endstream
+endobj
+5 0 obj<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000056 00000 n 
+0000000111 00000 n 
+0000000233 00000 n 
+0000001629 00000 n 
+trailer<< /Size 6 /Root 1 0 R >>
+startxref
+1697
+%%EOF

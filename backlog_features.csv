@@ -1,0 +1,13 @@
+id,titre,priorite,statut,impact,effort,complexite
+F01,Orchestrer des workflows d’approbation multi-niveaux,P1,Proposé,Élevé,Élevé,Haute
+F02,Construire un tableau de bord KPI configurable,P1,Proposé,Élevé,Moyen,Moyenne
+F03,Centraliser les intégrations dans un hub iPaaS,P1,Proposé,Élevé,Élevé,Haute
+F04,Piloter les budgets et forecasts projet,P1,Proposé,Élevé,Moyen,Moyenne
+F05,Proposer un portail client self-service,P1,Proposé,Élevé,Moyen,Moyenne
+F06,Activer un assistant IA orienté métier,P2,Proposé,Moyen,Moyen,Moyenne
+F07,Traçer un journal d’audit centralisé,P2,Proposé,Moyen,Moyen,Moyenne
+F08,Optimiser la gestion d’entrepôt WMS,P2,Proposé,Élevé,Élevé,Haute
+F09,Planifier les ressources RH et la charge,P2,Proposé,Moyen,Moyen,Moyenne
+F10,Automatiser les relances et le scoring de risque,P1,Proposé,Élevé,Moyen,Moyenne
+F11,Planifier des exports et rapports programmés,P1,Proposé,Élevé,Moyen,Moyenne
+F12,Industrialiser l’onboarding des entreprises,P2,Proposé,Moyen,Moyen,Moyenne

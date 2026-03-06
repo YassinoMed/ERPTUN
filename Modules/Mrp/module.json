@@ -1,0 +1,11 @@
+{
+    "name": "Mrp",
+    "alias": "mrp",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Mrp\\Providers\\MrpServiceProvider"
+    ],
+    "files": []
+}

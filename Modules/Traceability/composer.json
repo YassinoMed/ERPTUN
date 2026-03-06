@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/traceability",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Traceability\\": "",
+            "Modules\\Traceability\\Database\\Factories\\": "database/factories/",
+            "Modules\\Traceability\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Traceability\\Tests\\": "tests/"
+        }
+    }
+}

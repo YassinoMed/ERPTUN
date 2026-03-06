@@ -1,0 +1,788 @@
+
+
+networks:
+  erp_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+volumes:
+  redis_data: {}
+  kafka_data: {}
+  zookeeper_data: {}
+  core_db_data: {}
+  billing_db_data: {}
+  approvals_db_data: {}
+  mrp_db_data: {}
+  quality_db_data: {}
+  maintenance_db_data: {}
+  chatgpt_db_data: {}
+  hotel_db_data: {}
+  traceability_db_data: {}
+  cropplanning_db_data: {}
+  cooperative_db_data: {}
+  hedging_db_data: {}
+  hrops_db_data: {}
+  operations_db_data: {}
+  platform_db_data: {}
+  industry_db_data: {}
+  btp_db_data: {}
+  integrations_db_data: {}
+  saas_db_data: {}
+
+# =====================================================================
+# YAML ANCHORS (DRY — Don't Repeat Yourself)
+# =====================================================================
+
+x-laravel-service: &laravel-service
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: local-erp-php:8.4
+  restart: unless-stopped
+  working_dir: /var/www/html
+  volumes:
+    - ./:/var/www/html
+  networks:
+    - erp_network
+  environment: &laravel-env-base
+    APP_ENV: production
+    APP_DEBUG: "false"
+    REDIS_HOST: redis
+    KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+  healthcheck:
+    test: ["CMD-SHELL", "curl -sf http://localhost:8000/health 2>/dev/null || php -r 'echo ok;' || exit 1"]
+    interval: 20s
+    timeout: 10s
+    retries: 5
+    start_period: 40s
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+  deploy:
+    resources:
+      limits:
+        memory: 512M
+      reservations:
+        memory: 128M
+
+x-mysql-service: &mysql-service
+  image: mysql:8.0
+  restart: unless-stopped
+  networks:
+    - erp_network
+  environment: &mysql-env
+    MYSQL_ROOT_PASSWORD: root
+    MYSQL_ROOT_HOST: "%"
+  healthcheck:
+    test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+    interval: 15s
+    timeout: 5s
+    retries: 20
+    start_period: 90s
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+  deploy:
+    resources:
+      limits:
+        memory: 1G
+      reservations:
+        memory: 256M
+
+# =====================================================================
+#                         S E R V I C E S
+# =====================================================================
+services:
+
+  # ==================================================================
+  # 1. API GATEWAY — SINGLE ENTRY POINT (seul port exposé)
+  # ==================================================================
+  gateway:
+    image: nginx:1.25-alpine
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+      - "443:443"
+    volumes:
+      - ./docker/gateway.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - erp_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+    depends_on:
+      core:
+        condition: service_started
+
+  # ==================================================================
+  # 2. INFRASTRUCTURE — Cache & Event Streaming
+  # ==================================================================
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # NO external ports — internal only
+    volumes:
+      - redis_data:/data
+    networks:
+      - erp_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    restart: unless-stopped
+    # NO external ports — internal only
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+    networks:
+      - erp_network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    restart: unless-stopped
+    # NO external ports — internal only
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_ZOOKEEPER_SESSION_TIMEOUT_MS: 60000
+      KAFKA_ZOOKEEPER_CONNECTION_TIMEOUT_MS: 60000
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - erp_network
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:29092 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==================================================================
+  # 3. CORE SERVICE — Le noyau central de l'ERP
+  # ==================================================================
+  core:
+    <<: *laravel-service
+    command: php artisan serve --host=0.0.0.0 --port=8000
+    # NO external ports — only accessible via gateway
+    environment:
+      <<: *laravel-env-base
+      DB_CONNECTION: mysql
+      DB_HOST: core-db
+      DB_PORT: "3306"
+      DB_DATABASE: core
+      DB_USERNAME: core
+      DB_PASSWORD: secret
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
+    depends_on:
+      core-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+
+  core-db:
+    <<: *mysql-service
+    container_name: core-db
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: core
+      MYSQL_USER: core
+      MYSQL_PASSWORD: secret
+    # NO external ports — internal only
+    volumes:
+      - core_db_data:/var/lib/mysql
+
+  # ==================================================================
+  # 4. BILLING SERVICE — Facturation
+  # ==================================================================
+  billing:
+    <<: *laravel-service
+    command: php artisan serve --host=0.0.0.0 --port=8001
+    environment:
+      <<: *laravel-env-base
+      DB_CONNECTION: mysql
+      DB_HOST: billing-db
+      DB_PORT: "3306"
+      DB_DATABASE: billing
+      DB_USERNAME: billing
+      DB_PASSWORD: secret
+    depends_on:
+      billing-db:
+        condition: service_healthy
+      core:
+        condition: service_started
+
+  billing-db:
+    <<: *mysql-service
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: billing
+      MYSQL_USER: billing
+      MYSQL_PASSWORD: secret
+    volumes:
+      - billing_db_data:/var/lib/mysql
+
+  # ==================================================================
+  # 5. APPROVALS SERVICE — Approbations
+  # ==================================================================
+  approvals-service:
+    <<: *laravel-service
+    command: php artisan serve --host=0.0.0.0 --port=8011
+    environment:
+      <<: *laravel-env-base
+      DB_CONNECTION: mysql
+      DB_HOST: approvals-db
+      DB_PORT: "3306"
+      DB_DATABASE: approvals
+      DB_USERNAME: approvals
+      DB_PASSWORD: secret
+    depends_on:
+      approvals-db:
+        condition: service_healthy
+      core:
+        condition: service_started
+
+  approvals-db:
+    <<: *mysql-service
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: approvals
+      MYSQL_USER: approvals
+      MYSQL_PASSWORD: secret
+    volumes:
+      - approvals_db_data:/var/lib/mysql
+
+  # ==================================================================
+  # 6. MRP SERVICE — Planification des ressources
+  # ==================================================================
+  mrp-service:
+    <<: *laravel-service
+    command: php artisan serve --host=0.0.0.0 --port=8012
+    environment:
+      <<: *laravel-env-base
+      DB_CONNECTION: mysql
+      DB_HOST: mrp-db
+      DB_PORT: "3306"
+      DB_DATABASE: mrp
+      DB_USERNAME: mrp
+      DB_PASSWORD: secret
+    depends_on:
+      mrp-db:
+        condition: service_healthy
+      core:
+        condition: service_started
+
+  mrp-db:
+    <<: *mysql-service
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: mrp
+      MYSQL_USER: mrp
+      MYSQL_PASSWORD: secret
+    volumes:
+      - mrp_db_data:/var/lib/mysql
+
+  # ==================================================================
+  # 7. QUALITY SERVICE — Qualité
+  # ==================================================================
+  quality-service:
+    <<: *laravel-service
+    command: php artisan serve --host=0.0.0.0 --port=8013
+    environment:
+      <<: *laravel-env-base
+      DB_CONNECTION: mysql
+      DB_HOST: quality-db
+      DB_PORT: "3306"
+      DB_DATABASE: quality
+      DB_USERNAME: quality
+      DB_PASSWORD: secret
+    depends_on:
+      quality-db:
+        condition: service_healthy
+      core:
+        condition: service_started
+
+  quality-db:
+    <<: *mysql-service
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: quality
+      MYSQL_USER: quality
+      MYSQL_PASSWORD: secret
+    volumes:
+      - quality_db_data:/var/lib/mysql
+
+  # ==================================================================
+  # 8. MAINTENANCE SERVICE
+  # ==================================================================
+  maintenance-service:
+    <<: *laravel-service
+    command: php artisan serve --host=0.0.0.0 --port=8014
+    environment:
+      <<: *laravel-env-base
+      DB_CONNECTION: mysql
+      DB_HOST: maintenance-db
+      DB_PORT: "3306"
+      DB_DATABASE: maintenance
+      DB_USERNAME: maintenance
+      DB_PASSWORD: secret
+    depends_on:
+      maintenance-db:
+        condition: service_healthy
+      core:
+        condition: service_started
+
+  maintenance-db:
+    <<: *mysql-service
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: maintenance
+      MYSQL_USER: maintenance
+      MYSQL_PASSWORD: secret
+    volumes:
+      - maintenance_db_data:/var/lib/mysql
+
+  # ==================================================================
+  # 9. CHATGPT SERVICE — Intégration IA
+  # ==================================================================
+  chatgpt-service:
+    <<: *laravel-service
+    command: php artisan serve --host=0.0.0.0 --port=8015
+    environment:
+      <<: *laravel-env-base
+      DB_CONNECTION: mysql
+      DB_HOST: chatgpt-db
+      DB_PORT: "3306"
+      DB_DATABASE: chatgpt
+      DB_USERNAME: chatgpt
+      DB_PASSWORD: secret
+    depends_on:
+      chatgpt-db:
+        condition: service_healthy
+      core:
+        condition: service_started
+
+  chatgpt-db:
+    <<: *mysql-service
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: chatgpt
+      MYSQL_USER: chatgpt
+      MYSQL_PASSWORD: secret
+    volumes:
+      - chatgpt_db_data:/var/lib/mysql
+
+  # ==================================================================
+  # 10. HOTEL SERVICE — Hôtellerie
+  # ==================================================================
+  hotel-service:
+    <<: *laravel-service
+    command: php artisan serve --host=0.0.0.0 --port=8016
+    environment:
+      <<: *laravel-env-base
+      DB_CONNECTION: mysql
+      DB_HOST: hotel-db
+      DB_PORT: "3306"
+      DB_DATABASE: hotel
+      DB_USERNAME: hotel
+      DB_PASSWORD: secret
+    depends_on:
+      hotel-db:
+        condition: service_healthy
+      core:
+        condition: service_started
+
+  hotel-db:
+    <<: *mysql-service
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: hotel
+      MYSQL_USER: hotel
+      MYSQL_PASSWORD: secret
+    volumes:
+      - hotel_db_data:/var/lib/mysql
+
+  # ==================================================================
+  # 11. TRACEABILITY SERVICE — Traçabilité
+  # ==================================================================
+  traceability-service:
+    <<: *laravel-service
+    command: php artisan serve --host=0.0.0.0 --port=8017
+    environment:
+      <<: *laravel-env-base
+      DB_CONNECTION: mysql
+      DB_HOST: traceability-db
+      DB_PORT: "3306"
+      DB_DATABASE: traceability
+      DB_USERNAME: traceability
+      DB_PASSWORD: secret
+    depends_on:
+      traceability-db:
+        condition: service_healthy
+      core:
+        condition: service_started
+
+  traceability-db:
+    <<: *mysql-service
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: traceability
+      MYSQL_USER: traceability
+      MYSQL_PASSWORD: secret
+    volumes:
+      - traceability_db_data:/var/lib/mysql
+
+  # ==================================================================
+  # 12. CROP PLANNING SERVICE — Planification Agricole
+  # ==================================================================
+  cropplanning-service:
+    <<: *laravel-service
+    command: php artisan serve --host=0.0.0.0 --port=8018
+    environment:
+      <<: *laravel-env-base
+      DB_CONNECTION: mysql
+      DB_HOST: cropplanning-db
+      DB_PORT: "3306"
+      DB_DATABASE: cropplanning
+      DB_USERNAME: cropplanning
+      DB_PASSWORD: secret
+    depends_on:
+      cropplanning-db:
+        condition: service_healthy
+      core:
+        condition: service_started
+
+  cropplanning-db:
+    <<: *mysql-service
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: cropplanning
+      MYSQL_USER: cropplanning
+      MYSQL_PASSWORD: secret
+    volumes:
+      - cropplanning_db_data:/var/lib/mysql
+
+  # ==================================================================
+  # 13. COOPERATIVE SERVICE — Coopérative
+  # ==================================================================
+  cooperative-service:
+    <<: *laravel-service
+    command: php artisan serve --host=0.0.0.0 --port=8019
+    environment:
+      <<: *laravel-env-base
+      DB_CONNECTION: mysql
+      DB_HOST: cooperative-db
+      DB_PORT: "3306"
+      DB_DATABASE: cooperative
+      DB_USERNAME: cooperative
+      DB_PASSWORD: secret
+    depends_on:
+      cooperative-db:
+        condition: service_healthy
+      core:
+        condition: service_started
+
+  cooperative-db:
+    <<: *mysql-service
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: cooperative
+      MYSQL_USER: cooperative
+      MYSQL_PASSWORD: secret
+    volumes:
+      - cooperative_db_data:/var/lib/mysql
+
+  # ==================================================================
+  # 14. HEDGING SERVICE — Couverture Agricole
+  # ==================================================================
+  hedging-service:
+    <<: *laravel-service
+    command: php artisan serve --host=0.0.0.0 --port=8020
+    environment:
+      <<: *laravel-env-base
+      DB_CONNECTION: mysql
+      DB_HOST: hedging-db
+      DB_PORT: "3306"
+      DB_DATABASE: hedging
+      DB_USERNAME: hedging
+      DB_PASSWORD: secret
+    depends_on:
+      hedging-db:
+        condition: service_healthy
+      core:
+        condition: service_started
+
+  hedging-db:
+    <<: *mysql-service
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: hedging
+      MYSQL_USER: hedging
+      MYSQL_PASSWORD: secret
+    volumes:
+      - hedging_db_data:/var/lib/mysql
+
+  # ==================================================================
+  # 15. HR OPS SERVICE — RH Opérations
+  # ==================================================================
+  hrops-service:
+    <<: *laravel-service
+    command: php artisan serve --host=0.0.0.0 --port=8021
+    environment:
+      <<: *laravel-env-base
+      DB_CONNECTION: mysql
+      DB_HOST: hrops-db
+      DB_PORT: "3306"
+      DB_DATABASE: hrops
+      DB_USERNAME: hrops
+      DB_PASSWORD: secret
+    depends_on:
+      hrops-db:
+        condition: service_healthy
+      core:
+        condition: service_started
+
+  hrops-db:
+    <<: *mysql-service
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: hrops
+      MYSQL_USER: hrops
+      MYSQL_PASSWORD: secret
+    volumes:
+      - hrops_db_data:/var/lib/mysql
+
+  # ==================================================================
+  # 16. OPERATIONS SERVICE
+  # ==================================================================
+  operations-service:
+    <<: *laravel-service
+    command: php artisan serve --host=0.0.0.0 --port=8022
+    environment:
+      <<: *laravel-env-base
+      DB_CONNECTION: mysql
+      DB_HOST: operations-db
+      DB_PORT: "3306"
+      DB_DATABASE: operations
+      DB_USERNAME: operations
+      DB_PASSWORD: secret
+    depends_on:
+      operations-db:
+        condition: service_healthy
+      core:
+        condition: service_started
+
+  operations-db:
+    <<: *mysql-service
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: operations
+      MYSQL_USER: operations
+      MYSQL_PASSWORD: secret
+    volumes:
+      - operations_db_data:/var/lib/mysql
+
+  # ==================================================================
+  # 17. PLATFORM SERVICE — Plateforme
+  # ==================================================================
+  platform-service:
+    <<: *laravel-service
+    command: php artisan serve --host=0.0.0.0 --port=8023
+    environment:
+      <<: *laravel-env-base
+      DB_CONNECTION: mysql
+      DB_HOST: platform-db
+      DB_PORT: "3306"
+      DB_DATABASE: platform
+      DB_USERNAME: platform
+      DB_PASSWORD: secret
+    depends_on:
+      platform-db:
+        condition: service_healthy
+      core:
+        condition: service_started
+
+  platform-db:
+    <<: *mysql-service
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: platform
+      MYSQL_USER: platform
+      MYSQL_PASSWORD: secret
+    volumes:
+      - platform_db_data:/var/lib/mysql
+
+  # ==================================================================
+  # 18. INDUSTRY SERVICE — Industrie
+  # ==================================================================
+  industry-service:
+    <<: *laravel-service
+    command: php artisan serve --host=0.0.0.0 --port=8024
+    environment:
+      <<: *laravel-env-base
+      DB_CONNECTION: mysql
+      DB_HOST: industry-db
+      DB_PORT: "3306"
+      DB_DATABASE: industry
+      DB_USERNAME: industry
+      DB_PASSWORD: secret
+    depends_on:
+      industry-db:
+        condition: service_healthy
+      core:
+        condition: service_started
+
+  industry-db:
+    <<: *mysql-service
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: industry
+      MYSQL_USER: industry
+      MYSQL_PASSWORD: secret
+    volumes:
+      - industry_db_data:/var/lib/mysql
+
+  # ==================================================================
+  # 19. BTP SERVICE — Bâtiment et Travaux Publics
+  # ==================================================================
+  btp-service:
+    <<: *laravel-service
+    command: php artisan serve --host=0.0.0.0 --port=8025
+    environment:
+      <<: *laravel-env-base
+      DB_CONNECTION: mysql
+      DB_HOST: btp-db
+      DB_PORT: "3306"
+      DB_DATABASE: btp
+      DB_USERNAME: btp
+      DB_PASSWORD: secret
+    depends_on:
+      btp-db:
+        condition: service_healthy
+      core:
+        condition: service_started
+
+  btp-db:
+    <<: *mysql-service
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: btp
+      MYSQL_USER: btp
+      MYSQL_PASSWORD: secret
+    volumes:
+      - btp_db_data:/var/lib/mysql
+
+  # ==================================================================
+  # 20. INTEGRATIONS SERVICE
+  # ==================================================================
+  integrations-service:
+    <<: *laravel-service
+    command: php artisan serve --host=0.0.0.0 --port=8026
+    environment:
+      <<: *laravel-env-base
+      DB_CONNECTION: mysql
+      DB_HOST: integrations-db
+      DB_PORT: "3306"
+      DB_DATABASE: integrations
+      DB_USERNAME: integrations
+      DB_PASSWORD: secret
+    depends_on:
+      integrations-db:
+        condition: service_healthy
+      core:
+        condition: service_started
+
+  integrations-db:
+    <<: *mysql-service
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: integrations
+      MYSQL_USER: integrations
+      MYSQL_PASSWORD: secret
+    volumes:
+      - integrations_db_data:/var/lib/mysql
+
+  # ==================================================================
+  # 21. SAAS SERVICE — Gestion multi-tenant
+  # ==================================================================
+  saas-service:
+    <<: *laravel-service
+    command: php artisan serve --host=0.0.0.0 --port=8027
+    environment:
+      <<: *laravel-env-base
+      DB_CONNECTION: mysql
+      DB_HOST: saas-db
+      DB_PORT: "3306"
+      DB_DATABASE: saas
+      DB_USERNAME: saas
+      DB_PASSWORD: secret
+    depends_on:
+      saas-db:
+        condition: service_healthy
+      core:
+        condition: service_started
+
+  saas-db:
+    <<: *mysql-service
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: saas
+      MYSQL_USER: saas
+      MYSQL_PASSWORD: secret
+    volumes:
+      - saas_db_data:/var/lib/mysql

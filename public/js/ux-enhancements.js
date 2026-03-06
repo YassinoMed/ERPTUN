@@ -1793,6 +1793,136 @@
         }, 300);
     }
 
+    function initSubmitGuard() {
+        var forms = document.querySelectorAll('form[data-ux-submit-guard="1"]');
+        if (!forms.length) return;
+        var lang = (document.documentElement.getAttribute('lang') || '').toLowerCase();
+        var isFr = lang.indexOf('fr') === 0;
+        forms.forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                if (form.getAttribute('data-ux-busy') === '1') {
+                    e.preventDefault();
+                    return;
+                }
+                form.setAttribute('data-ux-busy', '1');
+                form.setAttribute('aria-busy', 'true');
+                var buttons = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+                buttons.forEach(function (btn) {
+                    if (btn.disabled) return;
+                    var label = btn.tagName.toLowerCase() === 'input' ? (btn.value || '') : (btn.textContent || '');
+                    btn.setAttribute('data-ux-orig-text', label);
+                    btn.disabled = true;
+                    var nextLabel = isFr ? 'Enregistrement…' : 'Saving…';
+                    if (btn.tagName.toLowerCase() === 'input') {
+                        btn.value = nextLabel;
+                    } else {
+                        btn.textContent = nextLabel;
+                    }
+                });
+                setTimeout(function () {
+                    if (form.getAttribute('data-ux-busy') !== '1') return;
+                    form.setAttribute('data-ux-busy', '0');
+                    form.removeAttribute('aria-busy');
+                    buttons.forEach(function (btn) {
+                        var original = btn.getAttribute('data-ux-orig-text');
+                        if (original != null) {
+                            if (btn.tagName.toLowerCase() === 'input') {
+                                btn.value = original;
+                            } else {
+                                btn.textContent = original;
+                            }
+                        }
+                        btn.disabled = false;
+                    });
+                }, 20000);
+            });
+        });
+    }
+
+    function initDirtyIndicator() {
+        var forms = document.querySelectorAll('form[data-ux-dirty="1"]');
+        if (!forms.length) return;
+        var lang = (document.documentElement.getAttribute('lang') || '').toLowerCase();
+        var isFr = lang.indexOf('fr') === 0;
+        var indicatorId = 'uxDirtyIndicator';
+        var indicator = document.getElementById(indicatorId);
+        if (!indicator) {
+            indicator = document.createElement('div');
+            indicator.id = indicatorId;
+            indicator.style.position = 'fixed';
+            indicator.style.bottom = '20px';
+            indicator.style.left = '20px';
+            indicator.style.zIndex = '99998';
+            indicator.style.padding = '10px 12px';
+            indicator.style.borderRadius = '10px';
+            indicator.style.fontSize = '12px';
+            indicator.style.background = 'rgba(20, 20, 20, 0.85)';
+            indicator.style.color = '#fff';
+            indicator.style.display = 'none';
+            indicator.textContent = isFr ? 'Modifications non enregistrées' : 'Unsaved changes';
+            document.body.appendChild(indicator);
+        }
+        var show = function () { indicator.style.display = ''; };
+        var hide = function () { indicator.style.display = 'none'; };
+        var markDirty = function () { show(); };
+        forms.forEach(function (form) {
+            form.addEventListener('input', markDirty, { passive: true });
+            form.addEventListener('change', markDirty, { passive: true });
+            form.addEventListener('submit', hide);
+        });
+    }
+
+    function initFileInfo() {
+        var inputs = document.querySelectorAll('input[type="file"][data-ux-fileinfo="1"]');
+        if (!inputs.length) return;
+        var lang = (document.documentElement.getAttribute('lang') || '').toLowerCase();
+        var isFr = lang.indexOf('fr') === 0;
+        inputs.forEach(function (input) {
+            var infoId = input.id ? input.id + '_info' : '';
+            var info = infoId ? document.getElementById(infoId) : null;
+            if (!info) {
+                info = document.createElement('div');
+                if (infoId) info.id = infoId;
+                info.setAttribute('role', 'status');
+                info.setAttribute('aria-live', 'polite');
+                info.style.marginTop = '6px';
+                info.style.fontSize = '12px';
+                info.style.color = '#6c757d';
+                var parent = input.parentNode || input;
+                parent.appendChild(info);
+            }
+            var allowedRaw = (input.getAttribute('data-allowed') || '').toLowerCase();
+            var allowed = allowedRaw ? allowedRaw.split(',').map(function (s) { return s.trim(); }).filter(Boolean) : [];
+            var maxKb = parseInt(input.getAttribute('data-max-kb') || '0', 10) || 0;
+            var render = function (text, isError) {
+                info.textContent = text || '';
+                info.style.color = isError ? '#dc3545' : '#6c757d';
+            };
+            input.addEventListener('change', function () {
+                if (!input.files || !input.files.length) {
+                    render('', false);
+                    return;
+                }
+                var file = input.files[0];
+                var name = file && file.name ? file.name : '';
+                var sizeKb = file && file.size ? Math.round(file.size / 1024) : 0;
+                var sizeMb = sizeKb ? (sizeKb / 1024).toFixed(2) : '0.00';
+                var ext = name.indexOf('.') !== -1 ? name.split('.').pop().toLowerCase() : '';
+                if (allowed.length && allowed.indexOf(ext) === -1) {
+                    input.value = '';
+                    render(isFr ? 'Format non autorisé' : 'Invalid file format', true);
+                    return;
+                }
+                if (maxKb && sizeKb > maxKb) {
+                    input.value = '';
+                    render(isFr ? 'Fichier trop volumineux' : 'File too large', true);
+                    return;
+                }
+                render((name || (isFr ? 'Fichier sélectionné' : 'File selected')) + ' • ' + sizeMb + ' MB', false);
+            });
+        });
+    }
+
     // ==========================================
     // INIT ALL
     // ==========================================
@@ -1813,6 +1943,9 @@
         initFormAutosave();
         initCollaborationPresence();
         initGlobalUndoRedo();
+        initSubmitGuard();
+        initDirtyIndicator();
+        initFileInfo();
         initPWA();
     });
 })();

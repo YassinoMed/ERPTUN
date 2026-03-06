@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Projectstages;
 use App\Models\Task;
+use App\Models\Utility;
 use Auth;
 use Illuminate\Http\Request;
 
@@ -13,6 +14,7 @@ class ProjectstagesController extends Controller
     {
         if(\Auth::user()->can('manage project stage'))
         {
+            Utility::project_stages(\Auth::user()->creatorId());
             $projectstages = Projectstages::where('created_by', '=', \Auth::user()->creatorId())->orderBy('order')->get();
 
             return view('projectstages.index', compact('projectstages'));

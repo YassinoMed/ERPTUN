@@ -123,6 +123,13 @@ return [
             'path' => storage_path('logs/paytabs.log'),
             'level' => 'info',
         ],
+
+        'seed' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/seed.log'),
+            'level' => 'debug',
+            'days' => 30,
+        ],
     ],
 
 ];

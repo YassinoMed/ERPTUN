@@ -1,0 +1,175 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+\title{Résumé de l'Architecture Générée pour ERPGo SaaS}
+\author{Généré automatiquement}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+Je vais générer les deux fichiers complets, adaptés à votre projet ERPGo SaaS existant, avec toutes les bonnes pratiques de production.
+
+Les deux fichiers ont été générés avec succès. Voici un résumé de ce qui a été créé :
+
+\section{Résumé de l'architecture générée}
+
+\subsection{docker-compose.yml — Changements clés vs l'ancienne version}
+
+\begin{longtable}{p{3cm}p{6cm}p{6cm}}
+\toprule
+\textbf{Aspect} & \textbf{Ancienne version} & \textbf{Nouvelle version} \\
+\midrule
+Ports exposés & Chaque service exposait son port vers l'hôte (8000, 8001, 8011-8027, 3306, 33011-33027...) & Seul le port 80/443 du Gateway est exposé. Tous les autres restent internes au réseau Docker \\
+Healthchecks & Seulement sur MySQL et quelques services & Healthchecks sur tous les services (Laravel, MySQL, Redis, Zookeeper, Kafka, et le Gateway lui-même) \\
+Logging & Par défaut (illimité) & Logs JSON avec rotation (max-size: 10m, max-file: 3) pour éviter de remplir le disque \\
+Ressources & Non limitées & Limites mémoire configurées (512M par service Laravel, 1G par DB MySQL) \\
+Ports internes cohérents & hrops et operations utilisaient le port 80 interne (incohérent) & Chaque service a un port interne unique et logique (8021, 8022) \\
+Volumes Zookeeper & Non persisté & Ajout de zookeeper\_data pour la persistance \\
+Kafka listeners & Exposait le port 9092 vers l'extérieur & Kafka reste interne au réseau Docker uniquement \\
+\bottomrule
+\end{longtable}
+
+\subsection{gateway.conf — Améliorations}
+
+\begin{longtable}{p{4cm}p{11cm}}
+\toprule
+\textbf{Fonctionnalité} & \textbf{Description} \\
+\midrule
+Upstreams & Chaque service a un bloc upstream dédié → permet le load balancing avec docker compose up --scale core=3 \\
+Rate Limiting & 30 req/s pour les APIs normales, 5 req/min pour /api/login (protection brute-force) \\
+Security Headers & X-Frame-Options, X-Content-Type-Options, X-XSS-Protection, Referrer-Policy \\
+Health Endpoint & GET /health → retourne \{"status":"ok"\} pour le monitoring \\
+ChatGPT timeout & Timeout étendu à 120s pour les réponses IA longues \\
+Error pages & Réponse JSON sur les erreurs 502/503/504 \\
+WebSocket support & Headers Upgrade et Connection sur la route par défaut / \\
+\bottomrule
+\end{longtable}
+
+\section{Liste des services applicatifs (sans bases de données)}
+
+Le tableau ci-dessous recense tous les conteneurs applicatifs et d'infrastructure déployés dans l'architecture, \textbf{sans les conteneurs de bases de données MySQL} (chaque service applicatif dispose de sa propre base dédiée en interne).
+
+\subsection{Services d'infrastructure}
+
+\begin{longtable}{p{3.5cm}p{2cm}p{3cm}p{6cm}}
+\toprule
+\textbf{Service} & \textbf{Port} & \textbf{Image} & \textbf{Description} \\
+\midrule
+gateway & 80 (→8080) & nginx:1.25-alpine & API Gateway — point d'entrée unique, reverse proxy, rate limiting, load balancing \\
+redis & 6379 & redis:7-alpine & Cache distribué, gestion des sessions et des files d'attente (queues) \\
+zookeeper & 2181 & cp-zookeeper:7.4.0 & Coordination et configuration pour le cluster Kafka \\
+kafka & 29092 & cp-kafka:7.4.0 & Bus d'événements (Event Streaming) — communication asynchrone inter-services \\
+\bottomrule
+\end{longtable}
+
+\subsection{Services métier (Laravel / PHP)}
+
+\begin{longtable}{p{3.5cm}p{1.2cm}p{2.5cm}p{8cm}}
+\toprule
+\textbf{Service} & \textbf{Port} & \textbf{BD (MySQL)} & \textbf{Description} \\
+\midrule
+core & 8000 & core & Noyau central de l'ERP — gère CRM, HRM, Projets, POS, Inventaire, Comptabilité, Ventes, WMS, Production \\
+billing & 8001 & billing & Facturation — gestion des factures, devis, paiements clients \\
+approvals-service & 8011 & approvals & Approbations — workflows de validation et circuits d'approbation \\
+mrp-service & 8012 & mrp & MRP — planification des besoins en matières premières \\
+quality-service & 8013 & quality & Qualité — contrôle qualité, inspections, normes et conformité \\
+maintenance-service & 8014 & maintenance & Maintenance — gestion préventive et corrective des équipements \\
+chatgpt-service & 8015 & chatgpt & Intelligence Artificielle — intégration OpenAI / ChatGPT \\
+hotel-service & 8016 & hotel & Hôtellerie — réservations, canaux, housekeeping, upselling \\
+traceability-service & 8017 & traceability & Traçabilité — suivi des lots, événements, certificats qualité \\
+cropplanning-service & 8018 & cropplanning & Planification Agricole — plans de culture, calendrier agricole \\
+cooperative-service & 8019 & cooperative & Coopérative — gestion des coopératives, livraisons, distributions \\
+hedging-service & 8020 & hedging & Couverture Agricole — contrats, indices de prix, gestion des risques \\
+hrops-service & 8021 & hrops & RH Opérations — gestion opérationnelle avancée des RH \\
+operations-service & 8022 & operations & Opérations — pilotage des opérations métier transversales \\
+platform-service & 8023 & platform & Plateforme — gestion de la plateforme SaaS \\
+industry-service & 8024 & industry & Industrie — fonctionnalités spécifiques au secteur industriel \\
+btp-service & 8025 & btp & BTP — gestion de chantiers, suivi des projets de construction \\
+integrations-service & 8026 & integrations & Intégrations — connecteurs et APIs tierces \\
+saas-service & 8027 & saas & SaaS — gestion multi-tenant, abonnements, plans \\
+\bottomrule
+\end{longtable}
+
+\textbf{Total : 4 services d'infrastructure + 19 services métier = 23 conteneurs applicatifs.}
+
+\subsection{Bases de données (MySQL 8.0)}
+
+Chaque service métier dispose de sa propre base de données MySQL 8.0 dédiée, assurant l'isolation des données entre les modules. Tous les ports MySQL sont internes au réseau Docker (non exposés vers l'hôte).
+
+\begin{longtable}{p{3.5cm}p{1.5cm}p{3.5cm}p{3cm}p{3cm}}
+\toprule
+\textbf{Conteneur DB} & \textbf{Port} & \textbf{Service associé} & \textbf{Base de données} & \textbf{Utilisateur} \\
+\midrule
+core-db & 3306 & core & core & core \\
+billing-db & 3306 & billing & billing & billing \\
+approvals-db & 3306 & approvals-service & approvals & approvals \\
+mrp-db & 3306 & mrp-service & mrp & mrp \\
+quality-db & 3306 & quality-service & quality & quality \\
+maintenance-db & 3306 & maintenance-service & maintenance & maintenance \\
+chatgpt-db & 3306 & chatgpt-service & chatgpt & chatgpt \\
+hotel-db & 3306 & hotel-service & hotel & hotel \\
+traceability-db & 3306 & traceability-service & traceability & traceability \\
+cropplanning-db & 3306 & cropplanning-service & cropplanning & cropplanning \\
+cooperative-db & 3306 & cooperative-service & cooperative & cooperative \\
+hedging-db & 3306 & hedging-service & hedging & hedging \\
+hrops-db & 3306 & hrops-service & hrops & hrops \\
+operations-db & 3306 & operations-service & operations & operations \\
+platform-db & 3306 & platform-service & platform & platform \\
+industry-db & 3306 & industry-service & industry & industry \\
+btp-db & 3306 & btp-service & btp & btp \\
+integrations-db & 3306 & integrations-service & integrations & integrations \\
+saas-db & 3306 & saas-service & saas & saas \\
+\bottomrule
+\end{longtable}
+
+\textbf{Total général : 23 conteneurs applicatifs + 19 conteneurs MySQL = 42 conteneurs.}
+
+\section{Table de routage complète}
+
+\begin{longtable}{p{5cm}p{5cm}p{2cm}}
+\toprule
+\textbf{URL Gateway} & \textbf{Service interne} & \textbf{Port} \\
+\midrule
+http://localhost/core & core & 8000 \\
+http://localhost/api/* & core & 8000 \\
+http://localhost/crm/* & core & 8000 \\
+http://localhost/hrm/* & core & 8000 \\
+http://localhost/projects/* & core & 8000 \\
+http://localhost/pos/* & core & 8000 \\
+http://localhost/inventory/* & core & 8000 \\
+http://localhost/accounting/* & core & 8000 \\
+http://localhost/sales/* & core & 8000 \\
+http://localhost/wms/* & core & 8000 \\
+http://localhost/production/* & core & 8000 \\
+http://localhost/billing/* & billing & 8001 \\
+http://localhost/approvals/* & approvals-service & 8011 \\
+http://localhost/mrp/* & mrp-service & 8012 \\
+http://localhost/quality/* & quality-service & 8013 \\
+http://localhost/maintenance/* & maintenance-service & 8014 \\
+http://localhost/chatgpt/* & chatgpt-service & 8015 \\
+http://localhost/hotel/* & hotel-service & 8016 \\
+http://localhost/traceability/* & traceability-service & 8017 \\
+http://localhost/crop-planning/* & cropplanning-service & 8018 \\
+http://localhost/cooperative/* & cooperative-service & 8019 \\
+http://localhost/hedging/* & hedging-service & 8020 \\
+http://localhost/hr-ops/* & hrops-service & 8021 \\
+http://localhost/operations/* & operations-service & 8022 \\
+http://localhost/platform/* & platform-service & 8023 \\
+http://localhost/industry/* & industry-service & 8024 \\
+http://localhost/btp/* & btp-service & 8025 \\
+http://localhost/integrations/* & integrations-service & 8026 \\
+http://localhost/saas/* & saas-service & 8027 \\
+\bottomrule
+\end{longtable}
+
+\end{document}

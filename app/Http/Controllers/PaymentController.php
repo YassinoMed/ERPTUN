@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Budget;
 use App\Models\AddTransactionLine;
 use App\Models\BankAccount;
 use App\Models\BillAccount;
@@ -188,6 +189,20 @@ class PaymentController extends Controller
             //For Notification
             $setting = Utility::settings(\Auth::user()->creatorId());
 
+            $budgetWarningMessage = '';
+            $budgetBreach = Budget::expenseBudgetAlert(\Auth::user()->creatorId(), $request->category_id, $request->date, (float)$request->amount);
+            if($budgetBreach)
+            {
+                $overAmount = $budgetBreach['actual_amount'] - $budgetBreach['budget_amount'];
+                $categoryName = !empty($category) ? $category->name : __('Category');
+                $budgetWarningMessage = __('Budget exceeded for :category (:period :year) by :amount', [
+                    'category' => $categoryName,
+                    'period' => $budgetBreach['period_key'],
+                    'year' => $budgetBreach['year'],
+                    'amount' => \Auth::user()->priceFormat($overAmount),
+                ]);
+            }
+
             //Twilio Notification
             if (isset($setting['twilio_payment_notification']) && $setting['twilio_payment_notification'] == 1) {
 
@@ -200,7 +215,7 @@ class PaymentController extends Controller
                 Utility::send_twilio_msg($vender->contact, 'bill_payment', $paymentNotificationArr);
             }
 
-            return redirect()->route('payment.index')->with('success', __('Payment successfully created') . ((isset($result) && $result != 1) ? '<br> <span class="text-danger">' . $result . '</span>' : ''));
+            return redirect()->route('payment.index')->with('success', __('Payment successfully created') . ((isset($result) && $result != 1) ? '<br> <span class="text-danger">' . $result . '</span>' : '') . (!empty($budgetWarningMessage) ? '<br> <span class="text-danger">' . $budgetWarningMessage . '</span>' : ''));
 
         } else {
             return redirect()->back()->with('error', __('Permission denied.'));

@@ -17,15 +17,10 @@
         padding: 8px 12px !important;
     }
 
-    @media screen and (max-width:991px){
-        .plan_card{
-            width: 50%;
-        }
+    .plan_card{
+        margin-bottom: 24px;
     }
     @media screen and (max-width:767px){
-        .plan_card{
-            width: 100%;
-        }
         .plan_card .price-card{
             height: auto ;
             margin-bottom: 0;
@@ -67,8 +62,8 @@
 @section('content')
     <div class="row">
         @foreach ($plans as $plan)
-            <div class="plan_card">
-                <div class="card price-card price-1 wow animate__fadeInUp" data-wow-delay="0.2s"
+            <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 plan_card">
+                <div class="card price-card price-1 wow animate__fadeInUp h-100" data-wow-delay="0.2s"
                     style="
                    visibility: visible;
                    animation-delay: 0.2s;
@@ -147,6 +142,18 @@
                                     <li class="white-sapce-nowrap"><span class="theme-avtar"><i
                                                 class="ti {{ ($plan->production ?? 0) == 1 ? 'ti-circle-plus text-primary' : 'ti-circle-minus text-danger' }} "></i></span>{{ ($plan->production ?? 0) == 1 ? __('Enable') : __('Disable') }}
                                         {{ __('Production') }}</li>
+                                    <li class="white-sapce-nowrap"><span class="theme-avtar"><i
+                                                class="ti {{ ($plan->btp_site_tracking ?? 0) == 1 ? 'ti-circle-plus text-primary' : 'ti-circle-minus text-danger' }} "></i></span>{{ ($plan->btp_site_tracking ?? 0) == 1 ? __('Enable') : __('Disable') }}
+                                        {{ __('BTP Site Tracking') }}</li>
+                                    <li class="white-sapce-nowrap"><span class="theme-avtar"><i
+                                                class="ti {{ ($plan->btp_subcontractors ?? 0) == 1 ? 'ti-circle-plus text-primary' : 'ti-circle-minus text-danger' }} "></i></span>{{ ($plan->btp_subcontractors ?? 0) == 1 ? __('Enable') : __('Disable') }}
+                                        {{ __('BTP Subcontractors') }}</li>
+                                    <li class="white-sapce-nowrap"><span class="theme-avtar"><i
+                                                class="ti {{ ($plan->btp_price_breakdowns ?? 0) == 1 ? 'ti-circle-plus text-primary' : 'ti-circle-minus text-danger' }} "></i></span>{{ ($plan->btp_price_breakdowns ?? 0) == 1 ? __('Enable') : __('Disable') }}
+                                        {{ __('BTP Price Breakdown') }}</li>
+                                    <li class="white-sapce-nowrap"><span class="theme-avtar"><i
+                                                class="ti {{ ($plan->btp_equipment_control ?? 0) == 1 ? 'ti-circle-plus text-primary' : 'ti-circle-minus text-danger' }} "></i></span>{{ ($plan->btp_equipment_control ?? 0) == 1 ? __('Enable') : __('Disable') }}
+                                        {{ __('BTP Equipment Control') }}</li>
 
                                 </ul>
                             </div>

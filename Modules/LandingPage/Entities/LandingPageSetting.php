@@ -4,6 +4,7 @@ namespace Modules\LandingPage\Entities;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Schema;
 use App\Models\Utility;
 
 class LandingPageSetting extends Model
@@ -24,7 +25,11 @@ class LandingPageSetting extends Model
 
     public static function settings()
     {
-        $data = LandingPageSetting::get();
+        if (!Schema::hasTable('landing_page_settings')) {
+            $data = collect();
+        } else {
+            $data = LandingPageSetting::get();
+        }
 
         $settings = [
             "topbar_status" => "on",

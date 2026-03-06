@@ -1,0 +1,11 @@
+{
+    "name": "HrOps",
+    "alias": "hr_ops",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\HrOps\\Providers\\HrOpsServiceProvider"
+    ],
+    "files": []
+}

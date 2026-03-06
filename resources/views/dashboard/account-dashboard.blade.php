@@ -474,6 +474,134 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="col-sm-6 col-12 dash-info-card">
+                            <div class="info-card-inner card mb-0">
+                                <svg class="star-bg" width="83" height="79" viewBox="0 0 83 79" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path opacity="0.4"
+                                        d="M59.0537 26.924C44.68 38.2757 42.7394 43.5902 45.6923 63.5089C34.0866 47.0541 29.0147 44.5469 10.7783 46.2497C25.1511 34.8957 27.0918 29.5812 24.1367 9.66327C35.7446 26.1172 40.8164 28.6245 59.0537 26.924Z"
+                                        fill="#FF3A6E" />
+                                    <path opacity="0.4"
+                                        d="M78.2765 61.7004C73.0978 65.7903 72.3986 67.705 73.4625 74.8815C69.2811 68.953 67.4538 68.0497 60.8834 68.6632C66.0618 64.5725 66.761 62.6577 65.6963 55.4815C69.8785 61.4097 71.7058 62.3131 78.2765 61.7004Z"
+                                        fill="#FF3A6E" />
+                                </svg>
+                                <svg class="bottom-svg" width="135" height="80" viewBox="0 0 135 80"
+                                    fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M74.7692 35C27.8769 35 5.38462 65 0 80H135.692V0C134.923 11.6667 121.662 35 74.7692 35Z"
+                                        fill="#FF3A6E"></path>
+                                </svg>
+                                <div
+                                    class="info-icon-wrp d-flex flex-wrap justify-content-between gap-2">
+                                    <div class="info-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M20.25 2.25H3.75C2.50736 2.25 1.5 3.25736 1.5 4.5V19.5C1.5 20.7426 2.50736 21.75 3.75 21.75H20.25C21.4926 21.75 22.5 20.7426 22.5 19.5V4.5C22.5 3.25736 21.4926 2.25 20.25 2.25ZM10.5 17.25H6V15.75H10.5V17.25ZM18 12.75H6V11.25H18V12.75ZM18 8.25H6V6.75H18V8.25Z" fill="white"/>
+                                        </svg>
+                                    </div>
+                                    <h3 class="mb-0">{{ $constant['taxes'] ?? 0 }}</h3>
+                                </div>
+                                <div class="info-content">
+                                    <h2 class="h4 mb-0"><a href="{{ route('taxes.index') }}"
+                                            class="info-link dashboard-link">{{ __('Total Taxes') }}</a></h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-12 dash-info-card">
+                            <div class="info-card-inner card mb-0">
+                                <svg class="star-bg" width="83" height="79" viewBox="0 0 83 79" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path opacity="0.4"
+                                        d="M59.0537 26.924C44.68 38.2757 42.7394 43.5902 45.6923 63.5089C34.0866 47.0541 29.0147 44.5469 10.7783 46.2497C25.1511 34.8957 27.0918 29.5812 24.1367 9.66327C35.7446 26.1172 40.8164 28.6245 59.0537 26.924Z"
+                                        fill="#FF3A6E" />
+                                    <path opacity="0.4"
+                                        d="M78.2765 61.7004C73.0978 65.7903 72.3986 67.705 73.4625 74.8815C69.2811 68.953 67.4538 68.0497 60.8834 68.6632C66.0618 64.5725 66.761 62.6577 65.6963 55.4815C69.8785 61.4097 71.7058 62.3131 78.2765 61.7004Z"
+                                        fill="#FF3A6E" />
+                                </svg>
+                                <svg class="bottom-svg" width="135" height="80" viewBox="0 0 135 80"
+                                    fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M74.7692 35C27.8769 35 5.38462 65 0 80H135.692V0C134.923 11.6667 121.662 35 74.7692 35Z"
+                                        fill="#FF3A6E"></path>
+                                </svg>
+                                <div
+                                    class="info-icon-wrp d-flex flex-wrap justify-content-between gap-2">
+                                    <div class="info-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M11.25 2.25H3.75C2.50736 2.25 1.5 3.25736 1.5 4.5V9C1.5 10.2426 2.50736 11.25 3.75 11.25H11.25C12.4926 11.25 13.5 10.2426 13.5 9V4.5C13.5 3.25736 12.4926 2.25 11.25 2.25ZM20.25 12.75H12.75C11.5074 12.75 10.5 13.7574 10.5 15V19.5C10.5 20.7426 11.5074 21.75 12.75 21.75H20.25C21.4926 21.75 22.5 20.7426 22.5 19.5V15C22.5 13.7574 21.4926 12.75 20.25 12.75ZM20.25 2.25H16.5C15.2574 2.25 14.25 3.25736 14.25 4.5V9C14.25 10.2426 15.2574 11.25 16.5 11.25H20.25C21.4926 11.25 22.5 10.2426 22.5 9V4.5C22.5 3.25736 21.4926 2.25 20.25 2.25ZM11.25 12.75H3.75C2.50736 12.75 1.5 13.7574 1.5 15V19.5C1.5 20.7426 2.50736 21.75 3.75 21.75H11.25C12.4926 21.75 13.5 20.7426 13.5 19.5V15C13.5 13.7574 12.4926 12.75 11.25 12.75Z" fill="white"/>
+                                        </svg>
+                                    </div>
+                                    <h3 class="mb-0">{{ $constant['category'] ?? 0 }}</h3>
+                                </div>
+                                <div class="info-content">
+                                    <h2 class="h4 mb-0"><a href="{{ route('product-category.index') }}"
+                                            class="info-link dashboard-link">{{ __('Total Categories') }}</a></h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-12 dash-info-card">
+                            <div class="info-card-inner card mb-0">
+                                <svg class="star-bg" width="83" height="79" viewBox="0 0 83 79" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path opacity="0.4"
+                                        d="M59.0537 26.924C44.68 38.2757 42.7394 43.5902 45.6923 63.5089C34.0866 47.0541 29.0147 44.5469 10.7783 46.2497C25.1511 34.8957 27.0918 29.5812 24.1367 9.66327C35.7446 26.1172 40.8164 28.6245 59.0537 26.924Z"
+                                        fill="#FF3A6E" />
+                                    <path opacity="0.4"
+                                        d="M78.2765 61.7004C73.0978 65.7903 72.3986 67.705 73.4625 74.8815C69.2811 68.953 67.4538 68.0497 60.8834 68.6632C66.0618 64.5725 66.761 62.6577 65.6963 55.4815C69.8785 61.4097 71.7058 62.3131 78.2765 61.7004Z"
+                                        fill="#FF3A6E" />
+                                </svg>
+                                <svg class="bottom-svg" width="135" height="80" viewBox="0 0 135 80"
+                                    fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M74.7692 35C27.8769 35 5.38462 65 0 80H135.692V0C134.923 11.6667 121.662 35 74.7692 35Z"
+                                        fill="#FF3A6E"></path>
+                                </svg>
+                                <div
+                                    class="info-icon-wrp d-flex flex-wrap justify-content-between gap-2">
+                                    <div class="info-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M7.5 3C5.842 3 4.5 4.342 4.5 6C4.5 7.658 5.842 9 7.5 9C9.158 9 10.5 7.658 10.5 6C10.5 4.342 9.158 3 7.5 3ZM16.5 15C14.842 15 13.5 16.342 13.5 18C13.5 19.658 14.842 21 16.5 21C18.158 21 19.5 19.658 19.5 18C19.5 16.342 18.158 15 16.5 15ZM16.5 3C14.842 3 13.5 4.342 13.5 6C13.5 7.658 14.842 9 16.5 9C18.158 9 19.5 7.658 19.5 6C19.5 4.342 18.158 3 16.5 3ZM7.5 15C5.842 15 4.5 16.342 4.5 18C4.5 19.658 5.842 21 7.5 21C9.158 21 10.5 19.658 10.5 18C10.5 16.342 9.158 15 7.5 15Z" fill="white"/>
+                                        </svg>
+                                    </div>
+                                    <h3 class="mb-0">{{ $constant['units'] ?? 0 }}</h3>
+                                </div>
+                                <div class="info-content">
+                                    <h2 class="h4 mb-0"><a href="{{ route('product-unit.index') }}"
+                                            class="info-link dashboard-link">{{ __('Total Units') }}</a></h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-12 dash-info-card">
+                            <div class="info-card-inner card mb-0">
+                                <svg class="star-bg" width="83" height="79" viewBox="0 0 83 79" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path opacity="0.4"
+                                        d="M59.0537 26.924C44.68 38.2757 42.7394 43.5902 45.6923 63.5089C34.0866 47.0541 29.0147 44.5469 10.7783 46.2497C25.1511 34.8957 27.0918 29.5812 24.1367 9.66327C35.7446 26.1172 40.8164 28.6245 59.0537 26.924Z"
+                                        fill="#FF3A6E" />
+                                    <path opacity="0.4"
+                                        d="M78.2765 61.7004C73.0978 65.7903 72.3986 67.705 73.4625 74.8815C69.2811 68.953 67.4538 68.0497 60.8834 68.6632C66.0618 64.5725 66.761 62.6577 65.6963 55.4815C69.8785 61.4097 71.7058 62.3131 78.2765 61.7004Z"
+                                        fill="#FF3A6E" />
+                                </svg>
+                                <svg class="bottom-svg" width="135" height="80" viewBox="0 0 135 80"
+                                    fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M74.7692 35C27.8769 35 5.38462 65 0 80H135.692V0C134.923 11.6667 121.662 35 74.7692 35Z"
+                                        fill="#FF3A6E"></path>
+                                </svg>
+                                <div
+                                    class="info-icon-wrp d-flex flex-wrap justify-content-between gap-2">
+                                    <div class="info-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M21 6.75V4.5C21 3.67157 20.3284 3 19.5 3H4.5C3.67157 3 3 3.67157 3 4.5V6.75C3 7.57843 3.67157 8.25 4.5 8.25H19.5C20.3284 8.25 21 7.57843 21 6.75ZM21 15V12.75C21 11.9216 20.3284 11.25 19.5 11.25H4.5C3.67157 11.25 3 11.9216 3 12.75V15C3 15.8284 3.67157 16.5 4.5 16.5H19.5C20.3284 16.5 21 15.8284 21 15ZM21 19.5C21 18.6716 20.3284 18 19.5 18H4.5C3.67157 18 3 18.6716 3 19.5C3 20.3284 3.67157 21 4.5 21H19.5C20.3284 21 21 20.3284 21 19.5Z" fill="white"/>
+                                        </svg>
+                                    </div>
+                                    <h3 class="mb-0">{{ $constant['bankAccount'] ?? 0 }}</h3>
+                                </div>
+                                <div class="info-content">
+                                    <h2 class="h4 mb-0"><a href="{{ route('bank-account.index') }}"
+                                            class="info-link dashboard-link">{{ __('Total Bank Accounts') }}</a></h2>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="card">
                         <div class="card-header">

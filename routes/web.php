@@ -80,6 +80,7 @@ use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\LoanOptionController;
 use App\Http\Controllers\MeetingController;
+use App\Http\Controllers\MedicalAppointmentController;
 use App\Http\Controllers\MercadoPaymentController;
 use App\Http\Controllers\MolliePaymentController;
 use App\Http\Controllers\NotificationTemplatesController;
@@ -102,6 +103,11 @@ use App\Http\Controllers\PipelineController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\PlanRequestController;
 use App\Http\Controllers\PosController;
+use App\Http\Controllers\PatientController;
+use App\Http\Controllers\PatientConsultationController;
+use App\Http\Controllers\PatientLabResultController;
+use App\Http\Controllers\PatientPrescriptionController;
+use App\Http\Controllers\ChequeController;
 use App\Http\Controllers\ProductServiceCategoryController;
 use App\Http\Controllers\ProductServiceController;
 use App\Http\Controllers\ProductServiceUnitController;
@@ -137,6 +143,7 @@ use App\Http\Controllers\ToyyibpayController;
 use App\Http\Controllers\TrainerController;
 use App\Http\Controllers\TrainingController;
 use App\Http\Controllers\TrainingTypeController;
+use App\Http\Controllers\EducationController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\TransferController;
 use App\Http\Controllers\TravelController;
@@ -160,6 +167,19 @@ use App\Http\Controllers\TapController;
 use App\Http\Controllers\ProductionBomController;
 use App\Http\Controllers\ProductionOrderController;
 use App\Http\Controllers\ProductionWorkCenterController;
+use App\Http\Controllers\HotelChannelController;
+use App\Http\Controllers\HotelYieldController;
+use App\Http\Controllers\HotelHousekeepingController;
+use App\Http\Controllers\HotelUpsellController;
+use App\Http\Controllers\AgriTraceabilityController;
+use App\Http\Controllers\AgriPlanningController;
+use App\Http\Controllers\AgriCooperativeController;
+use App\Http\Controllers\AgriContractController;
+use App\Http\Controllers\BtpSiteTrackingController;
+use App\Http\Controllers\BtpSubcontractorController;
+use App\Http\Controllers\BtpPriceBreakdownController;
+use App\Http\Controllers\BtpEquipmentControlController;
+use App\Http\Controllers\AiCopilotController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 
@@ -215,6 +235,7 @@ Route::get('/vender/bill/{id}/', [BillController::class, 'invoiceLink'])->name('
 Route::get('/vendor/purchase/{id}/', [PurchaseController::class, 'purchaseLink'])->name('purchase.link.copy');
 Route::get('/customer/proposal/{id}/', [ProposalController::class, 'invoiceLink'])->name('proposal.link.copy');
 Route::get('proposal/pdf/{id}', [ProposalController::class, 'proposal'])->name('proposal.pdf')->middleware(['XSS', 'revalidate']);
+Route::get('/education/certificate/{hash}', [EducationController::class, 'publicCertificate'])->name('education.certificates.verify');
 
 //================================= Invoice Payment Gateways  ====================================//
 
@@ -550,6 +571,34 @@ Route::group(['middleware' => ['verified']], function () {
         ],
         function () {
             Route::resource('customer', CustomerController::class);
+        }
+    );
+
+    Route::group(
+        [
+            'middleware' => [
+                'auth',
+                'XSS',
+                'revalidate',
+            ],
+        ],
+        function () {
+            Route::resource('patients', PatientController::class);
+            Route::get('patients/{patient}/consultations/create', [PatientConsultationController::class, 'create'])->name('patients.consultations.create');
+            Route::post('patients/{patient}/consultations', [PatientConsultationController::class, 'store'])->name('patients.consultations.store');
+            Route::post('patients/{patient}/lab-results', [PatientLabResultController::class, 'store'])->name('patients.lab-results.store');
+            Route::delete('patient-lab-results/{id}', [PatientLabResultController::class, 'destroy'])->name('patient-lab-results.destroy');
+            Route::post('consultations/{consultation}/prescriptions', [PatientPrescriptionController::class, 'store'])->name('consultations.prescriptions.store');
+            Route::delete('patient-prescriptions/{id}', [PatientPrescriptionController::class, 'destroy'])->name('patient-prescriptions.destroy');
+
+            Route::post('medical-appointments/{appointment}/cancel', [MedicalAppointmentController::class, 'cancel'])->name('medical-appointments.cancel');
+            Route::resource('medical-appointments', MedicalAppointmentController::class);
+
+            Route::get('cheques/export', [ChequeController::class, 'export'])->name('cheques.export');
+            Route::get('cheques/import', [ChequeController::class, 'importForm'])->name('cheques.import.form');
+            Route::post('cheques/import', [ChequeController::class, 'importStore'])->name('cheques.import');
+            Route::get('cheques/{cheque}/print', [ChequeController::class, 'print'])->name('cheques.print');
+            Route::resource('cheques', ChequeController::class);
         }
     );
 
@@ -1084,6 +1133,17 @@ Route::group(['middleware' => ['verified']], function () {
     Route::post('training/status', [TrainingController::class, 'updateStatus'])->name('training.status')->middleware(['auth', 'XSS']);
 
     Route::resource('training', TrainingController::class)->middleware(['auth', 'XSS']);
+
+    Route::get('education', [EducationController::class, 'index'])->name('education.index')->middleware(['auth', 'XSS']);
+    Route::post('education/courses', [EducationController::class, 'storeCourse'])->name('education.courses.store')->middleware(['auth', 'XSS']);
+    Route::post('education/modules', [EducationController::class, 'storeModule'])->name('education.modules.store')->middleware(['auth', 'XSS']);
+    Route::post('education/enrollments', [EducationController::class, 'storeEnrollment'])->name('education.enrollments.store')->middleware(['auth', 'XSS']);
+    Route::post('education/sessions', [EducationController::class, 'storeSession'])->name('education.sessions.store')->middleware(['auth', 'XSS']);
+    Route::post('education/attendances', [EducationController::class, 'storeAttendance'])->name('education.attendances.store')->middleware(['auth', 'XSS']);
+    Route::post('education/grades', [EducationController::class, 'storeGrade'])->name('education.grades.store')->middleware(['auth', 'XSS']);
+    Route::post('education/certificates', [EducationController::class, 'issueCertificate'])->name('education.certificates.issue')->middleware(['auth', 'XSS']);
+    Route::post('education/trainer-hours', [EducationController::class, 'storeTrainerHour'])->name('education.trainer-hours.store')->middleware(['auth', 'XSS']);
+    Route::post('education/trainer-invoices', [EducationController::class, 'storeTrainerInvoice'])->name('education.trainer-invoices.store')->middleware(['auth', 'XSS']);
 
     // HRM - HR Module
 
@@ -1899,12 +1959,115 @@ Route::group(['middleware' => ['verified']], function () {
         }
     );
 
+    Route::group(
+        [
+            'prefix' => 'hotel',
+            'as' => 'hotel.',
+            'middleware' => [
+                'auth',
+                'XSS',
+                'revalidate',
+            ],
+        ],
+        function () {
+            Route::get('channels', [HotelChannelController::class, 'index'])->name('channels.index');
+            Route::post('channels', [HotelChannelController::class, 'store'])->name('channels.store');
+            Route::post('channels/sync', [HotelChannelController::class, 'sync'])->name('channels.sync');
+
+            Route::get('yield', [HotelYieldController::class, 'index'])->name('yield.index');
+            Route::post('yield/rules', [HotelYieldController::class, 'storeRule'])->name('yield.rules.store');
+            Route::post('yield/forecasts', [HotelYieldController::class, 'storeForecast'])->name('yield.forecasts.store');
+            Route::post('yield/generate', [HotelYieldController::class, 'generate'])->name('yield.generate');
+
+            Route::get('housekeeping', [HotelHousekeepingController::class, 'index'])->name('housekeeping.index');
+            Route::post('housekeeping/tasks', [HotelHousekeepingController::class, 'storeTask'])->name('housekeeping.tasks.store');
+            Route::post('housekeeping/tasks/{task}', [HotelHousekeepingController::class, 'updateTaskStatus'])->name('housekeeping.tasks.update');
+            Route::post('housekeeping/issues', [HotelHousekeepingController::class, 'reportIssue'])->name('housekeeping.issues.store');
+            Route::post('housekeeping/inventory', [HotelHousekeepingController::class, 'storeInventoryMovement'])->name('housekeeping.inventory.store');
+
+            Route::get('upsell', [HotelUpsellController::class, 'index'])->name('upsell.index');
+            Route::post('upsell/services', [HotelUpsellController::class, 'storeService'])->name('upsell.services.store');
+            Route::post('upsell/packages', [HotelUpsellController::class, 'storePackage'])->name('upsell.packages.store');
+            Route::post('upsell/offers', [HotelUpsellController::class, 'generateOffer'])->name('upsell.offers.generate');
+            Route::post('upsell/conversions', [HotelUpsellController::class, 'convert'])->name('upsell.convert');
+        }
+    );
+
+    Route::group(
+        [
+            'prefix' => 'agri',
+            'as' => 'agri.',
+            'middleware' => [
+                'auth',
+                'XSS',
+                'revalidate',
+            ],
+        ],
+        function () {
+            Route::get('traceability', [AgriTraceabilityController::class, 'index'])->name('traceability.index');
+            Route::post('traceability/lots', [AgriTraceabilityController::class, 'storeLot'])->name('traceability.lots.store');
+            Route::post('traceability/events', [AgriTraceabilityController::class, 'storeEvent'])->name('traceability.events.store');
+            Route::post('traceability/certificates', [AgriTraceabilityController::class, 'issueCertificate'])->name('traceability.certificates.issue');
+
+            Route::get('planning', [AgriPlanningController::class, 'index'])->name('planning.index');
+            Route::post('planning/parcels', [AgriPlanningController::class, 'storeParcel'])->name('planning.parcels.store');
+            Route::post('planning/plans', [AgriPlanningController::class, 'storePlan'])->name('planning.plans.store');
+            Route::post('planning/rotation-rules', [AgriPlanningController::class, 'storeRotationRule'])->name('planning.rotation.store');
+            Route::post('planning/weather-alerts', [AgriPlanningController::class, 'storeWeatherAlert'])->name('planning.alerts.store');
+
+            Route::get('cooperatives', [AgriCooperativeController::class, 'index'])->name('cooperatives.index');
+            Route::post('cooperatives', [AgriCooperativeController::class, 'storeCooperative'])->name('cooperatives.store');
+            Route::post('cooperatives/members', [AgriCooperativeController::class, 'storeMember'])->name('cooperatives.members.store');
+            Route::post('cooperatives/deliveries', [AgriCooperativeController::class, 'storeDelivery'])->name('cooperatives.deliveries.store');
+            Route::post('cooperatives/distributions', [AgriCooperativeController::class, 'createDistribution'])->name('cooperatives.distributions.create');
+
+            Route::get('contracts', [AgriContractController::class, 'index'])->name('contracts.index');
+            Route::post('contracts', [AgriContractController::class, 'storeContract'])->name('contracts.store');
+            Route::post('contracts/hedges', [AgriContractController::class, 'storeHedge'])->name('contracts.hedges.store');
+            Route::post('contracts/price-indices', [AgriContractController::class, 'storePriceIndex'])->name('contracts.price-indices.store');
+        }
+    );
+
+    Route::group(
+        [
+            'prefix' => 'btp',
+            'as' => 'btp.',
+            'middleware' => [
+                'auth',
+                'XSS',
+                'revalidate',
+            ],
+        ],
+        function () {
+            Route::get('site-tracking', [BtpSiteTrackingController::class, 'index'])->name('site-tracking.index');
+            Route::post('site-tracking/photos', [BtpSiteTrackingController::class, 'storePhoto'])->name('site-tracking.photos.store');
+
+            Route::get('subcontractors', [BtpSubcontractorController::class, 'index'])->name('subcontractors.index');
+            Route::post('subcontractors', [BtpSubcontractorController::class, 'storeSubcontractor'])->name('subcontractors.store');
+            Route::post('subcontractors/invoices', [BtpSubcontractorController::class, 'storeInvoice'])->name('subcontractors.invoices.store');
+            Route::post('subcontractors/payments', [BtpSubcontractorController::class, 'storePayment'])->name('subcontractors.payments.store');
+
+            Route::get('price-breakdowns', [BtpPriceBreakdownController::class, 'index'])->name('price-breakdowns.index');
+            Route::post('price-breakdowns/items', [BtpPriceBreakdownController::class, 'storeItem'])->name('price-breakdowns.items.store');
+            Route::post('price-breakdowns/quotes', [BtpPriceBreakdownController::class, 'storeQuote'])->name('price-breakdowns.quotes.store');
+            Route::post('price-breakdowns/quote-items', [BtpPriceBreakdownController::class, 'storeQuoteItem'])->name('price-breakdowns.quote-items.store');
+
+            Route::get('equipment-control', [BtpEquipmentControlController::class, 'index'])->name('equipment-control.index');
+            Route::post('equipment-control/equipment', [BtpEquipmentControlController::class, 'storeEquipment'])->name('equipment-control.equipment.store');
+            Route::post('equipment-control/usages', [BtpEquipmentControlController::class, 'storeUsage'])->name('equipment-control.usages.store');
+            Route::post('equipment-control/maintenances', [BtpEquipmentControlController::class, 'storeMaintenance'])->name('equipment-control.maintenances.store');
+        }
+    );
+
     Route::get('referral-program/company', [ReferralProgramController::class, 'companyIndex'])->name('referral-program.company');
     Route::resource('referral-program', ReferralProgramController::class);
     Route::get('request-amount-sent/{id}', [ReferralProgramController::class, 'requestedAmountSent'])->name('request.amount.sent');
     Route::get('request-amount-cancel/{id}', [ReferralProgramController::class, 'requestCancel'])->name('request.amount.cancel');
-    Route::post('request-amount-store/{id}', [ReferralProgramController::class, 'requestedAmountStore'])->name('request.amount.store');
+    Route::get('request-amount-store/{id}', [ReferralProgramController::class, 'requestedAmountStore'])->name('request.amount.store');
     Route::get('request-amount/{id}/{status}', [ReferralProgramController::class, 'requestedAmount'])->name('amount.request');
+
+    // AI Copilot Route
+    Route::post('/copilot/ask', [AiCopilotController::class, 'ask'])->name('copilot.ask');
 });
 
 

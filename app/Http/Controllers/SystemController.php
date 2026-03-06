@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class SystemController extends Controller
@@ -43,6 +44,23 @@ class SystemController extends Controller
     {
 
         if (\Auth::user()->can('manage system settings')) {
+            $settings = Utility::settings();
+            $post = $request->except('_token');
+            $post['SITE_RTL'] = $request->has('SITE_RTL') ? $request->SITE_RTL : 'off';
+            $post['display_landing_page'] = $request->has('display_landing_page') ? $post['display_landing_page'] : 'off';
+            $post['gdpr_cookie'] = $request->has('gdpr_cookie') ? $post['gdpr_cookie'] : 'off';
+            $post['enable_signup'] = $request->has('enable_signup') ? $post['enable_signup'] : 'off';
+            $post['email_verification'] = $request->has('email_verification') ? $post['email_verification'] : 'off';
+            $post['cust_theme_bg'] = $request->has('cust_theme_bg') ? 'on' : 'off';
+            $post['cust_darklayout'] = $request->has('cust_darklayout') ? 'on' : 'off';
+            $post['cust_darklayout_auto'] = $request->has('cust_darklayout_auto') ? 'on' : 'off';
+
+            if ($request->color_flag == 'false' && isset($request->color)) {
+                $post['color'] = $request->color;
+            } elseif (isset($request->custom_color)) {
+                $post['color'] = $request->custom_color;
+            }
+
             if ($request->hasFile('logo_dark')) {
                 $logoName = 'logo-dark.png';
                 $dir = 'uploads/logo/';
@@ -52,16 +70,14 @@ class SystemController extends Controller
                 ];
                 $path = Utility::upload_file($request, 'logo_dark', $logoName, $dir, $validation);
                 if ($path['flag'] == 1) {
-                    $logo = $path['url'];
+                    $post['company_logo_dark'] = $logoName;
                 } else {
                     return redirect()->back()->with('error', __($path['msg']));
                 }
             }
 
             if ($request->hasFile('logo_light')) {
-
                 $logoName = 'logo-light.png';
-
                 $dir = 'uploads/logo/';
                 $validation = [
                     'mimes:' . 'png',
@@ -69,14 +85,13 @@ class SystemController extends Controller
                 ];
                 $path = Utility::upload_file($request, 'logo_light', $logoName, $dir, $validation);
                 if ($path['flag'] == 1) {
-                    $logo = $path['url'];
+                    $post['company_logo_light'] = $logoName;
                 } else {
                     return redirect()->back()->with('error', __($path['msg']));
                 }
             }
 
             if ($request->hasFile('favicon')) {
-
                 $favicon = 'favicon.png';
                 $dir = 'uploads/logo/';
                 $validation = [
@@ -86,64 +101,25 @@ class SystemController extends Controller
 
                 $path = Utility::upload_file($request, 'favicon', $favicon, $dir, $validation);
                 if ($path['flag'] == 1) {
-                    $favicon = $path['url'];
+                    $post['company_favicon'] = $favicon;
                 } else {
                     return redirect()->back()->with('error', __($path['msg']));
                 }
             }
 
-            $settings = Utility::settings();
+            unset(
+                $post['logo_dark'],
+                $post['logo_light'],
+                $post['favicon'],
+                $post['custom_color'],
+                $post['color_flag']
+            );
 
-            if (
-                !empty($request->title_text) || !empty($request->color) || !empty($request->SITE_RTL)
-                || !empty($request->footer_text) || !empty($request->default_language) || isset($request->display_landing_page)
-                || isset($request->gdpr_cookie) || isset($request->enable_signup) || isset($request->email_verification)
-                || isset($request->color) || !empty($request->cust_theme_bg) || !empty($request->cust_darklayout)
-            ) {
-                $post = $request->all();
-
-                $SITE_RTL = $request->has('SITE_RTL') ? $request->SITE_RTL : 'off';
-                $post['SITE_RTL'] = $SITE_RTL;
-
-                if (isset($request->color) && $request->color_flag == 'false') {
-                    $post['color'] = $request->color;
-                } else {
-                    $post['color'] = $request->custom_color;
-                }
-
-                if (!isset($request->display_landing_page)) {
-                    $post['display_landing_page'] = 'off';
-                }
-                if (!isset($request->gdpr_cookie)) {
-                    $post['gdpr_cookie'] = 'off';
-                }
-                if (!isset($request->enable_signup)) {
-                    $post['enable_signup'] = 'off';
-                }
-                if (!isset($request->email_verification)) {
-                    $post['email_verification'] = 'off';
-                }
-
-
-                if (!isset($request->cust_theme_bg)) {
-                    $cust_theme_bg = (!empty($request->cust_theme_bg)) ? 'on' : 'off';
-                    $post['cust_theme_bg'] = $cust_theme_bg;
-                }
-                if (!isset($request->cust_darklayout)) {
-
-                    $cust_darklayout = (!empty($request->cust_darklayout)) ? 'on' : 'off';
-                    $post['cust_darklayout'] = $cust_darklayout;
-                }
-                if (!isset($request->cust_darklayout_auto)) {
-                    $cust_darklayout_auto = (!empty($request->cust_darklayout_auto)) ? 'on' : 'off';
-                    $post['cust_darklayout_auto'] = $cust_darklayout_auto;
-                }
-
-                unset($post['_token'], $post['company_logo_dark'], $post['company_logo_light'], $post['company_favicon'], $post['custom_color']);
-
+            DB::beginTransaction();
+            try {
                 foreach ($post as $key => $data) {
                     if (in_array($key, array_keys($settings))) {
-                        \DB::insert(
+                        DB::insert(
                             'insert into settings (`value`, `name`,`created_by`) values (?, ?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`) ',
                             [
                                 $data,
@@ -153,6 +129,30 @@ class SystemController extends Controller
                         );
                     }
                 }
+                DB::commit();
+                Log::info('system.settings.updated', [
+                    'user_id' => \Auth::user()->id,
+                    'created_by' => \Auth::user()->creatorId(),
+                    'keys' => array_keys($post),
+                ]);
+                Utility::dispatchAutomationEvent('system.settings.updated', [
+                    'user_id' => \Auth::user()->id,
+                    'created_by' => \Auth::user()->creatorId(),
+                    'keys' => array_keys($post),
+                ], \Auth::user()->creatorId());
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                Log::error('system.settings.update_failed', [
+                    'user_id' => \Auth::user()->id,
+                    'created_by' => \Auth::user()->creatorId(),
+                    'error' => $e->getMessage(),
+                ]);
+                Utility::dispatchAutomationEvent('system.settings.update_failed', [
+                    'user_id' => \Auth::user()->id,
+                    'created_by' => \Auth::user()->creatorId(),
+                    'error' => $e->getMessage(),
+                ], \Auth::user()->creatorId());
+                return redirect()->back()->with('error', __('Brand Setting update failed.'));
             }
 
             return redirect()->back()->with('success', 'Brand Setting successfully updated.');

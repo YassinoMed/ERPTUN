@@ -11,8 +11,8 @@
     $lang = \App\Models\Utility::getValByName('default_language');
     $logo = \App\Models\Utility::get_file('uploads/logo');
 
-    $logo_light = \App\Models\Utility::getValByName('logo_light');
-    $logo_dark = \App\Models\Utility::getValByName('logo_dark');
+    $logo_light = \App\Models\Utility::getValByName('company_logo_light');
+    $logo_dark = \App\Models\Utility::getValByName('company_logo_dark');
     $company_favicon = \App\Models\Utility::getValByName('company_favicon');
     $setting = \App\Models\Utility::colorset();
     $color = !empty($setting['color']) ? $setting['color'] : 'theme-3';
@@ -408,7 +408,7 @@
                         <div class="card-header p-3">
                             <h5>{{ __('Brand Settings') }}</h5>
                         </div>
-                        {{ Form::model($settings, ['url' => 'systems', 'method' => 'POST', 'enctype' => 'multipart/form-data']) }}
+                        {{ Form::model($settings, ['url' => 'systems', 'method' => 'POST', 'enctype' => 'multipart/form-data', 'data-ux-submit-guard' => '1', 'data-ux-dirty' => '1', 'data-autosave' => '1']) }}
                         <div class="card-body p-3">
                             <div class="row">
                                 <div class="col-lg-4 col-sm-6 col-md-6">
@@ -428,7 +428,9 @@
                                                                 class="ti ti-upload px-1"></i>{{ __('Choose file here') }}
                                                         </div>
                                                         <input type="file" name="logo_dark" id="full_logo"
-                                                            class="form-control file" data-filename="full_logo">
+                                                            class="form-control file" data-ux-fileinfo="1"
+                                                            data-allowed="png" data-max-kb="20480"
+                                                            data-filename="company_logo_update">
                                                     </label>
                                                 </div>
                                                 @error('logo_dark')
@@ -460,7 +462,8 @@
                                                                 class="ti ti-upload px-1"></i>{{ __('Choose file here') }}
                                                         </div>
                                                         <input type="file" class="form-control file" name="logo_light"
-                                                            id="logo_light" data-filename="logo_light">
+                                                            id="logo_light" data-ux-fileinfo="1" data-allowed="png"
+                                                            data-max-kb="20480" data-filename="dark_logo_update">
                                                     </label>
                                                 </div>
                                                 @error('logo_light')
@@ -492,7 +495,8 @@
                                                                 class="ti ti-upload px-1"></i>{{ __('Choose file here') }}
                                                         </div>
                                                         <input type="file" class="form-control file" id="favicon"
-                                                            name="favicon" data-filename="favicon">
+                                                            name="favicon" data-ux-fileinfo="1" data-allowed="png"
+                                                            data-max-kb="20480" data-filename="company_favicon_update">
                                                     </label>
                                                 </div>
                                                 @error('favicon')
@@ -760,7 +764,19 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-12">
+                                   
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-footer p-3 text-end">
+                            <div class="form-group mb-0">
+                                <input class="btn btn-print-invoice btn-primary" type="submit"
+                                    value="{{ __('Save Changes') }}">
+                            </div>
+                        </div>
+                        {{ Form::close() }}
+                         <div class="col-12">
                                         <div class="card h-100 mb-0">
                                             <div class="card-header p-3">
                                                 <h6 class="mb-0 d-flex align-items-center gap-2">
@@ -809,16 +825,6 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-footer p-3 text-end">
-                            <div class="form-group mb-0">
-                                <input class="btn btn-print-invoice btn-primary" type="submit"
-                                    value="{{ __('Save Changes') }}">
-                            </div>
-                        </div>
-                        {{ Form::close() }}
                     </div>
 
                     <!--Email Settings-->

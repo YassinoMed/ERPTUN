@@ -1,0 +1,11 @@
+{
+    "name": "CropPlanning",
+    "alias": "cropplanning",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\CropPlanning\\Providers\\CropPlanningServiceProvider"
+    ],
+    "files": []
+}

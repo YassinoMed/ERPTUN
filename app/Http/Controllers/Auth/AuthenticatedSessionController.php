@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 use DateTime;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -73,6 +74,9 @@ class AuthenticatedSessionController extends Controller
 
     public function store(LoginRequest $request)
     {
+        if (!Schema::hasTable('users')) {
+            return redirect()->back()->with('status', __('Base de données non migrée. Lancez les migrations.'));
+        }
 
         $user = User::where('email',$request->email)->first();
         if($user != null)

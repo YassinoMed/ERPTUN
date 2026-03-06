@@ -121,6 +121,120 @@
                 <label class="custom-control-label form-label" for="enable_production">{{__('Production')}}</label>
             </div>
         </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch ">
+                <input type="checkbox" class="form-check-input" name="enable_integrations" id="enable_integrations" checked>
+                <label class="custom-control-label form-label" for="enable_integrations">{{__('Integrations')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch ">
+                <input type="checkbox" class="form-check-input" name="enable_sales" id="enable_sales" checked>
+                <label class="custom-control-label form-label" for="enable_sales">{{__('Sales')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch ">
+                <input type="checkbox" class="form-check-input" name="enable_wms" id="enable_wms" checked>
+                <label class="custom-control-label form-label" for="enable_wms">{{__('WMS')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch ">
+                <input type="checkbox" class="form-check-input" name="enable_mrp" id="enable_mrp" checked>
+                <label class="custom-control-label form-label" for="enable_mrp">{{__('MRP')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch ">
+                <input type="checkbox" class="form-check-input" name="enable_quality" id="enable_quality" checked>
+                <label class="custom-control-label form-label" for="enable_quality">{{__('Quality')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch ">
+                <input type="checkbox" class="form-check-input" name="enable_maintenance" id="enable_maintenance" checked>
+                <label class="custom-control-label form-label" for="enable_maintenance">{{__('Maintenance')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch ">
+                <input type="checkbox" class="form-check-input" name="enable_enterprise_accounting" id="enable_enterprise_accounting" checked>
+                <label class="custom-control-label form-label" for="enable_enterprise_accounting">{{__('Enterprise Accounting')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch ">
+                <input type="checkbox" class="form-check-input" name="enable_approvals" id="enable_approvals" checked>
+                <label class="custom-control-label form-label" for="enable_approvals">{{__('Approvals')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch ">
+                <input type="checkbox" class="form-check-input" name="enable_hr_ops" id="enable_hr_ops" checked>
+                <label class="custom-control-label form-label" for="enable_hr_ops">{{__('HR Ops')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch ">
+                <input type="checkbox" class="form-check-input" name="enable_saas" id="enable_saas" checked>
+                <label class="custom-control-label form-label" for="enable_saas">{{__('SaaS')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch ">
+                <input type="checkbox" class="form-check-input" name="enable_hotel" id="enable_hotel" checked>
+                <label class="custom-control-label form-label" for="enable_hotel">{{__('Hotel')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch ">
+                <input type="checkbox" class="form-check-input" name="enable_traceability" id="enable_traceability" checked>
+                <label class="custom-control-label form-label" for="enable_traceability">{{__('Traceability')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch ">
+                <input type="checkbox" class="form-check-input" name="enable_crop_planning" id="enable_crop_planning" checked>
+                <label class="custom-control-label form-label" for="enable_crop_planning">{{__('Crop Planning')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch ">
+                <input type="checkbox" class="form-check-input" name="enable_cooperative" id="enable_cooperative" checked>
+                <label class="custom-control-label form-label" for="enable_cooperative">{{__('Cooperative')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch ">
+                <input type="checkbox" class="form-check-input" name="enable_hedging" id="enable_hedging" checked>
+                <label class="custom-control-label form-label" for="enable_hedging">{{__('Hedging')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch ">
+                <input type="checkbox" class="form-check-input" name="enable_btp_site_tracking" id="enable_btp_site_tracking" checked>
+                <label class="custom-control-label form-label" for="enable_btp_site_tracking">{{__('BTP Site Tracking')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch ">
+                <input type="checkbox" class="form-check-input" name="enable_btp_subcontractors" id="enable_btp_subcontractors" checked>
+                <label class="custom-control-label form-label" for="enable_btp_subcontractors">{{__('BTP Subcontractors')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch ">
+                <input type="checkbox" class="form-check-input" name="enable_btp_price_breakdowns" id="enable_btp_price_breakdowns" checked>
+                <label class="custom-control-label form-label" for="enable_btp_price_breakdowns">{{__('BTP Price Breakdown')}}</label>
+            </div>
+        </div>
+        <div class="form-group col-md-3">
+            <div class="form-check form-switch ">
+                <input type="checkbox" class="form-check-input" name="enable_btp_equipment_control" id="enable_btp_equipment_control" checked>
+                <label class="custom-control-label form-label" for="enable_btp_equipment_control">{{__('BTP Equipment Control')}}</label>
+            </div>
+        </div>
 
     </div>
 </div>

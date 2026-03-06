@@ -1,0 +1,11 @@
+{
+    "name": "Wms",
+    "alias": "wms",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Wms\\Providers\\WmsServiceProvider"
+    ],
+    "files": []
+}

@@ -1,0 +1,11 @@
+{
+    "name": "Hedging",
+    "alias": "hedging",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Hedging\\Providers\\HedgingServiceProvider"
+    ],
+    "files": []
+}

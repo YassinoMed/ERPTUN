@@ -13,7 +13,7 @@ return new class extends Migration
         }
 
         $updates = [];
-        foreach (['crm', 'hrm', 'account', 'project', 'pos', 'production', 'chatgpt'] as $column) {
+        foreach (['crm', 'hrm', 'account', 'project', 'pos', 'production', 'chatgpt', 'hotel', 'traceability', 'crop_planning', 'cooperative', 'hedging'] as $column) {
             if (Schema::hasColumn('plans', $column)) {
                 $updates[$column] = 1;
             }
@@ -31,7 +31,7 @@ return new class extends Migration
         }
 
         $updates = [];
-        foreach (['crm', 'hrm', 'account', 'project', 'pos', 'production', 'chatgpt'] as $column) {
+        foreach (['crm', 'hrm', 'account', 'project', 'pos', 'production', 'chatgpt', 'hotel', 'traceability', 'crop_planning', 'cooperative', 'hedging'] as $column) {
             if (Schema::hasColumn('plans', $column)) {
                 $updates[$column] = 0;
             }
@@ -42,4 +42,3 @@ return new class extends Migration
         }
     }
 };
-

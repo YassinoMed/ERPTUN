@@ -37,6 +37,15 @@ class Plan extends Model
         'hr_ops',
         'saas',
         'chatgpt',
+        'hotel',
+        'traceability',
+        'crop_planning',
+        'cooperative',
+        'hedging',
+        'btp_site_tracking',
+        'btp_subcontractors',
+        'btp_price_breakdowns',
+        'btp_equipment_control',
         'storage_limit',
     ];
 

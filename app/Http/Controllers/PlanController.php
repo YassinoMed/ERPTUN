@@ -78,33 +78,37 @@ class PlanController extends Controller
                 }
                 $request->validate($validation);
                 $post = $request->all();
-                if(isset($request->enable_project))
+                $moduleInputs = [
+                    'crm' => 'enable_crm',
+                    'project' => 'enable_project',
+                    'hrm' => 'enable_hrm',
+                    'account' => 'enable_account',
+                    'pos' => 'enable_pos',
+                    'production' => 'enable_production',
+                    'chatgpt' => 'enable_chatgpt',
+                    'integrations' => 'enable_integrations',
+                    'sales' => 'enable_sales',
+                    'wms' => 'enable_wms',
+                    'mrp' => 'enable_mrp',
+                    'quality' => 'enable_quality',
+                    'maintenance' => 'enable_maintenance',
+                    'enterprise_accounting' => 'enable_enterprise_accounting',
+                    'approvals' => 'enable_approvals',
+                    'hr_ops' => 'enable_hr_ops',
+                    'saas' => 'enable_saas',
+                    'hotel' => 'enable_hotel',
+                    'traceability' => 'enable_traceability',
+                    'crop_planning' => 'enable_crop_planning',
+                    'cooperative' => 'enable_cooperative',
+                    'hedging' => 'enable_hedging',
+                    'btp_site_tracking' => 'enable_btp_site_tracking',
+                    'btp_subcontractors' => 'enable_btp_subcontractors',
+                    'btp_price_breakdowns' => 'enable_btp_price_breakdowns',
+                    'btp_equipment_control' => 'enable_btp_equipment_control',
+                ];
+                foreach($moduleInputs as $field => $input)
                 {
-                    $post['project'] = 1;
-                }
-                if(isset($request->enable_crm))
-                {
-                    $post['crm'] = 1;
-                }
-                if(isset($request->enable_hrm))
-                {
-                    $post['hrm'] = 1;
-                }
-                if(isset($request->enable_account))
-                {
-                    $post['account'] = 1;
-                }
-                if(isset($request->enable_pos))
-                {
-                    $post['pos'] = 1;
-                }
-                if(isset($request->enable_production))
-                {
-                    $post['production'] = 1;
-                }
-                if(isset($request->enable_chatgpt))
-                {
-                    $post['chatgpt'] = 1;
+                    $post[$field] = $request->has($input) ? 1 : 0;
                 }
                 if(isset($request->trial))
                 {
@@ -208,13 +212,38 @@ class PlanController extends Controller
 
             $post = $request->all();
 
-            $post['project'] = array_key_exists('enable_project', $post) ? 1 : 0;
-            $post['crm'] = array_key_exists('enable_crm', $post) ? 1 : 0;
-            $post['hrm'] = array_key_exists('enable_hrm', $post) ? 1 : 0;
-            $post['account'] = array_key_exists('enable_account', $post) ? 1 : 0;
-            $post['pos'] = array_key_exists('enable_pos', $post) ? 1 : 0;
-            $post['production'] = array_key_exists('enable_production', $post) ? 1 : 0;
-            $post['chatgpt'] = array_key_exists('enable_chatgpt', $post) ? 1 : 0;
+            $moduleInputs = [
+                'crm' => 'enable_crm',
+                'project' => 'enable_project',
+                'hrm' => 'enable_hrm',
+                'account' => 'enable_account',
+                'pos' => 'enable_pos',
+                'production' => 'enable_production',
+                'chatgpt' => 'enable_chatgpt',
+                'integrations' => 'enable_integrations',
+                'sales' => 'enable_sales',
+                'wms' => 'enable_wms',
+                'mrp' => 'enable_mrp',
+                'quality' => 'enable_quality',
+                'maintenance' => 'enable_maintenance',
+                'enterprise_accounting' => 'enable_enterprise_accounting',
+                'approvals' => 'enable_approvals',
+                'hr_ops' => 'enable_hr_ops',
+                'saas' => 'enable_saas',
+                'hotel' => 'enable_hotel',
+                'traceability' => 'enable_traceability',
+                'crop_planning' => 'enable_crop_planning',
+                'cooperative' => 'enable_cooperative',
+                'hedging' => 'enable_hedging',
+                'btp_site_tracking' => 'enable_btp_site_tracking',
+                'btp_subcontractors' => 'enable_btp_subcontractors',
+                'btp_price_breakdowns' => 'enable_btp_price_breakdowns',
+                'btp_equipment_control' => 'enable_btp_equipment_control',
+            ];
+            foreach($moduleInputs as $field => $input)
+            {
+                $post[$field] = $request->has($input) ? 1 : 0;
+            }
 
             if((int) $plan_id !== 1 && $request->has('trial'))
             {

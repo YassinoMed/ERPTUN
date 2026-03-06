@@ -20,6 +20,7 @@ use App\Models\ReferralSetting;
 use App\Models\User;
 use Illuminate\Support\Facades\Schema;
 use App\Models\AddTransactionLine;
+use App\Models\Projectstages;
 
 class Utility extends Model
 {
@@ -43,6 +44,10 @@ class Utility extends Model
     public static function getSetting()
     {
         if (self::$getsettings == null) {
+            if (!Schema::hasTable('settings')) {
+                self::$getsettings = collect();
+                return self::$getsettings;
+            }
             $data = DB::table('settings');
             $data = $data->where('created_by', '=', 1)->get();
             if (count($data) == 0) {
@@ -55,14 +60,18 @@ class Utility extends Model
 
     public static function getSettingById($id)
     {
-        
+
         // if (self::$getsettingsid == null) {
-            $data = DB::table('settings');
-            $data = $data->where('created_by', '=', $id)->get();
-            if (count($data) == 0) {
-                $data = DB::table('settings')->where('created_by', '=', 1)->get();
-            }
-            self::$getsettingsid = $data;
+        if (!Schema::hasTable('settings')) {
+            self::$getsettingsid = collect();
+            return self::$getsettingsid;
+        }
+        $data = DB::table('settings');
+        $data = $data->where('created_by', '=', $id)->get();
+        if (count($data) == 0) {
+            $data = DB::table('settings')->where('created_by', '=', 1)->get();
+        }
+        self::$getsettingsid = $data;
         // }
         return self::$getsettingsid;
     }
@@ -251,7 +260,7 @@ class Utility extends Model
             'twilio_from' => '',
             'twilio_from' => '',
             'chat_gpt_key' => '',
-            'chat_gpt_model'=>'',
+            'chat_gpt_model' => '',
             "ip_restrict" => "off",
 
             'mail_driver' => '',
@@ -273,11 +282,11 @@ class Utility extends Model
             'pusher_app_secret' => '',
             'pusher_app_cluster' => '',
 
-            'color_flag'=>'false',
+            'color_flag' => 'false',
 
-            'currency_space'=>'withspace',
-            'decimal_separator'=>'dot',
-            'thousand_separator'=>'dot',
+            'currency_space' => 'withspace',
+            'decimal_separator' => 'dot',
+            'thousand_separator' => 'dot',
             'currency_symbol' => 'withcurrencysymbol',
             'float_number' => 'comma',
 
@@ -388,7 +397,7 @@ class Utility extends Model
             "bill_logo" => "",
             "pos_logo" => "",
             "quotation_prefix" => "#QUO",
-            "quotation_logo"=>'',
+            "quotation_logo" => '',
             "pos_color" => "ffffff",
             "quotation_template" => "template1",
             "pos_template" => "template1",
@@ -468,7 +477,7 @@ class Utility extends Model
             'twilio_token' => '',
             'twilio_from' => '',
             'chat_gpt_key' => '',
-            'chat_gpt_model'=> '',
+            'chat_gpt_model' => '',
             "ip_restrict" => "off",
             "timezone" => '',
 
@@ -486,9 +495,9 @@ class Utility extends Model
             'mail_from_address' => '',
             'mail_from_name' => '',
 
-            'currency_space'=>'withspace',
-            'decimal_separator'=>'dot',
-            'thousand_separator'=>'dot',
+            'currency_space' => 'withspace',
+            'decimal_separator' => 'dot',
+            'thousand_separator' => 'dot',
             'currency_symbol' => 'withcurrencysymbol',
         ];
 
@@ -646,17 +655,14 @@ class Utility extends Model
         $number = explode('.', $price);
         $length = strlen(trim($number[0]));
         $float_number = isset($settings['float_number']) && $settings['float_number'] == 'dot' ? '.' : ',';
-        if($length > 3)
-        {
+        if ($length > 3) {
             $decimal_separator = $settings['decimal_separator'] == 'dot' ? ',' : ',';
             $thousand_separator = $settings['thousand_separator'] == 'dot' ? '.' : ',';
-        }
-        else
-        {
+        } else {
             $decimal_separator = $settings['decimal_separator'] == 'dot' ? '.' : ',';
             $thousand_separator = $settings['thousand_separator'] == 'dot' ? '.' : ',';
         }
-        $currency = $settings['currency_symbol'] == 'withcurrencysymbol' ? $settings['site_currency_symbol']: $settings['site_currency'];
+        $currency = $settings['currency_symbol'] == 'withcurrencysymbol' ? $settings['site_currency_symbol'] : $settings['site_currency'];
         $decimal_number = $settings['decimal_number'] ? $settings['decimal_number'] : 0;
         $currency_space = $settings['currency_space'];
         $price = number_format($price, $decimal_number, $decimal_separator, $thousand_separator);
@@ -668,7 +674,6 @@ class Utility extends Model
         }
 
         return (($settings['site_currency_symbol_position'] == "pre") ? $currency : '') . ($currency_space == 'withspace' ? ' ' : '') . $price . ($currency_space == 'withspace' ? ' ' : '') . (($settings['site_currency_symbol_position'] == "post") ? $currency : '');
-
     }
 
     public static function currencySymbol($settings)
@@ -789,8 +794,7 @@ class Utility extends Model
             $rates = Tax::get();
             self::$rates = $rates;
             foreach (self::$rates as $rate) {
-                $data[$rate->id]['id'] = $rate->id
-                ;
+                $data[$rate->id]['id'] = $rate->id;
                 $data[$rate->id]['name'] = $rate->name;
                 $data[$rate->id]['rate'] = $rate->rate;
                 $data[$rate->id]['created_by'] = $rate->created_by;
@@ -803,7 +807,7 @@ class Utility extends Model
     public static function taxRate($taxRate, $price, $quantity, $discount = 0)
     {
 
-//        return ($taxRate / 100) * (($price-$discount) * $quantity);
+        //        return ($taxRate / 100) * (($price-$discount) * $quantity);
         return (($price * $quantity) - $discount) * ($taxRate / 100);
     }
 
@@ -885,7 +889,6 @@ class Utility extends Model
                 $bankAccount->save();
             }
         }
-
     }
 
     // get font-color code accourding to bg-color
@@ -1158,7 +1161,8 @@ class Utility extends Model
             'name' => 'Purchase Tax',
             'type' => 2,
             'sub_type' => 6,
-        ], [
+        ],
+        [
             'code' => '2150',
             'name' => 'VAT Pay / Refund',
             'type' => 2,
@@ -1229,7 +1233,8 @@ class Utility extends Model
             'name' => 'Accr. Benefits - Central Provident Fund',
             'type' => 2,
             'sub_type' => 6,
-        ], [
+        ],
+        [
             'code' => '2320',
             'name' => 'Accr. Benefits - Stock Purchase',
             'type' => 2,
@@ -1832,7 +1837,8 @@ class Utility extends Model
             'name' => 'Purchase Tax',
             'type' => 'Liabilities',
             'sub_type' => 'Current Liabilities',
-        ], [
+        ],
+        [
             'code' => '2150',
             'name' => 'VAT Pay / Refund',
             'type' => 'Liabilities',
@@ -1903,7 +1909,8 @@ class Utility extends Model
             'name' => 'Accr. Benefits - Central Provident Fund',
             'type' => 'Liabilities',
             'sub_type' => 'Current Liabilities',
-        ], [
+        ],
+        [
             'code' => '2320',
             'name' => 'Accr. Benefits - Stock Purchase',
             'type' => 'Liabilities',
@@ -2380,7 +2387,7 @@ class Utility extends Model
 
     );
 
-// chart of account for new company
+    // chart of account for new company
     public static function chartOfAccountData1($user)
     {
         $chartOfAccounts = Self::$chartOfAccount1;
@@ -2388,11 +2395,11 @@ class Utility extends Model
         foreach ($chartOfAccounts as $account) {
 
             $type = ChartOfAccountType::where('created_by', $user)->where('name', $account['type'])->first();
-            $sub_type = ChartOfAccountSubType::where('type', $type->id)->where('name', $account['sub_type'])->where('created_by' , $user)->first();
+            $sub_type = ChartOfAccountSubType::where('type', $type->id)->where('name', $account['sub_type'])->where('created_by', $user)->first();
 
-            $account_name = ChartOfAccount::where('type', $type->id)->where('name', $account['name'])->where('created_by' , $user)->first();
+            $account_name = ChartOfAccount::where('type', $type->id)->where('name', $account['name'])->where('created_by', $user)->first();
 
-            if(empty($account_name)) {
+            if (empty($account_name)) {
                 ChartOfAccount::create(
                     [
                         'code' => $account['code'],
@@ -2421,19 +2428,17 @@ class Utility extends Model
                     'created_by' => $user->id,
                 ]
             );
-
         }
     }
 
 
     public static function addNewAccountData()
     {
-        $users = User::where('type','company')->get();
+        $users = User::where('type', 'company')->get();
 
-        foreach($users as $user)
-        {
+        foreach ($users as $user) {
             $chartOfAccountTypes = Self::$chartOfAccountType;
-            foreach($chartOfAccountTypes as $k => $type) {
+            foreach ($chartOfAccountTypes as $k => $type) {
                 $check_type = ChartOfAccountType::where('created_by', $user->id)->where('name', $type)->first();
 
                 $chartOfAccountSubTypes = Self::$chartOfAccountSubType;
@@ -2447,23 +2452,21 @@ class Utility extends Model
                                 'created_by' => $user->id,
                             ]
                         );
-                    
+
                         $chartOfAccounts = Self::$chartOfAccount1;
 
                         foreach ($chartOfAccounts as $chartAccount) {
                             $type = ChartOfAccountType::where('created_by', $user->id)->where('name', $chartAccount['type'])->first();
-                            $sub_type = ChartOfAccountSubType::where('type', $type->id)->where('name', $chartAccount['sub_type'])->where('created_by' , $user->id)->first();
-                            $check_account = ChartOfAccount::where('name', $chartAccount['name'])->where('created_by' , $user->id)->first();
+                            $sub_type = ChartOfAccountSubType::where('type', $type->id)->where('name', $chartAccount['sub_type'])->where('created_by', $user->id)->first();
+                            $check_account = ChartOfAccount::where('name', $chartAccount['name'])->where('created_by', $user->id)->first();
                             $receivableAccount = ChartOfAccount::where('created_by', $user->id)->where('type', $check_type->id)->where('name', 'Account Receivables')->first();
                             $payableAccount = ChartOfAccount::where('type', $check_type->id)->where('name', 'Account Payable')->first();
-                                if(!empty($receivableAccount))
-                                {
-                                    $receivableAccount->delete();
-                                }
-                                if(!empty($payableAccount))
-                                {
-                                    $payableAccount->delete();
-                                }
+                            if (!empty($receivableAccount)) {
+                                $receivableAccount->delete();
+                            }
+                            if (!empty($payableAccount)) {
+                                $payableAccount->delete();
+                            }
                             if (empty($check_account)) {
                                 ChartOfAccount::create(
                                     [
@@ -2476,7 +2479,7 @@ class Utility extends Model
                                     ]
                                 );
                             }
-                        }        
+                        }
                     }
                 }
             }
@@ -2528,13 +2531,12 @@ class Utility extends Model
                         $content->content = self::replaceVariable($content->content, $obj);
                         // send email
 
-                        try
-                        {
+                        try {
                             config(
                                 [
                                     'mail.driver' => $settings['mail_driver'] ? $settings['mail_driver'] : $setting['mail_driver'],
                                     'mail.host' => $settings['mail_host'] ? $settings['mail_host'] : $setting['mail_host'],
-                                    'mail.port' => $settings['mail_port'] ? $settings['mail_port'] :$setting['mail_port'],
+                                    'mail.port' => $settings['mail_port'] ? $settings['mail_port'] : $setting['mail_port'],
                                     'mail.encryption' => $settings['mail_encryption'] ? $settings['mail_encryption'] : $setting['mail_encryption'],
                                     'mail.username' => $settings['mail_username'] ? $settings['mail_username'] : $setting['mail_username'],
                                     'mail.password' => $settings['mail_password'] ? $settings['mail_password'] : $setting['mail_password'],
@@ -2607,8 +2609,7 @@ class Utility extends Model
                 if (!empty($content->content)) {
                     $content->content = self::replaceVariable($content->content, $obj);
                     // send email
-                    try
-                    {
+                    try {
                         config(
                             [
                                 'mail.driver' => $settings['mail_driver'],
@@ -2941,7 +2942,7 @@ class Utility extends Model
             'task_start_date' => '',
             'task_end_date' => '',
             'invoice_payment_method' => '',
-         ];
+        ];
 
         foreach ($obj as $key => $val) {
             $arrValue[$key] = $val;
@@ -2988,7 +2989,6 @@ class Utility extends Model
                 ]
             );
         }
-
     }
 
     public static function project_task_stages($created_id)
@@ -3007,6 +3007,33 @@ class Utility extends Model
                     'created_by' => $created_id,
                 ]
             );
+        }
+    }
+
+    public static function project_stages($created_id)
+    {
+        $stages = [
+            ['name' => 'Initiation', 'color' => '#6c757d'],
+            ['name' => 'Planification', 'color' => '#0d6efd'],
+            ['name' => 'Exécution', 'color' => '#198754'],
+            ['name' => 'Suivi & Contrôle', 'color' => '#fd7e14'],
+            ['name' => 'Clôture', 'color' => '#6f42c1'],
+        ];
+        $order = Projectstages::where('created_by', $created_id)->max('order');
+        $order = $order === null ? -1 : (int) $order;
+        foreach ($stages as $stage) {
+            $exists = Projectstages::where('created_by', $created_id)->where('name', $stage['name'])->exists();
+            if (! $exists) {
+                $order++;
+                Projectstages::create(
+                    [
+                        'name' => $stage['name'],
+                        'color' => $stage['color'],
+                        'order' => $order,
+                        'created_by' => $created_id,
+                    ]
+                );
+            }
         }
     }
 
@@ -3117,7 +3144,6 @@ class Utility extends Model
                 'email' => $user->email,
             ]
         );
-
     }
 
     public static function jobStage($id)
@@ -3267,7 +3293,6 @@ class Utility extends Model
 
             return (($settings['site_currency_symbol_position'] == "pre") ? $settings['site_currency_symbol'] : '') . number_format($amount, Utility::getValByName('decimal_number')) . (($settings['site_currency_symbol_position'] == "post") ? $settings['site_currency_symbol'] : '');
         }
-
     }
 
     // Return Week first day and last day
@@ -3582,7 +3607,6 @@ class Utility extends Model
                 $companyRole->givePermissionTo($permission);
             }
         }
-
     }
 
     public static function getAdminPaymentSetting()
@@ -3595,7 +3619,6 @@ class Utility extends Model
 
             $user_id = 1;
             $data = $data->where('created_by', '=', $user_id);
-
         }
         $data = $data->get();
         foreach ($data as $row) {
@@ -3628,7 +3651,6 @@ class Utility extends Model
         if (\Auth::check()) {
             $user_id = \Auth::user()->creatorId();
             $data = $data->where('created_by', '=', $user_id);
-
         }
         $data = $data->get();
         foreach ($data as $row) {
@@ -3676,7 +3698,6 @@ class Utility extends Model
         }
 
         return $totalMigration;
-
     }
 
     public static function getselectedThemeColor()
@@ -3834,7 +3855,6 @@ class Utility extends Model
             } catch (\Exception $e) {
             }
         }
-
     }
 
     //Twilio Notification
@@ -3877,7 +3897,6 @@ class Utility extends Model
             } catch (\Exception $e) {
             }
         }
-
     }
 
     //inventory management (Quantity)
@@ -3895,7 +3914,6 @@ class Utility extends Model
             }
             $product->save();
         }
-
     }
 
     //quantity update in warehouse details
@@ -3911,7 +3929,6 @@ class Utility extends Model
             $product->quantity = $pro_quantity + $quantity;
         }
         $product->save();
-
     }
 
     //warehouse transfer
@@ -3941,7 +3958,6 @@ class Utility extends Model
                 $fromWarehouse->save();
             }
         }
-
     }
 
     //add quantity in product stock
@@ -3968,7 +3984,6 @@ class Utility extends Model
             if (count($data) == 0) {
                 $data = DB::table('settings')->where('created_by', '=', 1)->get();
             }
-
         } else {
 
             $data->where('created_by', '=', 1);
@@ -3988,17 +4003,23 @@ class Utility extends Model
 
     public static function colorset()
     {
+        if (!Schema::hasTable('settings')) {
+            return Utility::settings();
+        }
         if (\Auth::check()) {
             if (\Auth::user()->type == 'super admin') {
                 $user = \Auth::user();
 
                 $setting = DB::table('settings')->where('created_by', $user->id)->pluck('value', 'name')->toArray();
-
             } else {
                 $setting = DB::table('settings')->where('created_by', \Auth::user()->creatorId())->pluck('value', 'name')->toArray();
             }
         } else {
-            $user = User::where('type', 'super admin')->first();
+            if (!Schema::hasTable('users')) {
+                $user = null;
+            } else {
+                $user = User::where('type', 'super admin')->first();
+            }
             $setting = DB::table('settings')
                 ->where('created_by', $user?->id ?? 1)
                 ->pluck('value', 'name')
@@ -4033,11 +4054,9 @@ class Utility extends Model
             } else {
                 return 'logo-dark.png';
             }
-
         } else {
             return 'logo-dark.png';
         }
-
     }
 
     public static function GetLogo()
@@ -4105,9 +4124,8 @@ class Utility extends Model
 
         $data = WarehouseProduct::updateOrCreate(
             ['warehouse_id' => $warehouse_id, 'product_id' => $product_id, 'created_by' => \Auth::user()->id],
-            ['warehouse_id' => $warehouse_id, 'product_id' => $product_id, 'quantity' => $product_quantity, 'created_by' => \Auth::user()->id])
-        ;
-
+            ['warehouse_id' => $warehouse_id, 'product_id' => $product_id, 'quantity' => $product_quantity, 'created_by' => \Auth::user()->id]
+        );
     }
 
     public static function starting_number($id, $type)
@@ -4147,7 +4165,6 @@ class Utility extends Model
 
                     $max_size = !empty($settings['wasabi_max_upload_size']) ? $settings['wasabi_max_upload_size'] : '2048';
                     $mimes = !empty($settings['wasabi_storage_validation']) ? $settings['wasabi_storage_validation'] : '';
-
                 } else if ($settings['storage_setting'] == 's3') {
                     config(
                         [
@@ -4160,7 +4177,6 @@ class Utility extends Model
                     );
                     $max_size = !empty($settings['s3_max_upload_size']) ? $settings['s3_max_upload_size'] : '2048';
                     $mimes = !empty($settings['s3_storage_validation']) ? $settings['s3_storage_validation'] : '';
-
                 } else {
 
                     $max_size = !empty($settings['local_storage_max_upload_size']) ? $settings['local_storage_max_upload_size'] : '20480000000';
@@ -4179,7 +4195,6 @@ class Utility extends Model
                         'mimes:' . $mimes,
                         'max:' . $max_size,
                     ];
-
                 }
 
                 $validator = \Validator::make($request->all(), [
@@ -4228,7 +4243,6 @@ class Utility extends Model
                     ];
                     return $res;
                 }
-
             } else {
                 $res = [
                     'flag' => 0,
@@ -4236,7 +4250,6 @@ class Utility extends Model
                 ];
                 return $res;
             }
-
         } catch (\Exception $e) {
 
             $res = [
@@ -4271,7 +4284,6 @@ class Utility extends Model
 
                     $max_size = !empty($settings['wasabi_max_upload_size']) ? $settings['wasabi_max_upload_size'] : '2048';
                     $mimes = !empty($settings['wasabi_storage_validation']) ? $settings['wasabi_storage_validation'] : '';
-
                 } else if ($settings['storage_setting'] == 's3') {
                     config(
                         [
@@ -4284,7 +4296,6 @@ class Utility extends Model
                     );
                     $max_size = !empty($settings['s3_max_upload_size']) ? $settings['s3_max_upload_size'] : '2048';
                     $mimes = !empty($settings['s3_storage_validation']) ? $settings['s3_storage_validation'] : '';
-
                 } else {
                     $max_size = !empty($settings['local_storage_max_upload_size']) ? $settings['local_storage_max_upload_size'] : '2048';
 
@@ -4301,7 +4312,6 @@ class Utility extends Model
                         'mimes:' . $mimes,
                         'max:' . $max_size,
                     ];
-
                 }
                 $validator = \Validator::make($request->all(), [
                     $name => $validation,
@@ -4353,7 +4363,6 @@ class Utility extends Model
                     ];
                     return $res;
                 }
-
             } else {
                 $res = [
                     'flag' => 0,
@@ -4361,7 +4370,6 @@ class Utility extends Model
                 ];
                 return $res;
             }
-
         } catch (\Exception $e) {
             $res = [
                 'flag' => 0,
@@ -4406,9 +4414,13 @@ class Utility extends Model
 
     public static function getStorageSetting()
     {
-        $data = DB::table('settings');
-        $data = $data->where('created_by', '=', 1);
-        $data = $data->get();
+        if (!Schema::hasTable('settings')) {
+            $data = collect();
+        } else {
+            $data = DB::table('settings');
+            $data = $data->where('created_by', '=', 1);
+            $data = $data->get();
+        }
         $settings = [
             "storage_setting" => "local",
             "local_storage_validation" => "jpg,jpeg,png,xlsx,xls,csv,pdf",
@@ -4493,7 +4505,6 @@ class Utility extends Model
         } else {
             return 11;
         }
-
     }
 
     public static $colorCode = [
@@ -4671,9 +4682,17 @@ class Utility extends Model
     //start for cookie settings
     public static function getCookieSetting()
     {
-        $data = \DB::table('settings')->whereIn('name', ['enable_cookie', 'cookie_logging', 'cookie_title',
-            'cookie_description', 'necessary_cookies', 'strictly_cookie_title',
-            'strictly_cookie_description', 'more_information_description', 'contactus_url'])->get();
+        $data = \DB::table('settings')->whereIn('name', [
+            'enable_cookie',
+            'cookie_logging',
+            'cookie_title',
+            'cookie_description',
+            'necessary_cookies',
+            'strictly_cookie_title',
+            'strictly_cookie_description',
+            'more_information_description',
+            'contactus_url'
+        ])->get();
         $settings = [
             'enable_cookie' => 'off',
             'necessary_cookies' => 'on',
@@ -4704,7 +4723,6 @@ class Utility extends Model
             } else {
                 return 'desktop';
             }
-
         }
     }
     //end for cookie settings
@@ -4727,7 +4745,6 @@ class Utility extends Model
 
         $user->save();
         return 1;
-
     }
 
     public static function changeStorageLimit($company_id, $file_path)
@@ -4754,7 +4771,6 @@ class Utility extends Model
         }
 
         return true;
-
     }
     // end for (plans) storage limit - for file upload size
 
@@ -4856,10 +4872,13 @@ class Utility extends Model
 
 
         // foreach ($types as $type) {
-        $total = AddTransactionLine::
-            select('chart_of_accounts.id', 'chart_of_accounts.code', 'chart_of_accounts.name',
+        $total = AddTransactionLine::select(
+            'chart_of_accounts.id',
+            'chart_of_accounts.code',
+            'chart_of_accounts.name',
             \DB::raw('sum(debit) as totalDebit'),
-            \DB::raw('sum(credit) as totalCredit'));
+            \DB::raw('sum(credit) as totalCredit')
+        );
         $total->leftjoin('chart_of_accounts', 'add_transaction_lines.account_id', 'chart_of_accounts.id');
         $total->leftjoin('chart_of_account_types', 'chart_of_accounts.type', 'chart_of_account_types.id');
         // $total->where('chart_of_accounts.type', $type->id);
@@ -4877,13 +4896,11 @@ class Utility extends Model
         foreach ($total as $key => $record) {
             $totalDebit = $record['totalDebit'];
             $totalCredit = $record['totalCredit'];
-
         }
 
         $balance += $totalCredit - $totalDebit;
 
         return $balance;
-
     }
 
     public static function getAccountData($account_id, $start_date = null, $end_date = null)
@@ -4934,7 +4951,6 @@ class Utility extends Model
 
 
         return $transactionData;
-
     }
     //end for chartOfAccount data show
 
@@ -4974,14 +4990,14 @@ class Utility extends Model
         }
     }
 
-    public static function addOnlinePaymentData($payment , $invoice , $payment_type)
+    public static function addOnlinePaymentData($payment, $invoice, $payment_type)
     {
-        $account = BankAccount::where('created_by' , $invoice->created_by)->where('payment_name',$payment_type)->first();
+        $account = BankAccount::where('created_by', $invoice->created_by)->where('payment_name', $payment_type)->first();
 
         $get_account = ChartOfAccount::find($account->chart_account_id);
 
         $data = [
-            'account_id'         => !empty($get_account)? $get_account->id : 0,
+            'account_id'         => !empty($get_account) ? $get_account->id : 0,
             'transaction_type'   => 'debit',
             'transaction_amount' => $payment->amount,
             'reference'          => 'Invoice Payment',
@@ -4992,7 +5008,7 @@ class Utility extends Model
         ];
         self::addTransactionLines($data);
 
-        $account = ChartOfAccount::where('name','Accounts Receivable')->where('created_by' , $invoice->created_by)->first();
+        $account = ChartOfAccount::where('name', 'Accounts Receivable')->where('created_by', $invoice->created_by)->first();
         $data    = [
             'account_id'         => !empty($account) ? $account->id : 0,
             'transaction_type'   => 'credit',
@@ -5006,24 +5022,21 @@ class Utility extends Model
         self::addTransactionLines($data);
     }
 
-    public static function addTransactionLines($data , $action = '' , $type = '')    
+    public static function addTransactionLines($data, $action = '', $type = '')
     {
-        if($type == 'notes')
-        {
+        if ($type == 'notes') {
             $existingTransaction = AddTransactionLine::where('reference', $data['reference'])
-            ->where('reference_id', $data['reference_id'])
-            ->where('reference_sub_id', $data['reference_sub_id'])
-            ->first();
-        }
-        else
-        {
+                ->where('reference_id', $data['reference_id'])
+                ->where('reference_sub_id', $data['reference_sub_id'])
+                ->first();
+        } else {
             $existingTransaction = AddTransactionLine::where('account_id', $data['account_id'])
                 ->where('reference', $data['reference'])
                 ->where('reference_id', $data['reference_id'])
                 ->where('reference_sub_id', $data['reference_sub_id'])
                 ->first();
         }
-        
+
         if ($existingTransaction && $action == 'edit') {
             $transactionLines = $existingTransaction;
         } else {
@@ -5057,10 +5070,12 @@ class Utility extends Model
             $taxData = Utility::getTaxData();
 
             $InvoiceProducts = \DB::table('invoice_products')
-                ->select('invoice_products.invoice_id as invoice',
+                ->select(
+                    'invoice_products.invoice_id as invoice',
                     \DB::raw('SUM(quantity) as total_quantity'),
                     \DB::raw('SUM(discount) as total_discount'),
-                    \DB::raw('SUM(price * quantity)  as sub_total'))
+                    \DB::raw('SUM(price * quantity)  as sub_total')
+                )
                 ->selectRaw('(SELECT SUM((price * quantity - discount) * (taxes.rate / 100)) FROM invoice_products
                     LEFT JOIN taxes ON FIND_IN_SET(taxes.id, invoice_products.tax) > 0
                     WHERE invoice_products.invoice_id = invoices.id) as tax_values')
@@ -5091,10 +5106,12 @@ class Utility extends Model
         if (self::$billProductsData === null) {
             $taxData = Utility::getTaxData();
             $BillProducts = \DB::table('bill_products')
-                ->select('bill_products.bill_id as bill',
+                ->select(
+                    'bill_products.bill_id as bill',
                     \DB::raw('SUM(quantity) as total_quantity'),
                     \DB::raw('SUM(discount) as total_discount'),
-                    \DB::raw('SUM(bill_products.price * quantity)  as sub_total'))
+                    \DB::raw('SUM(bill_products.price * quantity)  as sub_total')
+                )
                 ->selectRaw('(SELECT SUM(bill_accounts.price) FROM bill_accounts
                     WHERE bill_accounts.ref_id = bills.id) as acc_price')
                 ->selectRaw('(SELECT SUM((price * quantity - discount) * (taxes.rate / 100)) FROM bill_products
@@ -5181,7 +5198,6 @@ class Utility extends Model
                     $yearArr = array_slice($categoryData[$key], $i, 12);
                     $chartArr[] = array_sum($yearArr);
                 }
-
             } else {
                 $chartArr = $categoryData[$key];
                 $billchartArr = $categoryData[$key];
@@ -5622,23 +5638,19 @@ class Utility extends Model
         }
     }
 
-    public static function referralTransaction($plan , $company= '')
+    public static function referralTransaction($plan, $company = '')
     {
-        if($company != '')
-        {
+        if ($company != '') {
             $objUser = $company;
-        }
-        else
-        {
+        } else {
             $objUser = \Auth::user();
         }
 
-        $user = ReferralTransaction::where('company_id',$objUser->id)->first();
+        $user = ReferralTransaction::where('company_id', $objUser->id)->first();
 
-        $referralSetting = ReferralSetting::where('created_by' , 1)->first();
+        $referralSetting = ReferralSetting::where('created_by', 1)->first();
 
-        if($objUser->used_referral_code != 0 && $user == null && (isset($referralSetting) && $referralSetting->is_enable == 1))
-        {
+        if ($objUser->used_referral_code != 0 && $user == null && (isset($referralSetting) && $referralSetting->is_enable == 1)) {
             $transaction         = new ReferralTransaction();
             $transaction->company_id = $objUser->id;
             $transaction->plan_id = $plan->id;
@@ -5647,8 +5659,8 @@ class Utility extends Model
             $transaction->referral_code = $objUser->used_referral_code;
             $transaction->save();
 
-            $commissionAmount  = ($plan->price * $referralSetting->percentage)/100;
-            $user = User::where('referral_code' , $objUser->used_referral_code)->first();
+            $commissionAmount  = ($plan->price * $referralSetting->percentage) / 100;
+            $user = User::where('referral_code', $objUser->used_referral_code)->first();
 
             $user->commission_amount = $user->commission_amount + $commissionAmount;
             $user->save();
@@ -5670,11 +5682,11 @@ class Utility extends Model
                     $max_size = !empty($settings['local_storage_max_upload_size']) ? $settings['local_storage_max_upload_size'] : '2048';
                     $mimes =  !empty($settings['local_storage_validation']) ? $settings['local_storage_validation'] : '';
                 }
-                    $res = [
-                        'types'  => $mimes,
-                        'max_size'  => $max_size,
-                    ];
-                    return $res;
+                $res = [
+                    'types'  => $mimes,
+                    'max_size'  => $max_size,
+                ];
+                return $res;
             } else {
                 $res = [
                     'flag' => 0,
@@ -5708,10 +5720,10 @@ class Utility extends Model
             //     }
             // } else {
             //     // If you pass table name
-                // $table = $input;
+            // $table = $input;
             // }
 
-            if(Schema::hasTable($input)){
+            if (Schema::hasTable($input)) {
                 $tableFields = Schema::getColumnListing($input);
             } else {
                 return [

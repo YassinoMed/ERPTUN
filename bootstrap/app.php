@@ -33,11 +33,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // middlewareGroups / Group Middleware
         $middleware->web(append: [
             \App\Http\Middleware\FilterRequest::class,
+            \App\Http\Middleware\ServiceRoutingGuard::class,
         ]);
 
         // Append middleware to the 'api' group
         $middleware->appendToGroup('api', [
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            \App\Http\Middleware\ServiceRoutingGuard::class,
         ]);
 
 

@@ -18,6 +18,24 @@
             'hrm' => 0,
             'project' => 0,
             'pos' => 0,
+            'production' => 0,
+            'integrations' => 0,
+            'sales' => 0,
+            'wms' => 0,
+            'mrp' => 0,
+            'quality' => 0,
+            'maintenance' => 0,
+            'enterprise_accounting' => 0,
+            'approvals' => 0,
+            'hr_ops' => 0,
+            'saas' => 0,
+            'chatgpt' => 0,
+            'hotel' => 0,
+            'traceability' => 0,
+            'crop_planning' => 0,
+            'cooperative' => 0,
+            'hedging' => 0,
+            'storage_limit' => 0,
         ];
     }
 @endphp
@@ -388,7 +406,7 @@
                         Gate::check('manage leave') || Gate::check('manage attendance') ||
                         Gate::check('create attendance') || Gate::check('manage indicator') ||
                         Gate::check('manage appraisal') || Gate::check('manage goal tracking') ||
-                        Gate::check('manage training') || Gate::check('manage trainer') ||
+                        Gate::check('manage training') || Gate::check('manage education') || Gate::check('manage trainer') ||
                         Gate::check('manage job') || Gate::check('create job') ||
                         Gate::check('manage job application') || Gate::check('manage custom question') ||
                         Gate::check('manage job onBoard') || Gate::check('show interview schedule') ||
@@ -425,7 +443,7 @@
                             Request::segment(1) == 'leave_requests' || Request::segment(1) == 'holidays' ||
                             Request::segment(1) == 'policies' || Request::segment(1) == 'leave_calender' ||
                             Request::segment(1) == 'award' || Request::segment(1) == 'transfer' ||
-                            Request::segment(1) == 'resignation' || Request::segment(1) == 'training' ||
+                            Request::segment(1) == 'resignation' || Request::segment(1) == 'training' || Request::segment(1) == 'education' ||
                             Request::segment(1) == 'travel' || Request::segment(1) == 'promotion' ||
                             Request::segment(1) == 'complaint' || Request::segment(1) == 'warning' ||
                             Request::segment(1) == 'termination' || Request::segment(1) == 'announcement' ||
@@ -567,10 +585,10 @@
                                     </li>
                                 @endif
 
-                                @if (Gate::check('manage training') || Gate::check('manage trainer') || Gate::check('show training'))
-                                    <li class="dash-item dash-hasmenu {{ Request::segment(1) == 'trainer' || Request::segment(1) == 'training' ? 'active dash-trigger' : '' }}"
+                                @if (Gate::check('manage training') || Gate::check('manage education') || Gate::check('manage trainer') || Gate::check('show training'))
+                                    <li class="dash-item dash-hasmenu {{ Request::segment(1) == 'trainer' || Request::segment(1) == 'training' || Request::segment(1) == 'education' ? 'active dash-trigger' : '' }}"
                                         href="#navbar-training" data-toggle="collapse" role="button"
-                                        aria-expanded="{{ Request::segment(1) == 'trainer' || Request::segment(1) == 'training' ? 'true' : 'false' }}">
+                                        aria-expanded="{{ Request::segment(1) == 'trainer' || Request::segment(1) == 'training' || Request::segment(1) == 'education' ? 'true' : 'false' }}">
                                         <a class="dash-link" href="#">{{ __('Training Setup') }}<span
                                                 class="dash-arrow"><i data-feather="chevron-right"></i></span></a>
                                         <ul class="dash-submenu">
@@ -578,6 +596,12 @@
                                                 <li class="dash-item {{ request()->is('training*') ? 'active' : '' }}">
                                                     <a class="dash-link"
                                                         href="{{ route('training.index') }}">{{ __('Training List') }}</a>
+                                                </li>
+                                            @endcan
+                                            @can('manage education')
+                                                <li class="dash-item {{ request()->is('education*') ? 'active' : '' }}">
+                                                    <a class="dash-link"
+                                                        href="{{ route('education.index') }}">{{ __('Education') }}</a>
                                                 </li>
                                             @endcan
                                             @can('manage trainer')
@@ -819,7 +843,7 @@
                             Gate::check('manage constant custom field') || Gate::check('manage print settings') ||
                             Gate::check('manage customer') || Gate::check('manage vender') ||
                             Gate::check('manage proposal') || Gate::check('manage bank account') ||
-                            Gate::check('manage bank transfer') || Gate::check('manage invoice') ||
+                            Gate::check('manage bank transfer') || Gate::check('manage cheque') || Gate::check('manage invoice') ||
                             Gate::check('manage revenue') || Gate::check('manage credit note') ||
                             Gate::check('manage bill') || Gate::check('manage payment') ||
                             Gate::check('manage debit note') || Gate::check('manage chart of account') ||
@@ -830,7 +854,7 @@
                                         {{ Request::route()->getName() == 'print-setting' ||
                                         Request::segment(1) == 'customer' || Request::segment(1) == 'vender' ||
                                         Request::segment(1) == 'proposal' || Request::segment(1) == 'bank-account' ||
-                                        Request::segment(1) == 'bank-transfer' || Request::segment(1) == 'invoice' ||
+                                        Request::segment(1) == 'bank-transfer' || Request::segment(1) == 'cheques' || Request::segment(1) == 'invoice' ||
                                         Request::segment(1) == 'revenue' || Request::segment(1) == 'credit-note' ||
                                         Request::segment(1) == 'taxes' || Request::segment(1) == 'product-category' ||
                                         Request::segment(1) == 'product-unit' || Request::segment(1) == 'payment-method' ||
@@ -851,9 +875,9 @@
                             </a>
                             <ul class="dash-submenu">
 
-                                @if (Gate::check('manage bank account') || Gate::check('manage bank transfer'))
+                                @if (Gate::check('manage bank account') || Gate::check('manage bank transfer') || Gate::check('manage cheque'))
                                     <li
-                                        class="dash-item dash-hasmenu {{ Request::segment(1) == 'bank-account' || Request::segment(1) == 'bank-transfer' ? 'active dash-trigger' : '' }}">
+                                        class="dash-item dash-hasmenu {{ Request::segment(1) == 'bank-account' || Request::segment(1) == 'bank-transfer' || Request::segment(1) == 'cheques' ? 'active dash-trigger' : '' }}">
                                         <a class="dash-link" href="#">{{ __('Banking') }}<span
                                                 class="dash-arrow"><i data-feather="chevron-right"></i></span></a>
                                         <ul class="dash-submenu">
@@ -867,6 +891,13 @@
                                                 <a class="dash-link"
                                                     href="{{ route('bank-transfer.index') }}">{{ __('Transfer') }}</a>
                                             </li>
+                                            @if (Gate::check('manage cheque'))
+                                                <li
+                                                    class="dash-item {{ Request::segment(1) == 'cheques' ? 'active' : '' }}">
+                                                    <a class="dash-link"
+                                                        href="{{ route('cheques.index') }}">{{ __('Cheques') }}</a>
+                                                </li>
+                                            @endif
                                         </ul>
                                     </li>
                                 @endif
@@ -1129,6 +1160,142 @@
                 @endif
 
                 <!--------------------- End CRM ----------------------------------->
+
+                <!--------------------- Start Medical ----------------------------------->
+                @if (Gate::check('manage patient') || Gate::check('manage medical appointment'))
+                    <li
+                        class="dash-item dash-hasmenu {{ Request::segment(1) == 'patients' || Request::segment(1) == 'medical-appointments' ? ' active dash-trigger' : '' }}">
+                        <a href="#!" class="dash-link"><span class="dash-micon"><i
+                                    class="ti ti-heartbeat"></i></span><span
+                                class="dash-mtext">{{ __('Medical System') }}</span><span class="dash-arrow"><i
+                                    data-feather="chevron-right"></i></span></a>
+                        <ul class="dash-submenu">
+                            @if (Gate::check('manage patient'))
+                                <li
+                                    class="dash-item {{ Request::segment(1) == 'patients' ? 'active' : '' }}">
+                                    <a class="dash-link"
+                                        href="{{ route('patients.index') }}">{{ __('Patients') }}</a>
+                                </li>
+                            @endif
+                            @if (Gate::check('manage medical appointment'))
+                                <li
+                                    class="dash-item {{ Request::segment(1) == 'medical-appointments' ? 'active' : '' }}">
+                                    <a class="dash-link"
+                                        href="{{ route('medical-appointments.index') }}">{{ __('Appointments') }}</a>
+                                </li>
+                            @endif
+                        </ul>
+                    </li>
+                @endif
+                <!--------------------- End Medical ----------------------------------->
+
+                @if (!empty($userPlan) && $userPlan->hotel == 1 && (Gate::check('manage hotel channel') || Gate::check('manage hotel pricing') || Gate::check('manage hotel housekeeping') || Gate::check('manage hotel upsell')))
+                    <li
+                        class="dash-item dash-hasmenu {{ Request::segment(1) == 'hotel' ? ' active dash-trigger' : '' }}">
+                        <a href="#!" class="dash-link"><span class="dash-micon"><i
+                                    class="ti ti-building-skyscraper"></i></span><span
+                                class="dash-mtext">{{ __('Hotel Management') }}</span><span class="dash-arrow"><i
+                                    data-feather="chevron-right"></i></span></a>
+                        <ul class="dash-submenu {{ Request::segment(1) == 'hotel' ? 'show' : '' }}">
+                            @can('manage hotel channel')
+                                <li class="dash-item {{ Request::segment(2) == 'channels' ? 'active' : '' }}">
+                                    <a class="dash-link"
+                                        href="{{ route('hotel.channels.index') }}">{{ __('Channel Manager') }}</a>
+                                </li>
+                            @endcan
+                            @can('manage hotel pricing')
+                                <li class="dash-item {{ Request::segment(2) == 'yield' ? 'active' : '' }}">
+                                    <a class="dash-link"
+                                        href="{{ route('hotel.yield.index') }}">{{ __('Yield Management') }}</a>
+                                </li>
+                            @endcan
+                            @can('manage hotel housekeeping')
+                                <li class="dash-item {{ Request::segment(2) == 'housekeeping' ? 'active' : '' }}">
+                                    <a class="dash-link"
+                                        href="{{ route('hotel.housekeeping.index') }}">{{ __('Housekeeping') }}</a>
+                                </li>
+                            @endcan
+                            @can('manage hotel upsell')
+                                <li class="dash-item {{ Request::segment(2) == 'upsell' ? 'active' : '' }}">
+                                    <a class="dash-link"
+                                        href="{{ route('hotel.upsell.index') }}">{{ __('Upsell & Packages') }}</a>
+                                </li>
+                            @endcan
+                        </ul>
+                    </li>
+                @endif
+
+                @if (!empty($userPlan) && ($userPlan->traceability == 1 || $userPlan->crop_planning == 1 || $userPlan->cooperative == 1 || $userPlan->hedging == 1) && (Gate::check('manage agri traceability') || Gate::check('manage agri planning') || Gate::check('manage agri cooperative') || Gate::check('manage agri hedging')))
+                    <li
+                        class="dash-item dash-hasmenu {{ Request::segment(1) == 'agri' ? ' active dash-trigger' : '' }}">
+                        <a href="#!" class="dash-link"><span class="dash-micon"><i
+                                    class="ti ti-leaf"></i></span><span
+                                class="dash-mtext">{{ __('Agriculture Advanced') }}</span><span class="dash-arrow"><i
+                                    data-feather="chevron-right"></i></span></a>
+                        <ul class="dash-submenu {{ Request::segment(1) == 'agri' ? 'show' : '' }}">
+                            @if ($userPlan->traceability == 1 && Gate::check('manage agri traceability'))
+                                <li class="dash-item {{ Request::segment(2) == 'traceability' ? 'active' : '' }}">
+                                    <a class="dash-link"
+                                        href="{{ route('agri.traceability.index') }}">{{ __('Traceability') }}</a>
+                                </li>
+                            @endif
+                            @if ($userPlan->crop_planning == 1 && Gate::check('manage agri planning'))
+                                <li class="dash-item {{ Request::segment(2) == 'planning' ? 'active' : '' }}">
+                                    <a class="dash-link"
+                                        href="{{ route('agri.planning.index') }}">{{ __('Crop Planning') }}</a>
+                                </li>
+                            @endif
+                            @if ($userPlan->cooperative == 1 && Gate::check('manage agri cooperative'))
+                                <li class="dash-item {{ Request::segment(2) == 'cooperatives' ? 'active' : '' }}">
+                                    <a class="dash-link"
+                                        href="{{ route('agri.cooperatives.index') }}">{{ __('Cooperatives') }}</a>
+                                </li>
+                            @endif
+                            @if ($userPlan->hedging == 1 && Gate::check('manage agri hedging'))
+                                <li class="dash-item {{ Request::segment(2) == 'contracts' ? 'active' : '' }}">
+                                    <a class="dash-link"
+                                        href="{{ route('agri.contracts.index') }}">{{ __('Purchase Contracts') }}</a>
+                                </li>
+                            @endif
+                        </ul>
+                    </li>
+                @endif
+
+                @if (!empty($userPlan) && (data_get($userPlan, 'btp_site_tracking', 0) == 1 || data_get($userPlan, 'btp_subcontractors', 0) == 1 || data_get($userPlan, 'btp_price_breakdowns', 0) == 1 || data_get($userPlan, 'btp_equipment_control', 0) == 1) && (Gate::check('manage btp site tracking') || Gate::check('manage btp subcontractors') || Gate::check('manage btp price breakdowns') || Gate::check('manage btp equipment control')))
+                    <li
+                        class="dash-item dash-hasmenu {{ Request::segment(1) == 'btp' ? ' active dash-trigger' : '' }}">
+                        <a href="#!" class="dash-link"><span class="dash-micon"><i
+                                    class="ti ti-building"></i></span><span
+                                class="dash-mtext">{{ __('BTP Advanced') }}</span><span class="dash-arrow"><i
+                                    data-feather="chevron-right"></i></span></a>
+                        <ul class="dash-submenu {{ Request::segment(1) == 'btp' ? 'show' : '' }}">
+                            @if (data_get($userPlan, 'btp_site_tracking', 0) == 1 && Gate::check('manage btp site tracking'))
+                                <li class="dash-item {{ Request::segment(2) == 'site-tracking' ? 'active' : '' }}">
+                                    <a class="dash-link"
+                                        href="{{ route('btp.site-tracking.index') }}">{{ __('Site Tracking') }}</a>
+                                </li>
+                            @endif
+                            @if (data_get($userPlan, 'btp_subcontractors', 0) == 1 && Gate::check('manage btp subcontractors'))
+                                <li class="dash-item {{ Request::segment(2) == 'subcontractors' ? 'active' : '' }}">
+                                    <a class="dash-link"
+                                        href="{{ route('btp.subcontractors.index') }}">{{ __('Subcontractors') }}</a>
+                                </li>
+                            @endif
+                            @if (data_get($userPlan, 'btp_price_breakdowns', 0) == 1 && Gate::check('manage btp price breakdowns'))
+                                <li class="dash-item {{ Request::segment(2) == 'price-breakdowns' ? 'active' : '' }}">
+                                    <a class="dash-link"
+                                        href="{{ route('btp.price-breakdowns.index') }}">{{ __('Price Breakdown') }}</a>
+                                </li>
+                            @endif
+                            @if (data_get($userPlan, 'btp_equipment_control', 0) == 1 && Gate::check('manage btp equipment control'))
+                                <li class="dash-item {{ Request::segment(2) == 'equipment-control' ? 'active' : '' }}">
+                                    <a class="dash-link"
+                                        href="{{ route('btp.equipment-control.index') }}">{{ __('Equipment Control') }}</a>
+                                </li>
+                            @endif
+                        </ul>
+                    </li>
+                @endif
 
                 <!--------------------- Start Project ----------------------------------->
 

@@ -1,0 +1,11 @@
+{
+    "name": "Btp",
+    "alias": "btp",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Btp\\Providers\\BtpServiceProvider"
+    ],
+    "files": []
+}

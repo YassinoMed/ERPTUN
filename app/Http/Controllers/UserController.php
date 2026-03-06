@@ -405,9 +405,7 @@ class UserController extends Controller
             } else {
                 return redirect()->route('profile', \Auth::user()->id)->with('error', __($path['msg']));
             }
-        }
 
-        if (!empty($request->profile)) {
             $user['avatar'] = $fileNameToStore;
         }
         $user['name'] = $request['name'];
