@@ -19,6 +19,9 @@ $profile=\App\Models\Utility::get_file('uploads/avatar/');
 @section('page-title')
     {{__('Manage Customers')}}
 @endsection
+@section('page-subtitle')
+    {{ __('Track customer health, credit exposure and recent commercial activity from one place.') }}
+@endsection
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{route('dashboard')}}">{{__('Dashboard')}}</a></li>
     <li class="breadcrumb-item">{{__('Customer')}}</li>
@@ -40,10 +43,45 @@ $profile=\App\Models\Utility::get_file('uploads/avatar/');
 @endsection
 
 @section('content')
+    @php
+        $activeCustomers = $customers->where('is_active', 1)->count();
+        $limitedCreditCustomers = $customers->filter(function ($customer) {
+            return (float) ($customer['credit_limit'] ?? 0) > 0;
+        })->count();
+        $totalCreditExposure = $customers->sum(function ($customer) {
+            return (float) ($customer['credit_balance'] ?? 0);
+        });
+        $customersOnHold = $customers->filter(function ($customer) {
+            return (int) ($customer['credit_hold'] ?? 0) === 1;
+        })->count();
+    @endphp
+
+    <div class="ux-kpi-grid mb-4">
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __('Active customers') }}</span>
+            <strong class="ux-kpi-value">{{ $activeCustomers }}</strong>
+            <span class="ux-kpi-meta">{{ __('of :count total records', ['count' => $customers->count()]) }}</span>
+        </div>
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __('Customers with credit policy') }}</span>
+            <strong class="ux-kpi-value">{{ $limitedCreditCustomers }}</strong>
+            <span class="ux-kpi-meta">{{ __('controlled accounts') }}</span>
+        </div>
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __('Current credit exposure') }}</span>
+            <strong class="ux-kpi-value">{{ \Auth::user()->priceFormat($totalCreditExposure) }}</strong>
+            <span class="ux-kpi-meta">{{ __('open receivables under credit') }}</span>
+        </div>
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __('Customers on hold') }}</span>
+            <strong class="ux-kpi-value">{{ $customersOnHold }}</strong>
+            <span class="ux-kpi-meta">{{ __('validation blocked') }}</span>
+        </div>
+    </div>
 
     <div class="row">
         <div class="col-md-12">
-            <div class="card">
+            <div class="card ux-list-card">
                 <div class="card-body table-border-style">
                     <div class="table-responsive">
                         <table class="table datatable">
@@ -54,12 +92,14 @@ $profile=\App\Models\Utility::get_file('uploads/avatar/');
                                 <th> {{__('Contact')}}</th>
                                 <th> {{__('Email')}}</th>
                                 <th> {{__('Balance')}}</th>
+                                <th> {{__('Credit Limit')}}</th>
+                                <th> {{__('Credit Used')}}</th>
                                 <th>{{__('Action')}}</th>
                             </tr>
                             </thead>
                             <tbody>
                             @foreach ($customers as $k=>$customer)
-                                <tr class="cust_tr" id="cust_detail" data-url="{{route('customer.show',$customer['id'])}}" data-id="{{$customer['id']}}">
+                                <tr class="cust_tr" id="cust_detail" data-url="{{route('customer.show',$customer['id'])}}" data-id="{{$customer['id']}}" data-bulk-id="{{$customer['id']}}">
                                     <td class="Id">
                                         @can('show customer')
                                             <a href="{{ route('customer.show',\Crypt::encrypt($customer['id'])) }}" class="btn btn-outline-primary">
@@ -75,6 +115,8 @@ $profile=\App\Models\Utility::get_file('uploads/avatar/');
                                     <td>{{$customer['contact']}}</td>
                                     <td>{{$customer['email']}}</td>
                                     <td>{{\Auth::user()->priceFormat($customer['balance'])}}</td>
+                                    <td>{{ (float)($customer['credit_limit'] ?? 0) > 0 ? \Auth::user()->priceFormat($customer['credit_limit']) : __('Unlimited') }}</td>
+                                    <td>{{\Auth::user()->priceFormat($customer['credit_balance'] ?? 0)}}</td>
                                     <td class="Action">
                                         <span>
                                         @if($customer['is_active']==0)

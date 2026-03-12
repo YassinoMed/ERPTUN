@@ -1,0 +1,658 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage[a4paper,margin=2.2cm]{geometry}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{titlesec}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    pdftitle={Documentation complete ERP},
+    pdfauthor={Codex}
+}
+
+\titleformat{\section}{\large\bfseries}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.6em}{}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\title{Documentation complete de l'ERP}
+\author{Reference fonctionnelle et technique}
+\date{12 mars 2026}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Objet du document}
+Ce document decrit l'ERP Laravel modulaire present dans le projet \texttt{main-file}. Il centralise les axes fonctionnels, les modules, les fonctionnalites, les briques transverses, les verticales metier, les composants SaaS et les services techniques deja integres dans l'application.
+
+Le document couvre:
+\begin{itemize}[leftmargin=1.2cm]
+    \item l'architecture generale de l'ERP;
+    \item les domaines fonctionnels transverses;
+    \item les modules metier par verticale;
+    \item les fonctions SaaS, securite, API, workflows et UX;
+    \item l'etat de couverture fonctionnelle de la plateforme.
+\end{itemize}
+
+\section{Vue d'ensemble de la plateforme}
+\subsection{Nature du produit}
+L'application est un ERP SaaS multi-tenant construit sur Laravel et organise autour:
+\begin{itemize}[leftmargin=1.2cm]
+    \item d'un coeur applicatif dans \texttt{app/};
+    \item de modules additionnels dans \texttt{Modules/};
+    \item d'une couche Blade pour l'interface;
+    \item d'un modele de permissions, plans SaaS et activation par modules;
+    \item de services transverses pour les settings, logs, numerotation, audit, workflow, automation, securite et API.
+\end{itemize}
+
+\subsection{Axes couverts}
+\begin{itemize}[leftmargin=1.2cm]
+    \item ERP generaliste: CRM, ventes, achats, stock, finance, RH, projets.
+    \item Operations: production, maintenance, qualite, WMS, POS, livraison.
+    \item Verticales: industrie, agroalimentaire, medical, immobilier, assurance.
+    \item Corporate: gouvernance, filiales, innovation, documentation, conformite.
+    \item SaaS: plans, addons, onboarding tenant, quotas, portail, API.
+\end{itemize}
+
+\section{Architecture fonctionnelle}
+\subsection{Socle transverse}
+\begin{longtable}{p{4cm}p{10cm}}
+\toprule
+\textbf{Bloc} & \textbf{Capacites principales} \\
+\midrule
+Core system & settings centralises, numerotation centralisee, audit trail commun, recherche globale, notifications, saved views, timeline, notes internes \\
+Securite & scopes d'acces, IP restrictions, sessions actives, logs sensibles, centre securite, 2FA, audit des droits \\
+SaaS & plans, modules par plan, addons, onboarding, usages, centre d'aide, plan requests, monitoring quotas \\
+Workflow \& automation & approval flows, approval requests, regles d'automation, API clients, imports/exports, rapports planifies \\
+UX transverse & shell admin modernise, executive dashboard, workspace navigation, centre de notifications, responsive des listes critiques \\
+\bottomrule
+\end{longtable}
+
+\subsection{Organisation modulaire}
+Les modules detectes dans \texttt{Modules/} couvrent notamment:
+\begin{itemize}[leftmargin=1.2cm]
+    \item \texttt{Accounting}, \texttt{Billing}, \texttt{Sales}, \texttt{Crm};
+    \item \texttt{Inventory}, \texttt{Wms}, \texttt{Pos}, \texttt{LogisticsDelivery};
+    \item \texttt{Production}, \texttt{Mrp}, \texttt{Quality}, \texttt{Maintenance}, \texttt{Industry};
+    \item \texttt{CropPlanning}, \texttt{Traceability}, \texttt{Cooperative}, \texttt{Hedging};
+    \item \texttt{ClientPortal}, \texttt{SupplierPortal}, \texttt{KnowledgeBase}, \texttt{DocumentManagement};
+    \item \texttt{Approvals}, \texttt{WorkflowDesigner}, \texttt{BusinessIntelligence}, \texttt{ResourcePlanning};
+    \item \texttt{EmployeeSelfService}, \texttt{ExpenseManagement}, \texttt{LearningManagement}, \texttt{LegalManagement};
+    \item \texttt{IotTelemetry}, \texttt{EsgSustainability}, \texttt{FleetManagement}, \texttt{FieldService}, \texttt{AdvancedProcurement}, \texttt{AdvancedCmms}.
+\end{itemize}
+
+\section{Core transverse detaille}
+\subsection{Parametrage et gouvernance du coeur}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Parametres systeme centralises.
+    \item Parametres tenant et options metier.
+    \item Numerotation centralisee des documents.
+    \item Cache transverse pour le coeur.
+    \item Core security center.
+    \item Core consolidation cockpit.
+\end{itemize}
+
+\subsection{Securite, droits et audit}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Roles et permissions.
+    \item Scopes d'acces par \texttt{branch}, \texttt{warehouse} et \texttt{department}.
+    \item Audit trail transverse.
+    \item Logs API.
+    \item Logs d'acces sensibles.
+    \item Revocation de sessions.
+    \item Restriction IP.
+    \item 2FA et backup codes.
+    \item Archivage transverse et restauration.
+    \item Detection et fusion initiale de doublons.
+\end{itemize}
+
+\subsection{Recherche, notifications et experience utilisateur}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Recherche globale factorisee.
+    \item Preferences de notifications.
+    \item Centre de notifications.
+    \item Saved views.
+    \item Timeline transverse.
+    \item Notes internes.
+    \item Dashboard executif.
+    \item Modernisation du shell admin.
+\end{itemize}
+
+\subsection{SaaS et multi-tenant}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Plans SaaS.
+    \item Modules actives par plan.
+    \item Addons.
+    \item Onboarding tenant.
+    \item Usages et quotas.
+    \item Demandes de changement de plan.
+    \item Centre d'aide.
+    \item Plan requests et addon requests.
+\end{itemize}
+
+\subsection{API, imports, exports et reporting transverse}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Clients API et secret rotation.
+    \item Endpoints standardises pour les modules principaux.
+    \item Logs API et cockpit d'administration.
+    \item Imports avec preview.
+    \item Exports asynchrones.
+    \item Rapports sauvegardes et envois planifies.
+    \item Approval requests et automation rules.
+\end{itemize}
+
+\section{Gouvernance et corporate}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Reunions du conseil.
+    \item Cap table / actionnariat.
+    \item Filiales.
+    \item Visiteurs.
+    \item Idees et innovation.
+    \item Consolidation executive sur dashboard.
+\end{itemize}
+
+\section{Documentation, support et GED}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Categories support.
+    \item Knowledge base.
+    \item Repository documentaire.
+    \item Versioning documentaire.
+    \item Historique documentaire.
+    \item Liens documentaires transverses.
+    \item Help center.
+\end{itemize}
+
+\section{CRM, ventes et relation client}
+\subsection{CRM}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Leads.
+    \item Pipelines.
+    \item Deals.
+    \item Sources, labels et suivi commercial.
+    \item Timeline client et dashboards CRM partiellement modernises.
+\end{itemize}
+
+\subsection{Ventes}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Devis et proposals.
+    \item Factures clients.
+    \item Paiements.
+    \item Delivery notes.
+    \item Customer debit notes.
+    \item Historique et analyses commerciales.
+\end{itemize}
+
+\subsection{Credit et recouvrement}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Credit client.
+    \item Limite et exposition.
+    \item Recouvrement client.
+    \item Visualisation du risque client.
+\end{itemize}
+
+\section{Achats, fournisseurs et procurement}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Achats et commandes.
+    \item Bills fournisseurs.
+    \item Paiements fournisseurs.
+    \item Warehouse purchasing.
+    \item Vendor management.
+    \item Vendor rating.
+    \item Procurement avance via modules et retail procurement requests.
+\end{itemize}
+
+\section{Stock, WMS, logistique et POS}
+\subsection{Stock et entrepots}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Produits et services.
+    \item Categories, taxes, unites.
+    \item Warehouses.
+    \item Warehouse transfers.
+    \item Visualisation stock et mouvements.
+\end{itemize}
+
+\subsection{POS et retail}
+\begin{itemize}[leftmargin=1.2cm]
+    \item POS de base.
+    \item Retail operations.
+    \item Caisses.
+    \item Mouvements de caisse.
+    \item Sessions POS.
+    \item Fidelite de base.
+    \item Promotions retail.
+    \item Retail BI.
+    \item Portail client.
+    \item Portail fournisseur.
+    \item Replenishment requests et multi-sites de base.
+\end{itemize}
+
+\subsection{Livraison}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Delivery notes.
+    \item Tournees.
+    \item Transport shipments.
+    \item Tracking operations.
+\end{itemize}
+
+\section{Finance, comptabilite et bancaire}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Chart of accounts.
+    \item Transactions.
+    \item Bank accounts.
+    \item Revenus et depenses.
+    \item Facturation client et fournisseur.
+    \item Tenant billing.
+    \item Paiements en ligne et passerelles multiples.
+\end{itemize}
+
+\section{RH, paie et organisation}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Employes.
+    \item Departements.
+    \item Branches.
+    \item Presence et conges.
+    \item Salaires et paie.
+    \item Recrutement et formation.
+    \item Competences.
+    \item Plan de succession.
+    \item Employee self service via modules existants.
+\end{itemize}
+
+\section{Projets, portefeuille et pilotage}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Projects.
+    \item Project stages et tasks.
+    \item Timesheets.
+    \item PPM portfolios.
+    \item PPM initiatives.
+    \item OKR objectives.
+    \item OKR key results.
+    \item Executive view et priorisation.
+\end{itemize}
+
+\section{Industrie, production, qualite et maintenance}
+\subsection{Production et MRP}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Work centers.
+    \item BOM.
+    \item Production orders.
+    \item Routings.
+    \item Production planning.
+    \item Machine load et labor load.
+    \item Realtime shopfloor.
+    \item Production BI.
+\end{itemize}
+
+\subsection{Ressources industrielles}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Industrial resources.
+    \item Shift teams.
+    \item Sous-traitance industrielle.
+    \item Cost records industriels.
+\end{itemize}
+
+\subsection{Qualite et maintenance}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Quality plans.
+    \item Industrial quality control.
+    \item Maintenance orders.
+    \item Advanced CMMS modules disponibles.
+\end{itemize}
+
+\section{Agroalimentaire, traçabilite et operations agricoles}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Crop planning.
+    \item Cooperative management.
+    \item Agri contracts.
+    \item Traceability.
+    \item Agri lots.
+    \item Weighing.
+    \item Cold room.
+    \item Export shipment.
+    \item FEFO operations.
+    \item Transformation batches.
+    \item Compliance checks.
+    \item Traceability network.
+    \item Agri dashboard et reports.
+\end{itemize}
+
+\section{Medical et clinique}
+\subsection{Socle patient}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Patients.
+    \item Rendez-vous medicaux.
+    \item Consultations.
+    \item Documents patients.
+    \item Consentements patients.
+    \item Audit d'acces au dossier.
+\end{itemize}
+
+\subsection{Operations medicales}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Urgences de base.
+    \item Imagerie de base.
+    \item Soins infirmiers de base.
+    \item Telemedecine de base.
+    \item Laboratory board.
+    \item Surgery board.
+    \item Biomedical board.
+    \item Specialties board.
+    \item Medical reports.
+    \item Patient portal.
+\end{itemize}
+
+\subsection{Finance et exploitation medicales}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Medical services.
+    \item Medical invoices.
+    \item Medical invoice payments.
+    \item Hospital rooms.
+    \item Hospital beds.
+    \item Hospital admissions.
+    \item Pharmacy medications.
+    \item Pharmacy dispensations.
+\end{itemize}
+
+\section{Immobilier, assurance et patrimoine}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Insurance policies.
+    \item Insurance claims.
+    \item Managed properties.
+    \item Property units.
+    \item Property leases.
+    \item Asset management module present dans l'architecture.
+\end{itemize}
+
+\section{Conformite, securite et risque}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Security incidents.
+    \item GDPR register.
+    \item Data consents.
+    \item HSE incidents.
+    \item Legal management module present.
+    \item Governance, risk and compliance modules presents.
+\end{itemize}
+
+\section{ERP metier complementaire}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Internal ITSM.
+    \item Configuration items.
+    \item Software licenses.
+    \item Partner management.
+    \item Event tickets.
+    \item Microfinance loans.
+    \item Leasing contracts.
+    \item Transport shipments.
+    \item LIMS records.
+    \item Product lifecycle records.
+\end{itemize}
+
+\section{Integrations, IA et communications}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Integrations module.
+    \item WhatsApp omnichannel module.
+    \item ChatGPT / AI copilot.
+    \item Payment gateways multiples.
+    \item SMS et notifications.
+    \item API clients et API docs.
+\end{itemize}
+
+\section{Portails, automatisation et services numeriques}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Client portal.
+    \item Supplier portal.
+    \item Employee self service.
+    \item Booking engine.
+    \item Workflow designer.
+    \item SLA management.
+    \item Resource planning.
+    \item Recurring billing.
+    \item Customer subscriptions.
+    \item Contract management.
+\end{itemize}
+
+\section{Qualite, maintenance avancee et operations terrain}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Advanced CMMS.
+    \item Field service.
+    \item Fleet management.
+    \item Advanced procurement.
+    \item Asset management.
+    \item Operations module transverse.
+    \item Maintenance et quality seeders/metiers.
+\end{itemize}
+
+\section{Retail avance, franchise et commerce connecte}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Franchise et multi-site.
+    \item Loyalty rewards.
+    \item Ecommerce connectors.
+    \item Logistics delivery.
+    \item Promotions commerciales multi-magasins.
+    \item Portails commerciaux B2B et B2C internes.
+\end{itemize}
+
+\section{Legal, conformite et gouvernance avancee}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Legal management.
+    \item Governance, risk and compliance.
+    \item ESG sustainability.
+    \item Audit, conformite et preuves documentaires.
+    \item Registres de consentements et traces d'acces.
+\end{itemize}
+
+\section{Hotel, BTP, education et autres verticales}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Hotel operations et channels.
+    \item BTP.
+    \item Education seeding et donnees pedagogiques.
+    \item Learning management.
+    \item HrOps.
+    \item Cooperative et hedging.
+\end{itemize}
+
+\section{IoT, donnees, analytique et intelligence}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Business intelligence.
+    \item IoT telemetry.
+    \item Analytics et KPI.
+    \item Dashboards par domaine.
+    \item Executive overview.
+    \item Reporting transverse et rapports planifies.
+\end{itemize}
+
+\section{Resume par grands domaines}
+\begin{longtable}{p{4.2cm}p{4cm}p{6.5cm}}
+\toprule
+\textbf{Domaine} & \textbf{Etat global} & \textbf{Contenu principal} \\
+\midrule
+Core transverse & Avance & settings, numerotation, audit, securite, recherche, notifications, SaaS, API, reporting transverse \\
+Corporate & Avance & board meetings, cap table, subsidiaries, visitors, innovation \\
+Commercial & Avance & CRM, factures, credit client, recouvrement, delivery notes \\
+Achats & Avance & purchases, bills, vendors, procurement et vendor rating \\
+Stock / WMS / POS & Avance & warehouses, transfers, POS, retail operations, BI retail \\
+Finance & Avance & accounting, banking, invoicing, online payments \\
+RH / Paie & Avance & employees, payroll, recruitment, succession \\
+Projets / Pilotage & Avance & projects, PPM, OKR, NPS \\
+Industrie & Avance & planning, routings, shopfloor, quality, maintenance, cost \\
+Agro & Avance & planning, traceability, FEFO, export, compliance, reports \\
+Medical & Avance & patient, appointments, consultations, pharmacy, hospital, lab/surgery/biomedical, portal \\
+Immobilier / Assurance & Avance & properties, units, leases, policies, claims \\
+Conformite / Risque & Avance & GDPR, consents, incidents, HSE \\
+Portails / SaaS & Avance & client portal, supplier portal, ESS, subscriptions, contracts, addons, plans \\
+Integrations / IA / Analytics & Avance & APIs, webhooks, AI copilot, BI, IoT, reporting, notifications \\
+Autres verticales & Avance & hotel, BTP, education, learning, fleet, field service, legal, ESG \\
+\bottomrule
+\end{longtable}
+
+\section{Modules SaaS exposes dans les plans}
+Les plans SaaS integrement deja un ensemble de flags modules, avec notamment des extensions recentes telles que:
+\begin{itemize}[leftmargin=1.2cm]
+    \item \texttt{board\_meeting}
+    \item \texttt{cap\_table}
+    \item \texttt{subsidiary}
+    \item \texttt{customer\_recovery}
+    \item \texttt{visitor}
+    \item \texttt{innovation\_idea}
+    \item \texttt{knowledge\_base}
+    \item \texttt{document\_repository}
+    \item \texttt{delivery\_note}
+    \item \texttt{medical\_service}
+    \item \texttt{medical\_invoice}
+    \item \texttt{pharmacy\_medication}
+    \item \texttt{pharmacy\_dispensation}
+    \item \texttt{hospital\_room}
+    \item \texttt{hospital\_bed}
+    \item \texttt{hospital\_admission}
+    \item \texttt{agri\_operations}
+    \item \texttt{medical\_operations}
+    \item \texttt{retail\_operations}
+\end{itemize}
+
+\section{Axes UX et experience utilisateur}
+Le projet integre deja une modernisation transverse:
+\begin{itemize}[leftmargin=1.2cm]
+    \item shell admin modernise;
+    \item executive dashboard;
+    \item plans modernises;
+    \item centre de notifications;
+    \item workspace shortcuts;
+    \item filtres structures sur plusieurs ecrans critiques;
+    \item responsive ameliore sur une partie des listes;
+    \item saved views et preferences utilisateur.
+\end{itemize}
+
+\section{Fonctionnalites detaillees par domaine}
+\subsection{Matrice detaillee des fonctionnalites couvertes}
+\begin{longtable}{p{3.6cm}p{9.8cm}}
+\toprule
+\textbf{Domaine} & \textbf{Fonctionnalites detaillees} \\
+\midrule
+Core transverse & settings centralises, numerotation, audit trail, logs API, saved views, timeline, notes internes, centre securite, 2FA, restrictions IP, scopes d'acces, consolidations, imports avec preview, exports asynchrones, rapports planifies, approval requests, automation rules, centre d'aide, onboarding, usages, addons, plans SaaS \\
+CRM et relation client & leads, deals, pipelines, proposals, fiche client, credit client, recouvrement, NPS campaigns, customer debit notes, historique commercial \\
+Ventes & devis, factures clients, paiements, delivery notes, analyses commerciales, portail client, promotions retail, contrats commerciaux, abonnements clients et recurring billing \\
+Achats et fournisseurs & purchases, bills fournisseurs, paiements fournisseurs, procurement requests retail, referentiel fournisseurs, vendor rating, portail fournisseur \\
+Stock et WMS & produits, categories, unites, taxes, entrepots, transferts, disponibilite stock, mouvements, support aux operations retail et medicales \\
+POS et retail & POS de base, caisses, sessions POS, mouvements de caisse, fidelite, promotions, multi-sites de base, tournées de livraison, BI retail, portail client et portail fournisseur \\
+Finance et comptabilite & chart of accounts, transactions, bank accounts, revenus, depenses, facturation tenant, passerelles de paiement, paiements medicaux, leasing et microfinance de base \\
+RH et organisation & employes, departements, branches, presence, conges, salaires, paie, recrutement, formation, competences, succession planning, employee self service \\
+Projets et pilotage & projects, tasks, stages, timesheets, PPM portfolios, PPM initiatives, OKR objectives, OKR key results, executive dashboard \\
+Industrie et production & work centers, BOM, routings, production orders, planning, machine load, labor load, realtime shopfloor, BI production, resources, shift teams, sous-traitance, quality plans, maintenance orders, cost records \\
+Agroalimentaire & crop planning, cooperative, agri contracts, traceability, agri lots, weighing, cold room, export shipment, FEFO operations, transformation batches, compliance checks, traceability network, reporting agro \\
+Medical et clinique & patients, rendez-vous, consultations, documents, consentements, audit d'acces, urgences, imagerie, soins infirmiers, telemedecine, labo board, chirurgie board, biomedical board, specialties board, medical reports, patient portal, medical services, medical invoices, hospitalisation, pharmacie \\
+Immobilier et assurance & insurance policies, insurance claims, managed properties, property units, property leases \\
+Conformite et securite & GDPR register, data consents, security incidents, HSE incidents, legal management, governance risk and compliance, traces d'acces sensibles \\
+Documentation et connaissance & support categories, knowledge base, document repository, versioning, historique documentaire, liens transverses, help center \\
+Integrations et innovation & API clients, API docs, webhooks et endpoints standardises, WhatsApp omnichannel, AI copilot, analytics et BI, IoT telemetry, ESG sustainability, innovation ideas \\
+Autres verticales & hotel operations, channels hoteliers, BTP, learning management, cooperative, hedging, transport shipments, PLM records, LIMS records, billetterie \\
+\bottomrule
+\end{longtable}
+
+\subsection{Fonctionnalites SaaS et plans}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Gestion des plans, quotas et usages.
+    \item Modules activables par plan.
+    \item Addons et demandes d'extension.
+    \item Onboarding tenant et cockpit plateforme.
+    \item Facturation tenant et cycle SaaS.
+    \item Suivi des demandes de changement de plan.
+\end{itemize}
+
+\section{Fonctionnalites manquantes ou a approfondir}
+Le projet est deja tres large, mais certaines capacites restent a completer ou a pousser plus loin pour atteindre une couverture exhaustive.
+
+\subsection{Core transverse restant}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Standardisation complete de tous les endpoints API historiques.
+    \item Generalisation de l'authentification \texttt{api\_clients} sur tout le perimetre API cible.
+    \item Cache systematique des menus, permissions et referentiels sur l'ensemble des modules historiques.
+    \item Eager loading et optimisation de toutes les listes volumineuses.
+    \item Exports planifies industrialises sur tous les rapports existants.
+    \item Fusion transverse sur davantage d'entites.
+    \item Archivage transverse applique a tous les modules anciens.
+    \item UX 2FA exhaustive sur tous les parcours utilisateurs.
+    \item UI complete des sessions actives et des terminaux.
+\end{itemize}
+
+\subsection{Workflow, automation et administration avancee}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Branchement du workflow avance sur l'ensemble des anciens modules metier.
+    \item Automation no-code plus riche avec supervision, retries et reprise d'echec.
+    \item Dashboards plus avances pour approvals, automation et API.
+\end{itemize}
+
+\subsection{SaaS et monetisation encore perfectibles}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Cycle commercial SaaS complet sur tous les cas d'usage.
+    \item Upgrade et downgrade gouvernes plus finement.
+    \item Monitoring quotas et usages plus exhaustif sur tous les modules facturables.
+\end{itemize}
+
+\subsection{Distribution encore a approfondir}
+\begin{itemize}[leftmargin=1.2cm]
+    \item POS avance complet avec parcours comptoir plus riche.
+    \item Retail multi-sites complet avec gouvernance centrale plus poussee.
+    \item BI commerciale exhaustive.
+    \item Promotions avancees plus riches.
+    \item Portails client et fournisseur encore plus profonds.
+\end{itemize}
+
+\subsection{Medical encore a approfondir}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Portail patient plus complet.
+    \item Laboratoire avance plus pousse.
+    \item Bloc operatoire et chirurgie plus detailles.
+    \item Biomedical complet avec maintenance et conformite detaillees.
+    \item Reporting medical plus exhaustif.
+    \item Specialites medicales dediees avec parcours separes si besoin.
+\end{itemize}
+
+\subsection{Industrie et agro encore a enrichir}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Industrie: algorithmes de charge encore plus pousses et BI atelier plus riche.
+    \item Agro: traçabilite amont/aval encore plus exhaustive et agriculture operationnelle plus profonde.
+    \item Reporting BI sectoriel encore a renforcer sur certaines verticales.
+\end{itemize}
+
+\subsection{UX globale restante}
+\begin{itemize}[leftmargin=1.2cm]
+    \item Harmonisation UX de tous les modules historiques.
+    \item Navigation encore plus rationalisee.
+    \item Tableaux et filtres unifies sur tout l'ERP.
+    \item Responsive avance sur tous les ecrans critiques.
+    \item Centre de notifications encore plus complet.
+    \item IA contextuelle et premium UX.
+\end{itemize}
+
+\section{Conclusion}
+L'ERP couvre a la fois:
+\begin{itemize}[leftmargin=1.2cm]
+    \item un socle ERP horizontal complet;
+    \item un coeur SaaS multi-tenant industrialise;
+    \item des verticales metier industrie, agro, medical et retail;
+    \item des fonctions corporate, conformite, securite, GED et gouvernance;
+    \item des briques avancees d'API, workflow, automation et reporting.
+\end{itemize}
+
+Ce document constitue une reference fonctionnelle globale exploitable pour:
+\begin{itemize}[leftmargin=1.2cm]
+    \item la vente produit;
+    \item la documentation client;
+    \item la preparation de demos;
+    \item l'onboarding des equipes techniques;
+    \item la planification des futures iterations.
+\end{itemize}
+
+\end{document}

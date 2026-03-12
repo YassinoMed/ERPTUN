@@ -52,6 +52,13 @@
                                             <span class="badge bg-light-warning p-2 f-w-600 text-warning rounded">   {{ __('On Hold') }}</span>
                                         @endif
                                     </div>
+                                    @if(!empty($support->category))
+                                        <p class="mb-2">
+                                            <span class="badge text-white" style="background-color: {{ $support->category->color }};">
+                                                {{ $support->category->name }}
+                                            </span>
+                                        </p>
+                                    @endif
                                     <p class="mb-0">
                                         <b> {{!empty($support->createdBy)?$support->createdBy->name:''}}</b>
                                         .
@@ -138,4 +145,3 @@
         </div>
     </div>
 @endsection
-

@@ -1,0 +1,11 @@
+{
+    "name": "BusinessIntelligence",
+    "alias": "businessintelligence",
+    "description": "Couche analytique avanc\u00e9e avec dashboards dynamiques, KPIs et exports planifi\u00e9s.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\BusinessIntelligence\\Providers\\BusinessIntelligenceServiceProvider"
+    ],
+    "files": []
+}

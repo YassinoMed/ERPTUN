@@ -90,6 +90,10 @@
     <li class="breadcrumb-item">{{ __('Deal') }}</li>
 @endsection
 
+@section('page-subtitle')
+    {{ __('Track pipeline momentum, sales pressure and deal throughput without leaving the board.') }}
+@endsection
+
 
 @section('action-btn')
     <div class="float-end">

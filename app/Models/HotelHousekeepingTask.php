@@ -2,9 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 
-class HotelHousekeepingTask extends Model
+class HotelHousekeepingTask extends HotelModel
 {
     protected $fillable = [
         'room_id',

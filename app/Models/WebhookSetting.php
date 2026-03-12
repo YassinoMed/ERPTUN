@@ -2,9 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 
-class WebhookSetting extends Model
+class WebhookSetting extends IntegrationModel
 {
     protected $fillable = [
         'module',

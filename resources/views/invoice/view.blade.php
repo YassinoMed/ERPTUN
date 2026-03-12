@@ -363,6 +363,12 @@
             <div class="row justify-content-between align-items-center mb-3">
                 <div class="d-flex flex-wrap align-items-center justify-content-end gap-2">
                     @if ($invoice->status != 4)
+                        @can('create delivery note')
+                            <div class="all-button-box">
+                                <a href="{{ route('delivery-note.create', ['invoice_id' => $invoice->id]) }}"
+                                    class="btn btn-sm btn-primary">{{ __('Create Delivery Note') }}</a>
+                            </div>
+                        @endcan
                         <div class="all-button-box">
                             <a href="#" class="btn btn-sm btn-primary"
                                 data-url="{{ route('invoice.credit.note', $invoice->id) }}" data-ajax-popup="true"

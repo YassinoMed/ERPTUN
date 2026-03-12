@@ -5,19 +5,23 @@ namespace App\Http\Controllers;
 use App\Models\Announcement;
 use App\Models\AttendanceEmployee;
 use App\Models\ActivityLog;
+use App\Models\ApprovalRequest;
 use App\Models\BankAccount;
 use App\Models\Bill;
+use App\Models\BiomedicalAsset;
 use App\Models\Bug;
 use App\Models\BugStatus;
 use App\Models\Contract;
 use App\Models\Deal;
 use App\Models\DealTask;
 use App\Models\Employee;
+use App\Models\EmergencyVisit;
 use App\Models\Event;
 use App\Models\Expense;
 use App\Models\Goal;
 use App\Models\Invoice;
 use App\Models\Job;
+use App\Models\LabOrder;
 use App\Models\Lead;
 use App\Models\LeadActivityLog;
 use App\Models\LeadStage;
@@ -31,9 +35,15 @@ use App\Models\ProductServiceCategory;
 use App\Models\ProductServiceUnit;
 use App\Models\Project;
 use App\Models\ProjectTask;
+use App\Models\PosSession;
+use App\Models\ProductionShopfloorEvent;
 use App\Models\Purchase;
 use App\Models\Revenue;
+use App\Models\RetailPromotion;
+use App\Models\RetailStore;
+use App\Models\SavedView;
 use App\Models\Stage;
+use App\Models\SurgicalProcedure;
 use App\Models\Tax;
 use App\Models\Timesheet;
 use App\Models\TimeTracker;
@@ -41,7 +51,11 @@ use App\Models\Trainer;
 use App\Models\Training;
 use App\Models\User;
 use App\Models\Utility;
+use App\Models\AgriComplianceCheck;
+use App\Models\AgriTransformationBatch;
+use App\Services\Core\GlobalSearchService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
@@ -176,6 +190,7 @@ class DashboardController extends Controller
                     }
 
                     $user = Auth::user();
+                    $data['executiveSummary'] = $this->buildExecutiveSummary($user);
                     $layoutKey = 'dashboard_layout_account_user_' . $user->id;
                     $layoutRow = \DB::table('settings')
                         ->where('name', $layoutKey)
@@ -303,8 +318,9 @@ class DashboardController extends Controller
                         $dashboardLayout = $decodedLayout['widgets'] ?? $decodedLayout;
                     }
                 }
+                $executiveSummary = $this->buildExecutiveSummary($user);
 
-                return view('dashboard.project-dashboard', compact('home_data', 'dashboardLayout'));
+                return view('dashboard.project-dashboard', compact('home_data', 'dashboardLayout', 'executiveSummary'));
             }
         } else {
 
@@ -356,6 +372,48 @@ class DashboardController extends Controller
         );
 
         return response()->json(['success' => true]);
+    }
+
+    public function executiveDashboard()
+    {
+        $user = Auth::user();
+        $creatorId = $user->creatorId();
+
+        $summary = $this->buildExecutiveSummary($user);
+        $operationalPulse = $this->buildOperationalPulse($user);
+
+        $recentInvoices = Invoice::query()
+            ->with(['customer'])
+            ->where('created_by', '=', $creatorId)
+            ->latest('id')
+            ->limit(6)
+            ->get();
+
+        $recentPurchases = Purchase::query()
+            ->with(['vender'])
+            ->where('created_by', '=', $creatorId)
+            ->latest('id')
+            ->limit(6)
+            ->get();
+
+        $urgentApprovals = ApprovalRequest::query()
+            ->with(['approvalFlow', 'currentStep', 'requester', 'delegatedUser'])
+            ->where('created_by', '=', $creatorId)
+            ->whereIn('status', ['pending', 'in_progress', 'escalated'])
+            ->orderByRaw('CASE WHEN due_at IS NULL THEN 1 ELSE 0 END')
+            ->orderBy('due_at')
+            ->orderByDesc('id')
+            ->limit(8)
+            ->get();
+
+        $savedViews = SavedView::query()
+            ->where('user_id', '=', $user->id)
+            ->latest('is_default')
+            ->latest('id')
+            ->limit(6)
+            ->get();
+
+        return view('dashboard.executive-dashboard', compact('summary', 'operationalPulse', 'recentInvoices', 'recentPurchases', 'urgentApprovals', 'savedViews'));
     }
 
     public function hrm_dashboard_index()
@@ -605,8 +663,9 @@ class DashboardController extends Controller
                         $dashboardLayout = $decodedLayout['widgets'] ?? $decodedLayout;
                     }
                 }
+                $executiveSummary = $this->buildExecutiveSummary($user);
 
-                return view('dashboard.crm-dashboard', compact('crm_data', 'dashboardLayout'));
+                return view('dashboard.crm-dashboard', compact('crm_data', 'dashboardLayout', 'executiveSummary'));
             }
         } else {
             return $this->pos_dashboard_index();
@@ -882,8 +941,30 @@ class DashboardController extends Controller
             ->where('is_read', '=', 0)
             ->count();
 
+        $summary = [
+            'total' => (int)$items->count(),
+            'unread' => (int)$unreadCount,
+            'workflow' => 0,
+            'crm' => 0,
+            'system' => 0,
+        ];
+
+        foreach ($items as $notification) {
+            $message = mb_strtolower(trim((string)$notification->message));
+            if (str_contains($message, 'approval') || str_contains($message, 'workflow')) {
+                $summary['workflow']++;
+                continue;
+            }
+            if (str_contains($message, 'lead') || str_contains($message, 'deal') || str_contains($message, 'contract')) {
+                $summary['crm']++;
+                continue;
+            }
+            $summary['system']++;
+        }
+
         return response()->json([
             'unread_count' => (int)$unreadCount,
+            'summary' => $summary,
             'items' => $items->map(function (Notification $notification) {
                 return [
                     'id' => $notification->id,
@@ -1069,99 +1150,7 @@ class DashboardController extends Controller
             ]);
         }
 
-        $creatorId = $user->creatorId();
-
-        if ($user->can('manage client')) {
-            $clients = User::query()
-                ->where('created_by', '=', $creatorId)
-                ->where('type', '=', 'client')
-                ->where(function ($query) use ($q) {
-                    $query->where('name', 'LIKE', "%{$q}%")
-                        ->orWhere('email', 'LIKE', "%{$q}%")
-                        ->orWhere('job_title', 'LIKE', "%{$q}%");
-                })
-                ->orderByDesc('id')
-                ->limit($limit)
-                ->get(['id', 'name', 'email']);
-
-            $results['clients'] = $clients->map(function (User $client) {
-                return [
-                    'id' => $client->id,
-                    'title' => $client->name,
-                    'subtitle' => $client->email,
-                    'visit_url' => route('global.search.visit', ['type' => 'client', 'id' => $client->id]),
-                ];
-            })->values();
-        }
-
-        if ($user->can('manage invoice')) {
-            $invoices = Invoice::query()
-                ->with(['customer:id,name'])
-                ->where('created_by', '=', $creatorId)
-                ->where(function ($query) use ($q) {
-                    $query->where('invoice_id', 'LIKE', "%{$q}%")
-                        ->orWhere('ref_number', 'LIKE', "%{$q}%");
-                })
-                ->orderByDesc('id')
-                ->limit($limit)
-                ->get();
-
-            $results['invoices'] = $invoices->map(function (Invoice $invoice) use ($user) {
-                $title = $user->invoiceNumberFormat($invoice->invoice_id);
-                $subtitle = !empty($invoice->customer) ? $invoice->customer->name : null;
-                return [
-                    'id' => $invoice->id,
-                    'title' => $title,
-                    'subtitle' => $subtitle,
-                    'visit_url' => route('global.search.visit', ['type' => 'invoice', 'id' => $invoice->id]),
-                ];
-            })->values();
-        }
-
-        if ($user->can('manage project')) {
-            $projects = Project::query()
-                ->where('created_by', '=', $creatorId)
-                ->where('project_name', 'LIKE', "%{$q}%")
-                ->orderByDesc('id')
-                ->limit($limit)
-                ->get(['id', 'project_name', 'status']);
-
-            $results['projects'] = $projects->map(function (Project $project) {
-                return [
-                    'id' => $project->id,
-                    'title' => $project->project_name,
-                    'subtitle' => $project->status,
-                    'visit_url' => route('global.search.visit', ['type' => 'project', 'id' => $project->id]),
-                ];
-            })->values();
-        }
-
-        if ($user->can('manage employee')) {
-            $employeesQuery = Employee::query();
-            if ($user->type == 'Employee') {
-                $employeesQuery->where('user_id', '=', $user->id);
-            } else {
-                $employeesQuery->where('created_by', '=', $creatorId);
-            }
-            $employees = $employeesQuery
-                ->where(function ($query) use ($q) {
-                    $query->where('name', 'LIKE', "%{$q}%")
-                        ->orWhere('email', 'LIKE', "%{$q}%")
-                        ->orWhere('employee_id', 'LIKE', "%{$q}%");
-                })
-                ->orderByDesc('id')
-                ->limit($limit)
-                ->get(['id', 'name', 'email', 'employee_id']);
-
-            $results['employees'] = $employees->map(function (Employee $employee) {
-                return [
-                    'id' => $employee->id,
-                    'title' => $employee->name,
-                    'subtitle' => $employee->email,
-                    'visit_url' => route('global.search.visit', ['type' => 'employee', 'id' => $employee->id]),
-                ];
-            })->values();
-        }
+        $results = app(GlobalSearchService::class)->search($user, $q, $limit);
 
         return response()->json([
             'q' => $q,
@@ -1173,92 +1162,13 @@ class DashboardController extends Controller
     public function visitGlobalSearchResult(string $type, int $id)
     {
         $user = Auth::user();
-        $creatorId = $user->creatorId();
+        $visit = app(GlobalSearchService::class)->resolveVisit($user, $type, $id);
 
-        $type = strtolower(trim($type));
-        $recentItem = null;
-        $redirectUrl = null;
-
-        if ($type === 'client') {
-            if (!$user->can('manage client')) {
-                abort(403);
-            }
-            $client = User::query()
-                ->where('created_by', '=', $creatorId)
-                ->where('type', '=', 'client')
-                ->findOrFail($id);
-
-            $redirectUrl = route('clients.show', $client->id);
-            $recentItem = [
-                'type' => 'client',
-                'id' => $client->id,
-                'title' => $client->name,
-                'subtitle' => $client->email,
-                'visit_url' => route('global.search.visit', ['type' => 'client', 'id' => $client->id]),
-            ];
-        } elseif ($type === 'invoice') {
-            if (!$user->can('manage invoice')) {
-                abort(403);
-            }
-            $invoice = Invoice::query()
-                ->with(['customer:id,name'])
-                ->where('created_by', '=', $creatorId)
-                ->findOrFail($id);
-
-            $redirectUrl = route('invoice.show', $invoice->id);
-            $recentItem = [
-                'type' => 'invoice',
-                'id' => $invoice->id,
-                'title' => $user->invoiceNumberFormat($invoice->invoice_id),
-                'subtitle' => !empty($invoice->customer) ? $invoice->customer->name : null,
-                'visit_url' => route('global.search.visit', ['type' => 'invoice', 'id' => $invoice->id]),
-            ];
-        } elseif ($type === 'project') {
-            if (!$user->can('manage project')) {
-                abort(403);
-            }
-            $project = Project::query()
-                ->where('created_by', '=', $creatorId)
-                ->findOrFail($id);
-
-            $redirectUrl = route('projects.show', $project->id);
-            $recentItem = [
-                'type' => 'project',
-                'id' => $project->id,
-                'title' => $project->project_name,
-                'subtitle' => $project->status,
-                'visit_url' => route('global.search.visit', ['type' => 'project', 'id' => $project->id]),
-            ];
-        } elseif ($type === 'employee') {
-            if (!$user->can('manage employee')) {
-                abort(403);
-            }
-            $employeeQuery = Employee::query();
-            if ($user->type == 'Employee') {
-                $employeeQuery->where('user_id', '=', $user->id);
-            } else {
-                $employeeQuery->where('created_by', '=', $creatorId);
-            }
-
-            $employee = $employeeQuery->findOrFail($id);
-
-            $redirectUrl = route('employee.show', $employee->id);
-            $recentItem = [
-                'type' => 'employee',
-                'id' => $employee->id,
-                'title' => $employee->name,
-                'subtitle' => $employee->email,
-                'visit_url' => route('global.search.visit', ['type' => 'employee', 'id' => $employee->id]),
-            ];
-        } else {
-            abort(404);
+        if (!empty($visit['recent'])) {
+            $this->pushGlobalSearchRecent((int)$user->id, $visit['recent']);
         }
 
-        if (!empty($recentItem)) {
-            $this->pushGlobalSearchRecent((int)$user->id, $recentItem);
-        }
-
-        return redirect()->to($redirectUrl);
+        return redirect()->to($visit['redirect_url']);
     }
 
     private function globalSearchRecentCacheKey(int $userId): string
@@ -1322,6 +1232,153 @@ class DashboardController extends Controller
             array_slice($deduped, 0, 8),
             now()->addDays(30)
         );
+    }
+
+    private function buildExecutiveSummary(User $user): array
+    {
+        $creatorId = $user->creatorId();
+
+        $summary = [];
+
+        if ($user->can('show account dashboard')) {
+            $summary['finance'] = [
+                'label' => __('Finance'),
+                'headline' => __('Collection posture'),
+                'value' => Invoice::query()->where('created_by', '=', $creatorId)->count(),
+                'meta' => __(':count bills tracked', ['count' => Bill::query()->where('created_by', '=', $creatorId)->count()]),
+                'accent' => 'finance',
+                'route' => route('dashboard'),
+            ];
+        }
+
+        if ($user->can('show crm dashboard')) {
+            $summary['crm'] = [
+                'label' => __('CRM'),
+                'headline' => __('Pipeline coverage'),
+                'value' => Lead::query()->where('created_by', '=', $creatorId)->count(),
+                'meta' => __(':count active deals', ['count' => Deal::query()->where('created_by', '=', $creatorId)->count()]),
+                'accent' => 'crm',
+                'route' => route('crm.dashboard'),
+            ];
+        }
+
+        if ($user->can('show project dashboard')) {
+            $summary['projects'] = [
+                'label' => __('Projects'),
+                'headline' => __('Operational workload'),
+                'value' => Project::query()->where('created_by', '=', $creatorId)->count(),
+                'meta' => __(':count open tasks', ['count' => ProjectTask::query()->where('created_by', '=', $creatorId)->where('is_complete', '=', 0)->count()]),
+                'accent' => 'project',
+                'route' => route('project.dashboard'),
+            ];
+        }
+
+        $summary['operations'] = [
+                'label' => __('Operations'),
+                'headline' => __('Attention required'),
+                'value' => ApprovalRequest::query()->where('created_by', '=', $creatorId)->whereIn('status', ['pending', 'in_progress', 'escalated'])->count(),
+                'meta' => __(':count unread notifications', ['count' => Notification::query()->where('user_id', '=', $user->id)->where('is_read', '=', 0)->count()]),
+                'accent' => 'system',
+                'route' => route('approval-requests.index'),
+            ];
+
+        if ($user->can('show hrm dashboard')) {
+            $summary['people'] = [
+                'label' => __('People'),
+                'headline' => __('Workforce pulse'),
+                'value' => Employee::query()->where('created_by', '=', $creatorId)->count(),
+                'meta' => __(':count jobs and trainings in flight', [
+                    'count' => Job::query()->where('created_by', '=', $creatorId)->count() + Training::query()->where('created_by', '=', $creatorId)->count(),
+                ]),
+                'accent' => 'hr',
+                'route' => route('hrm.dashboard'),
+            ];
+        }
+
+        return $summary;
+    }
+
+    private function buildOperationalPulse(User $user): array
+    {
+        $creatorId = $user->creatorId();
+        $pulse = [];
+
+        if ($user->can('manage retail operations') && Schema::hasTable('retail_stores') && Schema::hasTable('pos_sessions') && Schema::hasTable('retail_promotions')) {
+            $pulse[] = [
+                'label' => __('Retail'),
+                'headline' => __('Stores, POS and campaigns'),
+                'value' => RetailStore::query()->where('created_by', '=', $creatorId)->where('status', '=', 'active')->count(),
+                'meta' => __(':sessions open sessions, :promotions active promotions', [
+                    'sessions' => PosSession::query()->where('created_by', '=', $creatorId)->where('status', '=', 'open')->count(),
+                    'promotions' => RetailPromotion::query()->where('created_by', '=', $creatorId)->where('status', '=', 'active')->count(),
+                ]),
+                'accent' => 'crm',
+                'route' => route('retail.operations.reports'),
+            ];
+        }
+
+        if ($user->can('manage medical operations') && Schema::hasTable('emergency_visits') && Schema::hasTable('lab_orders') && Schema::hasTable('surgical_procedures')) {
+            $pulse[] = [
+                'label' => __('Medical'),
+                'headline' => __('Emergency and clinical load'),
+                'value' => EmergencyVisit::query()->where('created_by', '=', $creatorId)->whereIn('status', ['waiting', 'in_care'])->count(),
+                'meta' => __(':labs critical labs, :surgeries planned surgeries', [
+                    'labs' => LabOrder::query()->where('created_by', '=', $creatorId)->where('critical_flag', '=', true)->whereIn('status', ['ordered', 'collected', 'validated'])->count(),
+                    'surgeries' => SurgicalProcedure::query()->where('created_by', '=', $creatorId)->whereIn('status', ['planned', 'in_progress'])->count(),
+                ]),
+                'accent' => 'hr',
+                'route' => route('medical.operations.reports'),
+            ];
+        }
+
+        if ($user->can('manage industrial resource') && Schema::connection((new ProductionShopfloorEvent())->getConnectionName())->hasTable((new ProductionShopfloorEvent())->getTable())) {
+            $pulse[] = [
+                'label' => __('Industry'),
+                'headline' => __('Shopfloor and downtime'),
+                'value' => ProductionShopfloorEvent::query()->where('created_by', '=', $creatorId)->whereDate('happened_at', today())->count(),
+                'meta' => __(':minutes downtime minutes today', [
+                    'minutes' => (int) ProductionShopfloorEvent::query()->where('created_by', '=', $creatorId)->whereDate('happened_at', today())->sum('downtime_minutes'),
+                ]),
+                'accent' => 'system',
+                'route' => route('production.planning.analytics'),
+            ];
+        }
+
+        if (
+            $user->can('manage agri operations')
+            && Schema::connection((new AgriTransformationBatch())->getConnectionName())->hasTable((new AgriTransformationBatch())->getTable())
+            && Schema::connection((new AgriComplianceCheck())->getConnectionName())->hasTable((new AgriComplianceCheck())->getTable())
+        ) {
+            $pulse[] = [
+                'label' => __('Agri'),
+                'headline' => __('Transformations and controls'),
+                'value' => AgriTransformationBatch::query()->where('created_by', '=', $creatorId)->whereDate('processed_at', '>=', now()->subDays(30))->count(),
+                'meta' => __(':checks recent compliance checks', [
+                    'checks' => AgriComplianceCheck::query()->where('created_by', '=', $creatorId)->whereDate('checked_at', '>=', now()->subDays(30))->count(),
+                ]),
+                'accent' => 'finance',
+                'route' => route('agri.reports.index'),
+            ];
+        }
+
+        if ($user->can('manage medical operations') && Schema::hasTable('biomedical_assets')) {
+            $dueBiomedicals = BiomedicalAsset::query()
+                ->where('created_by', '=', $creatorId)
+                ->get()
+                ->filter(fn (BiomedicalAsset $asset) => $asset->isDueForCalibration())
+                ->count();
+
+            $pulse[] = [
+                'label' => __('Biomedical'),
+                'headline' => __('Calibration exposure'),
+                'value' => BiomedicalAsset::query()->where('created_by', '=', $creatorId)->count(),
+                'meta' => __(':count assets due for calibration', ['count' => $dueBiomedicals]),
+                'accent' => 'project',
+                'route' => route('medical.operations.index'),
+            ];
+        }
+
+        return $pulse;
     }
 
 }

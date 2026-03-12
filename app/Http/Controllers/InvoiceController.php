@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Services\Core\SecurityAccessService;
 
 class InvoiceController extends Controller
 {
@@ -118,6 +119,14 @@ class InvoiceController extends Controller
                 $messages = $validator->getMessageBag();
                 return redirect()->back()->with('error', $messages->first());
             }
+            $customer = Customer::find($request->customer_id);
+            if (empty($customer)) {
+                return redirect()->back()->with('error', __('Customer not found.'));
+            }
+            $creditValidation = $this->validateCustomerCredit($customer, $request->items);
+            if ($creditValidation !== true) {
+                return redirect()->back()->with('error', $creditValidation);
+            }
             $status = Invoice::$statues;
             $invoice = new Invoice();
             $invoice->invoice_id = $this->invoiceNumber();
@@ -158,7 +167,6 @@ class InvoiceController extends Controller
 
                 //For Notification
                 $setting = Utility::settings(\Auth::user()->creatorId());
-                $customer = Customer::find($request->customer_id);
                 $invoiceNotificationArr = [
                     'invoice_number' => \Auth::user()->invoiceNumberFormat($invoice->invoice_id),
                     'user_name' => \Auth::user()->name,
@@ -180,6 +188,8 @@ class InvoiceController extends Controller
                 }
 
             }
+
+            $customer->syncCreditBalance();
 
             Utility::dispatchAutomationEvent('invoice.created', $invoice, \Auth::user()->creatorId());
 
@@ -249,6 +259,14 @@ class InvoiceController extends Controller
                     $messages = $validator->getMessageBag();
 
                     return redirect()->route('invoice.index')->with('error', $messages->first());
+                }
+                $customer = Customer::find($request->customer_id);
+                if (empty($customer)) {
+                    return redirect()->route('invoice.index')->with('error', __('Customer not found.'));
+                }
+                $creditValidation = $this->validateCustomerCredit($customer, $request->items, $invoice->id);
+                if ($creditValidation !== true) {
+                    return redirect()->route('invoice.index')->with('error', $creditValidation);
                 }
 
                 $invoice->customer_id = $request->customer_id;
@@ -357,6 +375,8 @@ class InvoiceController extends Controller
                     }
                 }
 
+                $customer->syncCreditBalance();
+
                 return redirect()->route('invoice.index')->with('success', __('Invoice successfully updated.'));
             } else {
                 return redirect()->back()->with('error', __('Permission denied.'));
@@ -404,6 +424,10 @@ class InvoiceController extends Controller
                 $customFields = CustomField::where('created_by', '=', \Auth::user()->creatorId())->where('module', '=', 'invoice')->get();
 
                 $creditnote = CreditNote::where('invoice',$invoice->id)->first();
+                app(SecurityAccessService::class)->logSensitiveAccess('view_invoice_record', Invoice::class, $invoice->id, [
+                    'invoice_id' => $invoice->invoice_id,
+                    'customer_id' => $invoice->customer_id,
+                ]);
 
                 return view('invoice.view', compact('invoice', 'customer', 'iteams', 'invoicePayment', 'customFields', 'user', 'invoice_user', 'user_plan' , 'creditnote'));
             } else {
@@ -724,6 +748,9 @@ class InvoiceController extends Controller
 
             Transaction::addTransaction($invoicePayment);
             $customer = Customer::where('id', $invoice->customer_id)->first();
+            if ($customer) {
+                $customer->syncCreditBalance();
+            }
 
             $payment = new InvoicePayment();
             $payment->name = $customer['name'];
@@ -835,10 +862,54 @@ class InvoiceController extends Controller
                 Utility::bankAccountBalance($payment->account_id, $payment->amount, 'debit');
             }
 
+            $customer = Customer::find($invoice->customer_id);
+            if ($customer) {
+                $customer->syncCreditBalance();
+            }
+
             return redirect()->back()->with('success', __('Payment successfully deleted.'));
         } else {
             return redirect()->back()->with('error', __('Permission denied.'));
         }
+    }
+
+    protected function validateCustomerCredit(Customer $customer, $items, $excludeInvoiceId = null)
+    {
+        if ((int) ($customer->credit_hold ?? 0) !== 1 || (float) ($customer->credit_limit ?? 0) <= 0) {
+            return true;
+        }
+
+        $projectedAmount = $this->calculateInvoiceAmountFromItems($items);
+        if ($customer->canUseCredit($projectedAmount, $excludeInvoiceId)) {
+            return true;
+        }
+
+        return __('Customer credit limit exceeded.') . ' ' .
+            __('Limit') . ': ' . \Auth::user()->priceFormat($customer->credit_limit) . ' | ' .
+            __('Current exposure') . ': ' . \Auth::user()->priceFormat($customer->currentCreditExposure($excludeInvoiceId)) . ' | ' .
+            __('Projected invoice') . ': ' . \Auth::user()->priceFormat($projectedAmount);
+    }
+
+    protected function calculateInvoiceAmountFromItems($items)
+    {
+        $taxData = Utility::getTaxData();
+        $total = 0;
+
+        foreach ((array) $items as $item) {
+            $quantity = (float) ($item['quantity'] ?? 0);
+            $price = (float) ($item['price'] ?? 0);
+            $discount = (float) ($item['discount'] ?? 0);
+            $lineBase = max(0, ($price - $discount) * $quantity);
+            $taxTotal = 0;
+
+            foreach (array_filter(explode(',', (string) ($item['tax'] ?? ''))) as $taxId) {
+                $taxTotal += (float) ($taxData[$taxId]['rate'] ?? 0);
+            }
+
+            $total += $lineBase + (($taxTotal / 100) * $lineBase);
+        }
+
+        return $total;
     }
 
     public function paymentReminder($invoice_id)

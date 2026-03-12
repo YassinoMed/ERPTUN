@@ -9,6 +9,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Services\Core\DocumentNumberService;
+use App\Services\Core\TenantLifecycleService;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Lab404\Impersonate\Models\Impersonate;
@@ -41,6 +43,11 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_enable_login',
         'last_login_at',
         'created_by',
+        'theme_mode',
+        'keyboard_shortcuts',
+        'two_factor_enabled',
+        'pwa_notifications',
+        'last_activity',
     ];
 
     protected $hidden = [
@@ -95,6 +102,11 @@ class User extends Authenticatable implements MustVerifyEmail
         } else {
             return User::where('id', $this->created_by)->first();
         }
+    }
+
+    public function accessScopes()
+    {
+        return $this->hasMany(UserAccessScope::class);
     }
 
     public function currentLanguage()
@@ -163,62 +175,46 @@ class User extends Authenticatable implements MustVerifyEmail
     }
     public function purchaseNumberFormat($number)
     {
-        $settings = Utility::settings();
-
-        return $settings["purchase_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('purchase', $number, $this->creatorId());
     }
     public static function quotationNumberFormat($number)
     {
-        $settings = Utility::settings();
+        $ownerId = \Auth::check() ? \Auth::user()->creatorId() : null;
 
-        return $settings["quotation_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('quotation', $number, $ownerId);
     }
     public function posNumberFormat($number)
     {
-        $settings = Utility::settings();
-
-        return $settings["pos_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('pos', $number, $this->creatorId());
     }
 
     public function invoiceNumberFormat($number)
     {
-        $settings = Utility::settings();
-
-        return $settings["invoice_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('invoice', $number, $this->creatorId());
     }
 
     public function proposalNumberFormat($number)
     {
-        $settings = Utility::settings();
-
-        return $settings["proposal_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('proposal', $number, $this->creatorId());
     }
 
     public function contractNumberFormat($number)
     {
-        $settings = Utility::settings();
-
-        return $settings["contract_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('contract', $number, $this->creatorId());
     }
 
     public function billNumberFormat($number)
     {
-        $settings = Utility::settings();
-
-        return $settings["bill_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('bill', $number, $this->creatorId());
     }
     public function expenseNumberFormat($number)
     {
-        $settings = Utility::settings();
-
-        return $settings["expense_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('expense', $number, $this->creatorId());
     }
 
     public function journalNumberFormat($number)
     {
-        $settings = Utility::settings();
-
-        return $settings["journal_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('journal', $number, $this->creatorId());
     }
 
     public function getPlan()
@@ -332,6 +328,8 @@ class User extends Authenticatable implements MustVerifyEmail
                     }
                 }
             }
+
+            app(TenantLifecycleService::class)->provisionChecklist($user_id, $this->id);
 
             return ['is_success' => true];
         } else {

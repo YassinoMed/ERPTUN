@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Models\Utility;
 use App\Models\WarehouseProduct;
 use App\Models\WarehouseTransfer;
+use App\Services\Core\AccessScopeService;
 use Illuminate\Support\Facades\Crypt;
 use App\Models\warehouse;
 use Illuminate\Http\Request;
@@ -25,6 +26,11 @@ use Illuminate\Support\Facades\Storage;
 
 class PurchaseController extends Controller
 {
+    public function __construct(
+        private readonly AccessScopeService $accessScopes
+    ) {
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -36,7 +42,14 @@ class PurchaseController extends Controller
         $vender = Vender::where('created_by', '=', \Auth::user()->creatorId())->get()->pluck('name', 'id');
         $vender->prepend('Select Vendor', '');
         $status = Purchase::$statues;
-        $purchases = Purchase::where('created_by', '=', \Auth::user()->creatorId())->with(['vender','category'])->get();
+        $purchases = Purchase::query()
+            ->where('created_by', '=', \Auth::user()->creatorId())
+            ->with(['vender','category'])
+            ->when(
+                $this->accessScopes->hasRestrictedScope(\Auth::user(), 'warehouse'),
+                fn ($query) => $query->whereIn('warehouse_id', $this->accessScopes->scopedIds(\Auth::user(), 'warehouse'))
+            )
+            ->get();
 
 
         return view('purchase.index', compact('purchases', 'status','vender'));
@@ -61,7 +74,10 @@ class PurchaseController extends Controller
             $venders     = Vender::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
             $venders->prepend('Select Vender', '');
 
-            $warehouse     = warehouse::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
+            $warehouse     = $this->accessScopes
+                ->filterOwnedQuery(warehouse::query(), \Auth::user(), 'warehouse')
+                ->get()
+                ->pluck('name', 'id');
             $warehouse->prepend('Select Warehouse', '');
 
             $product_services = ProductService::where('created_by', \Auth::user()->creatorId())->where('type','!=', 'service')->get()->pluck('name', 'id');
@@ -86,6 +102,7 @@ class PurchaseController extends Controller
 
         if(\Auth::user()->can('create purchase'))
         {
+            $this->accessScopes->assertScopeAccess(\Auth::user(), 'warehouse', (int) $request->warehouse_id);
             $validator = \Validator::make(
                 $request->all(), [
                     'vender_id' => 'required',
@@ -168,6 +185,7 @@ class PurchaseController extends Controller
 
             if(!empty($purchase) && $purchase->created_by == \Auth::user()->creatorId())
             {
+                $this->accessScopes->assertScopeAccess(\Auth::user(), 'warehouse', (int) $purchase->warehouse_id);
 
                 $purchasePayment = PurchasePayment::where('purchase_id', $purchase->id)->first();
                 $vendor      = $purchase->vender;
@@ -197,11 +215,15 @@ class PurchaseController extends Controller
                 return redirect()->back()->with('error', __('Something went wrong.'));
             }
             $purchase     = Purchase::find($idwww);
+            $this->accessScopes->assertScopeAccess(\Auth::user(), 'warehouse', (int) optional($purchase)->warehouse_id);
 
             if ($purchase->status != 3 && $purchase->status != 4) {
                 $category = ProductServiceCategory::where('created_by', \Auth::user()->creatorId())->where('type', 'expense')->get()->pluck('name', 'id');
                 $category->prepend('Select Category', '');
-                $warehouse     = warehouse::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
+                $warehouse     = $this->accessScopes
+                    ->filterOwnedQuery(warehouse::query(), \Auth::user(), 'warehouse')
+                    ->get()
+                    ->pluck('name', 'id');
 
                 $purchase_number      = \Auth::user()->purchaseNumberFormat($purchase->purchase_id);
                 $venders          = Vender::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
@@ -224,6 +246,7 @@ class PurchaseController extends Controller
 
         if(\Auth::user()->can('edit purchase'))
         {
+            $this->accessScopes->assertScopeAccess(\Auth::user(), 'warehouse', (int) $request->warehouse_id);
 
             if($purchase->created_by == \Auth::user()->creatorId())
             {
@@ -243,6 +266,7 @@ class PurchaseController extends Controller
                     return redirect()->route('purchase.index')->with('error', $messages->first());
                 }
                 $purchase->vender_id      = $request->vender_id;
+                $purchase->warehouse_id   = $request->warehouse_id;
                 $purchase->purchase_date      = $request->purchase_date;
                 $purchase->category_id    = $request->category_id;
                 $purchase->save();

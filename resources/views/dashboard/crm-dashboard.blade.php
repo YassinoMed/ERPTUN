@@ -64,7 +64,23 @@
     <li class="breadcrumb-item"><a href="{{route('dashboard')}}">{{__('Dashboard')}}</a></li>
     <li class="breadcrumb-item">{{__('CRM')}}</li>
 @endsection
+
+@section('page-subtitle')
+    {{ __('Watch lead generation, contract flow and deal conversion from a single commercial cockpit.') }}
+@endsection
 @section('content')
+@if(!empty($executiveSummary))
+    <div class="ux-kpi-grid mb-4">
+        @foreach($executiveSummary as $item)
+            <a href="{{ $item['route'] }}" class="ux-kpi-card executive-metric executive-metric-{{ $item['accent'] }}">
+                <span class="ux-kpi-label">{{ $item['label'] }}</span>
+                <strong class="ux-kpi-value">{{ $item['value'] }}</strong>
+                <span class="ux-kpi-caption">{{ $item['headline'] }}</span>
+                <small class="ux-kpi-meta">{{ $item['meta'] }}</small>
+            </a>
+        @endforeach
+    </div>
+@endif
 <div class="row mb-4 gy-3" id="crm-dashboard-main-row">
     <div class="col-xl-4 col-sm-6 col-12 crm-dash-card dashboard-widget" data-widget="crm-total-lead">
         <div class="crm-card-inner d-flex align-items-center gap-3">

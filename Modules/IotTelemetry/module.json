@@ -1,0 +1,11 @@
+{
+    "name": "IotTelemetry",
+    "alias": "iottelemetry",
+    "description": "Collecte t\u00e9l\u00e9m\u00e9trique, alertes seuils et dashboards temps r\u00e9el pour capteurs et \u00e9quipements.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\IotTelemetry\\Providers\\IotTelemetryServiceProvider"
+    ],
+    "files": []
+}

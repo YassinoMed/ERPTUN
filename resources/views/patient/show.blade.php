@@ -4,21 +4,21 @@
     {{ $patient->first_name }} {{ $patient->last_name }}
 @endsection
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{route('dashboard')}}">{{__('Dashboard')}}</a></li>
-    <li class="breadcrumb-item"><a href="{{route('patients.index')}}">{{__('Patients')}}</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('patients.index') }}">{{ __('Patients') }}</a></li>
     <li class="breadcrumb-item">{{ $patient->first_name }} {{ $patient->last_name }}</li>
 @endsection
 
 @section('action-btn')
     <div class="float-end d-flex">
         @can('edit patient')
-            <a href="#" class="btn btn-sm btn-info me-2" data-url="{{ route('patients.edit', $patient->id) }}" data-ajax-popup="true" data-size="lg" data-bs-toggle="tooltip" title="{{__('Edit')}}" data-title="{{__('Edit Patient')}}">
+            <a href="#" class="btn btn-sm btn-info me-2" data-url="{{ route('patients.edit', $patient->id) }}" data-ajax-popup="true" data-size="lg" data-bs-toggle="tooltip" title="{{ __('Edit') }}" data-title="{{ __('Edit Patient') }}">
                 <i class="ti ti-pencil"></i>
             </a>
         @endcan
         @can('delete patient')
-            {!! Form::open(['method' => 'DELETE', 'route' => ['patients.destroy', $patient->id],'id'=>'delete-form-'.$patient->id]) !!}
-            <a href="#" class="btn btn-sm btn-danger bs-pass-para" data-bs-toggle="tooltip" title="{{__('Delete')}}" data-confirm="{{__('Are You Sure?').'|'.__('This action can not be undone. Do you want to continue?')}}" data-confirm-yes="document.getElementById('delete-form-{{$patient->id}}').submit();">
+            {!! Form::open(['method' => 'DELETE', 'route' => ['patients.destroy', $patient->id], 'id' => 'delete-form-' . $patient->id]) !!}
+            <a href="#" class="btn btn-sm btn-danger bs-pass-para" data-bs-toggle="tooltip" title="{{ __('Delete') }}" data-confirm="{{ __('Are You Sure?') . '|' . __('This action can not be undone. Do you want to continue?') }}" data-confirm-yes="document.getElementById('delete-form-{{ $patient->id }}').submit();">
                 <i class="ti ti-trash"></i>
             </a>
             {!! Form::close() !!}
@@ -29,8 +29,14 @@
 @section('content')
     @php
         $avatarPath = \App\Models\Utility::get_file('uploads/avatar/');
-        $photoUrl = $patient->photo_path ? asset(\Storage::url($patient->photo_path)) : $avatarPath.'avatar.png';
+        $photoUrl = $patient->photo_path ? asset(\Storage::url($patient->photo_path)) : $avatarPath . 'avatar.png';
+        $consultationMap = $consultations->keyBy('id');
+        $prescriptions = collect();
+        foreach ($consultations as $consultation) {
+            $prescriptions = $prescriptions->merge($consultation->prescriptions);
+        }
     @endphp
+
     <div class="row">
         <div class="col-xl-4">
             <div class="card">
@@ -41,32 +47,142 @@
                         <p class="text-muted mb-0">{{ $patient->gender ? ucfirst($patient->gender) : __('Not specified') }}</p>
                     </div>
                     <div class="row">
-                        <div class="col-6 mb-2 text-muted">{{__('CIN')}}</div>
+                        <div class="col-6 mb-2 text-muted">{{ __('CIN') }}</div>
                         <div class="col-6 mb-2">{{ $patient->cin ?? '-' }}</div>
-                        <div class="col-6 mb-2 text-muted">{{__('CNAM')}}</div>
+                        <div class="col-6 mb-2 text-muted">{{ __('CNAM') }}</div>
                         <div class="col-6 mb-2">{{ $patient->cnam_number ?? '-' }}</div>
-                        <div class="col-6 mb-2 text-muted">{{__('Blood Group')}}</div>
+                        <div class="col-6 mb-2 text-muted">{{ __('Blood Group') }}</div>
                         <div class="col-6 mb-2">{{ $patient->blood_group ?? '-' }}</div>
-                        <div class="col-6 mb-2 text-muted">{{__('Birth Date')}}</div>
+                        <div class="col-6 mb-2 text-muted">{{ __('Birth Date') }}</div>
                         <div class="col-6 mb-2">{{ $patient->birth_date ? \Auth::user()->dateFormat($patient->birth_date) : '-' }}</div>
-                        <div class="col-6 mb-2 text-muted">{{__('Phone')}}</div>
+                        <div class="col-6 mb-2 text-muted">{{ __('Phone') }}</div>
                         <div class="col-6 mb-2">{{ $patient->phone ?? '-' }}</div>
-                        <div class="col-6 mb-2 text-muted">{{__('Email')}}</div>
+                        <div class="col-6 mb-2 text-muted">{{ __('Email') }}</div>
                         <div class="col-6 mb-2">{{ $patient->email ?? '-' }}</div>
-                        <div class="col-12 mb-2 text-muted">{{__('Address')}}</div>
+                        <div class="col-12 mb-2 text-muted">{{ __('Address') }}</div>
                         <div class="col-12 mb-2">{{ $patient->address ?? '-' }}</div>
-                        <div class="col-12 mb-2 text-muted">{{__('Allergies')}}</div>
+                        <div class="col-12 mb-2 text-muted">{{ __('Allergies') }}</div>
                         <div class="col-12 mb-2">{{ $patient->allergies ?? '-' }}</div>
+                        <div class="col-12 mb-2 text-muted">{{ __('Medical History') }}</div>
+                        <div class="col-12 mb-2">{{ $patient->medical_history ?? '-' }}</div>
+                        <div class="col-12 mb-2 text-muted">{{ __('Current Treatments') }}</div>
+                        <div class="col-12 mb-2">{{ $patient->current_treatments ?? '-' }}</div>
                     </div>
                 </div>
             </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ __('Emergency Contact') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-5 mb-2 text-muted">{{ __('Name') }}</div>
+                        <div class="col-7 mb-2">{{ $patient->emergency_contact_name ?? '-' }}</div>
+                        <div class="col-5 mb-2 text-muted">{{ __('Phone') }}</div>
+                        <div class="col-7 mb-2">{{ $patient->emergency_contact_phone ?? '-' }}</div>
+                        <div class="col-5 mb-2 text-muted">{{ __('Relationship') }}</div>
+                        <div class="col-7 mb-2">{{ $patient->emergency_contact_relationship ?? '-' }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ __('Signed Consents') }}</h5>
+                </div>
+                <div class="card-body">
+                    @can('create patient consent')
+                        {{ Form::open(['route' => ['patients.consents.store', $patient->id], 'method' => 'post', 'files' => true]) }}
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    {{ Form::label('title', __('Consent Title'), ['class' => 'form-label']) }}<x-required></x-required>
+                                    {{ Form::text('title', null, ['class' => 'form-control', 'required' => 'required']) }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ Form::label('status', __('Status'), ['class' => 'form-label']) }}
+                                    {{ Form::select('status', ['signed' => __('Signed'), 'revoked' => __('Revoked'), 'expired' => __('Expired')], 'signed', ['class' => 'form-control']) }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ Form::label('consented_at', __('Consent Date'), ['class' => 'form-label']) }}<x-required></x-required>
+                                    {{ Form::date('consented_at', now()->format('Y-m-d'), ['class' => 'form-control', 'required' => 'required']) }}
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    {{ Form::label('expires_at', __('Expires At'), ['class' => 'form-label']) }}
+                                    {{ Form::date('expires_at', null, ['class' => 'form-control']) }}
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group">
+                                    {{ Form::label('notes', __('Notes'), ['class' => 'form-label']) }}
+                                    {{ Form::textarea('notes', null, ['class' => 'form-control', 'rows' => 2]) }}
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group">
+                                    {{ Form::label('consent_file', __('Signed File'), ['class' => 'form-label']) }}
+                                    {{ Form::file('consent_file', ['class' => 'form-control']) }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">{{ __('Save') }}</button>
+                        </div>
+                        {{ Form::close() }}
+                    @else
+                        <div class="text-muted">{{ __('You do not have permission to record consents.') }}</div>
+                    @endcan
+
+                    <hr>
+
+                    @forelse($consents as $consent)
+                        <div class="border rounded p-2 mb-2">
+                            <div class="d-flex justify-content-between">
+                                <strong>{{ $consent->title }}</strong>
+                                <span class="badge bg-light text-dark">{{ ucfirst($consent->status) }}</span>
+                            </div>
+                            <div class="small text-muted mt-1">
+                                {{ __('Signed') }}: {{ \Auth::user()->dateFormat($consent->consented_at) }}
+                                @if($consent->expires_at)
+                                    · {{ __('Expires') }}: {{ \Auth::user()->dateFormat($consent->expires_at) }}
+                                @endif
+                            </div>
+                            @if($consent->notes)
+                                <div class="small mt-1">{{ $consent->notes }}</div>
+                            @endif
+                            <div class="mt-2 d-flex gap-2">
+                                @if($consent->file_path)
+                                    <a href="{{ asset(Storage::url($consent->file_path)) }}" class="btn btn-sm btn-outline-primary" target="_blank">{{ __('Open') }}</a>
+                                @endif
+                                @can('delete patient consent')
+                                    {!! Form::open(['method' => 'DELETE', 'route' => ['patient-consents.destroy', $consent->id], 'id' => 'delete-consent-' . $consent->id]) !!}
+                                    <a href="#" class="btn btn-sm btn-outline-danger bs-pass-para" data-confirm="{{ __('Are You Sure?') . '|' . __('This action can not be undone. Do you want to continue?') }}" data-confirm-yes="document.getElementById('delete-consent-{{ $consent->id }}').submit();">
+                                        {{ __('Delete') }}
+                                    </a>
+                                    {!! Form::close() !!}
+                                @endcan
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-muted">{{ __('No consents available.') }}</div>
+                    @endforelse
+                </div>
+            </div>
         </div>
+
         <div class="col-xl-8">
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between">
-                    <h5 class="mb-0">{{__('Consultations')}}</h5>
+                    <h5 class="mb-0">{{ __('Consultations') }}</h5>
                     @can('create patient consultation')
-                        <a href="#" data-size="lg" data-url="{{ route('patients.consultations.create', $patient->id) }}" data-ajax-popup="true" data-bs-toggle="tooltip" title="{{__('Create')}}" data-title="{{__('Add Consultation')}}" class="btn btn-sm btn-primary">
+                        <a href="#" data-size="lg" data-url="{{ route('patients.consultations.create', $patient->id) }}" data-ajax-popup="true" data-bs-toggle="tooltip" title="{{ __('Create') }}" data-title="{{ __('Add Consultation') }}" class="btn btn-sm btn-primary">
                             <i class="ti ti-plus"></i>
                         </a>
                     @endcan
@@ -75,30 +191,55 @@
                     <div class="table-responsive">
                         <table class="table">
                             <thead>
-                            <tr>
-                                <th>{{__('Date')}}</th>
-                                <th>{{__('Doctor')}}</th>
-                                <th>{{__('Title')}}</th>
-                                <th>{{__('Diagnosis')}}</th>
-                                <th>{{__('Next Visit')}}</th>
-                                <th>{{__('Notes')}}</th>
-                            </tr>
+                                <tr>
+                                    <th>{{ __('Date') }}</th>
+                                    <th>{{ __('Doctor') }}</th>
+                                    <th>{{ __('Reason') }}</th>
+                                    <th>{{ __('Diagnosis') }}</th>
+                                    <th>{{ __('Vitals') }}</th>
+                                    <th>{{ __('Clinical Notes') }}</th>
+                                </tr>
                             </thead>
                             <tbody>
-                            @forelse ($consultations as $consultation)
-                                <tr>
-                                    <td>{{ \Auth::user()->dateFormat($consultation->consultation_date) }}</td>
-                                    <td>{{ $consultation->doctor_name ?? '-' }}</td>
-                                    <td>{{ $consultation->title ?? '-' }}</td>
-                                    <td>{{ $consultation->diagnosis ?? '-' }}</td>
-                                    <td>{{ $consultation->next_visit_date ? \Auth::user()->dateFormat($consultation->next_visit_date) : '-' }}</td>
-                                    <td>{{ $consultation->notes ?? '-' }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="text-center">{{__('No consultations available')}}</td>
-                                </tr>
-                            @endforelse
+                                @forelse ($consultations as $consultation)
+                                    <tr>
+                                        <td>{{ \Auth::user()->dateFormat($consultation->consultation_date) }}</td>
+                                        <td>{{ $consultation->doctor_name ?? '-' }}</td>
+                                        <td>
+                                            <div>{{ $consultation->title ?? '-' }}</div>
+                                            @if($consultation->reason_for_visit)
+                                                <div class="small text-muted">{{ $consultation->reason_for_visit }}</div>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <div>{{ $consultation->diagnosis ?? '-' }}</div>
+                                            @if($consultation->requested_exams)
+                                                <div class="small text-muted">{{ __('Exams') }}: {{ $consultation->requested_exams }}</div>
+                                            @endif
+                                        </td>
+                                        <td class="small">
+                                            {{ __('Temp') }}: {{ $consultation->temperature ?? '-' }}<br>
+                                            {{ __('HR') }}: {{ $consultation->heart_rate ?? '-' }}<br>
+                                            {{ __('BP') }}: {{ $consultation->blood_pressure ?? '-' }}<br>
+                                            {{ __('RR') }}: {{ $consultation->respiratory_rate ?? '-' }}
+                                        </td>
+                                        <td class="small">
+                                            <div>{{ $consultation->clinical_observations ?? ($consultation->notes ?? '-') }}</div>
+                                            @if($consultation->sick_leave_start || $consultation->sick_leave_end)
+                                                <div class="text-muted mt-1">
+                                                    {{ __('Sick Leave') }}:
+                                                    {{ $consultation->sick_leave_start ? \Auth::user()->dateFormat($consultation->sick_leave_start) : '-' }}
+                                                    -
+                                                    {{ $consultation->sick_leave_end ? \Auth::user()->dateFormat($consultation->sick_leave_end) : '-' }}
+                                                </div>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center">{{ __('No consultations available') }}</td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -107,7 +248,86 @@
 
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">{{__('Add Prescription')}}</h5>
+                    <h5 class="mb-0">{{ __('Medical Documents') }}</h5>
+                </div>
+                <div class="card-body">
+                    @can('create patient document')
+                        {{ Form::open(['route' => ['patients.documents.store', $patient->id], 'method' => 'post', 'files' => true]) }}
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    {{ Form::label('title', __('Title'), ['class' => 'form-label']) }}<x-required></x-required>
+                                    {{ Form::text('title', null, ['class' => 'form-control', 'required' => 'required']) }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    {{ Form::label('category', __('Category'), ['class' => 'form-label']) }}
+                                    {{ Form::text('category', null, ['class' => 'form-control', 'placeholder' => __('Report, scan, imaging...')]) }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    {{ Form::label('document_file', __('File'), ['class' => 'form-label']) }}<x-required></x-required>
+                                    {{ Form::file('document_file', ['class' => 'form-control', 'required' => 'required']) }}
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group">
+                                    {{ Form::label('description', __('Description'), ['class' => 'form-label']) }}
+                                    {{ Form::textarea('description', null, ['class' => 'form-control', 'rows' => 2]) }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">{{ __('Upload') }}</button>
+                        </div>
+                        {{ Form::close() }}
+                    @endcan
+
+                    <div class="table-responsive mt-3">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>{{ __('Uploaded') }}</th>
+                                    <th>{{ __('Title') }}</th>
+                                    <th>{{ __('Category') }}</th>
+                                    <th>{{ __('Description') }}</th>
+                                    <th>{{ __('Action') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($documents as $document)
+                                    <tr>
+                                        <td>{{ $document->uploaded_at ? \Auth::user()->dateFormat($document->uploaded_at) : '-' }}</td>
+                                        <td>{{ $document->title }}</td>
+                                        <td>{{ $document->category ?? '-' }}</td>
+                                        <td>{{ $document->description ?? '-' }}</td>
+                                        <td>
+                                            <a href="{{ asset(Storage::url($document->file_path)) }}" class="btn btn-sm btn-outline-primary" target="_blank">{{ __('Open') }}</a>
+                                            @can('delete patient document')
+                                                {!! Form::open(['method' => 'DELETE', 'route' => ['patient-documents.destroy', $document->id], 'id' => 'delete-document-' . $document->id, 'class' => 'd-inline']) !!}
+                                                <a href="#" class="btn btn-sm btn-outline-danger bs-pass-para" data-confirm="{{ __('Are You Sure?') . '|' . __('This action can not be undone. Do you want to continue?') }}" data-confirm-yes="document.getElementById('delete-document-{{ $document->id }}').submit();">
+                                                    {{ __('Delete') }}
+                                                </a>
+                                                {!! Form::close() !!}
+                                            @endcan
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center">{{ __('No documents available') }}</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ __('Add Prescription') }}</h5>
                 </div>
                 <div class="card-body">
                     @can('create patient prescription')
@@ -156,18 +376,18 @@
                             </div>
                         </div>
                         <div class="text-end">
-                            <button type="submit" class="btn btn-primary">{{__('Save')}}</button>
+                            <button type="submit" class="btn btn-primary">{{ __('Save') }}</button>
                         </div>
                         {{ Form::close() }}
                     @else
-                        <div class="text-muted">{{__('You do not have permission to add prescriptions.')}}</div>
+                        <div class="text-muted">{{ __('You do not have permission to add prescriptions.') }}</div>
                     @endcan
                 </div>
             </div>
 
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">{{__('Add Lab Result')}}</h5>
+                    <h5 class="mb-0">{{ __('Add Lab Result') }}</h5>
                 </div>
                 <div class="card-body">
                     @can('create patient lab result')
@@ -222,53 +442,53 @@
                             </div>
                         </div>
                         <div class="text-end">
-                            <button type="submit" class="btn btn-primary">{{__('Save')}}</button>
+                            <button type="submit" class="btn btn-primary">{{ __('Save') }}</button>
                         </div>
                         {{ Form::close() }}
                     @else
-                        <div class="text-muted">{{__('You do not have permission to add lab results.')}}</div>
+                        <div class="text-muted">{{ __('You do not have permission to add lab results.') }}</div>
                     @endcan
                 </div>
             </div>
 
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">{{__('Lab Results')}}</h5>
+                    <h5 class="mb-0">{{ __('Lab Results') }}</h5>
                 </div>
                 <div class="card-body table-border-style">
                     <div class="table-responsive">
                         <table class="table">
                             <thead>
-                            <tr>
-                                <th>{{__('Result Date')}}</th>
-                                <th>{{__('Test Name')}}</th>
-                                <th>{{__('Result')}}</th>
-                                <th>{{__('Unit')}}</th>
-                                <th>{{__('Action')}}</th>
-                            </tr>
+                                <tr>
+                                    <th>{{ __('Result Date') }}</th>
+                                    <th>{{ __('Test Name') }}</th>
+                                    <th>{{ __('Result') }}</th>
+                                    <th>{{ __('Unit') }}</th>
+                                    <th>{{ __('Action') }}</th>
+                                </tr>
                             </thead>
                             <tbody>
-                            @forelse ($labResults as $labResult)
-                                <tr>
-                                    <td>{{ $labResult->result_date ? \Auth::user()->dateFormat($labResult->result_date) : '-' }}</td>
-                                    <td>{{ $labResult->test_name }}</td>
-                                    <td>{{ $labResult->result_value ?? '-' }}</td>
-                                    <td>{{ $labResult->unit ?? '-' }}</td>
-                                    <td>
-                                        @can('delete patient lab result')
-                                            {!! Form::open(['method' => 'DELETE', 'route' => ['patient-lab-results.destroy', $labResult->id],'id'=>'delete-lab-'.$labResult->id]) !!}
-                                            <a href="#" class="btn btn-sm btn-danger bs-pass-para" data-confirm="{{__('Are You Sure?').'|'.__('This action can not be undone. Do you want to continue?')}}" data-confirm-yes="document.getElementById('delete-lab-{{$labResult->id}}').submit();">
-                                                <i class="ti ti-trash"></i>
-                                            </a>
-                                            {!! Form::close() !!}
-                                        @endcan
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="text-center">{{__('No lab results available')}}</td>
-                                </tr>
-                            @endforelse
+                                @forelse ($labResults as $labResult)
+                                    <tr>
+                                        <td>{{ $labResult->result_date ? \Auth::user()->dateFormat($labResult->result_date) : '-' }}</td>
+                                        <td>{{ $labResult->test_name }}</td>
+                                        <td>{{ $labResult->result_value ?? '-' }}</td>
+                                        <td>{{ $labResult->unit ?? '-' }}</td>
+                                        <td>
+                                            @can('delete patient lab result')
+                                                {!! Form::open(['method' => 'DELETE', 'route' => ['patient-lab-results.destroy', $labResult->id], 'id' => 'delete-lab-' . $labResult->id]) !!}
+                                                <a href="#" class="btn btn-sm btn-danger bs-pass-para" data-confirm="{{ __('Are You Sure?') . '|' . __('This action can not be undone. Do you want to continue?') }}" data-confirm-yes="document.getElementById('delete-lab-{{ $labResult->id }}').submit();">
+                                                    <i class="ti ti-trash"></i>
+                                                </a>
+                                                {!! Form::close() !!}
+                                            @endcan
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center">{{ __('No lab results available') }}</td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -277,64 +497,96 @@
 
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">{{__('Prescriptions')}}</h5>
+                    <h5 class="mb-0">{{ __('Prescriptions') }}</h5>
                 </div>
                 <div class="card-body table-border-style">
                     <div class="table-responsive">
                         <table class="table">
                             <thead>
-                            <tr>
-                                <th>{{__('Consultation')}}</th>
-                                <th>{{__('Medication')}}</th>
-                                <th>{{__('Dosage')}}</th>
-                                <th>{{__('Frequency')}}</th>
-                                <th>{{__('Duration')}}</th>
-                                <th>{{__('Notes')}}</th>
-                                <th>{{__('Action')}}</th>
-                            </tr>
+                                <tr>
+                                    <th>{{ __('Consultation') }}</th>
+                                    <th>{{ __('Medication') }}</th>
+                                    <th>{{ __('Dosage') }}</th>
+                                    <th>{{ __('Frequency') }}</th>
+                                    <th>{{ __('Duration') }}</th>
+                                    <th>{{ __('Notes') }}</th>
+                                    <th>{{ __('Action') }}</th>
+                                </tr>
                             </thead>
                             <tbody>
-                            @php
-                                $prescriptions = collect();
-                                $consultationMap = $consultations->keyBy('id');
-                                foreach ($consultations as $consultation) {
-                                    $prescriptions = $prescriptions->merge($consultation->prescriptions);
-                                }
-                            @endphp
-                            @forelse ($prescriptions as $prescription)
-                                <tr>
-                                    <td>
-                                        @if($consultationMap->has($prescription->consultation_id))
-                                            {{ \Auth::user()->dateFormat($consultationMap[$prescription->consultation_id]->consultation_date) }}
-                                        @else
-                                            {{ $prescription->consultation_id }}
-                                        @endif
-                                    </td>
-                                    <td>{{ $prescription->medication_name }}</td>
-                                    <td>{{ $prescription->dosage ?? '-' }}</td>
-                                    <td>{{ $prescription->frequency ?? '-' }}</td>
-                                    <td>{{ $prescription->duration ?? '-' }}</td>
-                                    <td>{{ $prescription->notes ?? '-' }}</td>
-                                    <td>
-                                        @can('delete patient prescription')
-                                            {!! Form::open(['method' => 'DELETE', 'route' => ['patient-prescriptions.destroy', $prescription->id],'id'=>'delete-prescription-'.$prescription->id]) !!}
-                                            <a href="#" class="btn btn-sm btn-danger bs-pass-para" data-confirm="{{__('Are You Sure?').'|'.__('This action can not be undone. Do you want to continue?')}}" data-confirm-yes="document.getElementById('delete-prescription-{{$prescription->id}}').submit();">
-                                                <i class="ti ti-trash"></i>
-                                            </a>
-                                            {!! Form::close() !!}
-                                        @endcan
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="7" class="text-center">{{__('No prescriptions available')}}</td>
-                                </tr>
-                            @endforelse
+                                @forelse ($prescriptions as $prescription)
+                                    <tr>
+                                        <td>
+                                            @if($consultationMap->has($prescription->consultation_id))
+                                                {{ \Auth::user()->dateFormat($consultationMap[$prescription->consultation_id]->consultation_date) }}
+                                            @else
+                                                {{ $prescription->consultation_id }}
+                                            @endif
+                                        </td>
+                                        <td>{{ $prescription->medication_name }}</td>
+                                        <td>{{ $prescription->dosage ?? '-' }}</td>
+                                        <td>{{ $prescription->frequency ?? '-' }}</td>
+                                        <td>{{ $prescription->duration ?? '-' }}</td>
+                                        <td>{{ $prescription->notes ?? '-' }}</td>
+                                        <td>
+                                            @can('delete patient prescription')
+                                                {!! Form::open(['method' => 'DELETE', 'route' => ['patient-prescriptions.destroy', $prescription->id], 'id' => 'delete-prescription-' . $prescription->id]) !!}
+                                                <a href="#" class="btn btn-sm btn-danger bs-pass-para" data-confirm="{{ __('Are You Sure?') . '|' . __('This action can not be undone. Do you want to continue?') }}" data-confirm-yes="document.getElementById('delete-prescription-{{ $prescription->id }}').submit();">
+                                                    <i class="ti ti-trash"></i>
+                                                </a>
+                                                {!! Form::close() !!}
+                                            @endcan
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="text-center">{{ __('No prescriptions available') }}</td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
+
+            @can('manage medical record access log')
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">{{ __('Medical Record Access Log') }}</h5>
+                    </div>
+                    <div class="card-body table-border-style">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>{{ __('Date') }}</th>
+                                        <th>{{ __('User') }}</th>
+                                        <th>{{ __('Action') }}</th>
+                                        <th>{{ __('Context') }}</th>
+                                        <th>{{ __('IP') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($accessLogs as $accessLog)
+                                        <tr>
+                                            <td>{{ \Auth::user()->dateFormat($accessLog->created_at) }} {{ \Auth::user()->timeFormat($accessLog->created_at) }}</td>
+                                            <td>{{ optional($accessLog->user)->name ?? '-' }}</td>
+                                            <td>{{ ucwords(str_replace('_', ' ', $accessLog->action)) }}</td>
+                                            <td>{{ $accessLog->context ?? '-' }}</td>
+                                            <td>{{ $accessLog->ip_address ?? '-' }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="text-center">{{ __('No access logs available') }}</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @endcan
+
             @can('create patient prescription')
                 <script>
                     (function () {

@@ -3,9 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class ProductionOrder extends Model
+class ProductionOrder extends ProductionModel
 {
     use HasFactory;
 
@@ -13,11 +12,15 @@ class ProductionOrder extends Model
         'order_number',
         'product_id',
         'production_bom_version_id',
+        'production_routing_id',
         'warehouse_id',
         'work_center_id',
         'employee_id',
+        'production_shift_team_id',
         'quantity_planned',
         'quantity_produced',
+        'planned_machine_hours',
+        'planned_labor_hours',
         'planned_start_date',
         'planned_end_date',
         'priority',
@@ -46,6 +49,11 @@ class ProductionOrder extends Model
         return $this->hasOne(warehouse::class, 'id', 'warehouse_id');
     }
 
+    public function routing()
+    {
+        return $this->belongsTo(ProductionRouting::class, 'production_routing_id');
+    }
+
     public function workCenter()
     {
         return $this->hasOne(ProductionWorkCenter::class, 'id', 'work_center_id');
@@ -54,6 +62,11 @@ class ProductionOrder extends Model
     public function employee()
     {
         return $this->hasOne(Employee::class, 'id', 'employee_id');
+    }
+
+    public function shiftTeam()
+    {
+        return $this->belongsTo(ProductionShiftTeam::class, 'production_shift_team_id');
     }
 
     public function operations()
@@ -69,5 +82,15 @@ class ProductionOrder extends Model
     public function qualityChecks()
     {
         return $this->hasMany(ProductionQualityCheck::class, 'production_order_id')->latest();
+    }
+
+    public function subcontractOrders()
+    {
+        return $this->hasMany(IndustrialSubcontractOrder::class, 'production_order_id')->latest();
+    }
+
+    public function costRecords()
+    {
+        return $this->hasMany(IndustrialCostRecord::class, 'production_order_id')->latest();
     }
 }

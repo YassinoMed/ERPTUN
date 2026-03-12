@@ -1,0 +1,11 @@
+{
+    "name": "GovernanceRiskCompliance",
+    "alias": "governanceriskcompliance",
+    "description": "Gestion des risques, audits, incidents, plans d\u2019action et conformit\u00e9 interne.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\GovernanceRiskCompliance\\Providers\\GovernanceRiskComplianceServiceProvider"
+    ],
+    "files": []
+}

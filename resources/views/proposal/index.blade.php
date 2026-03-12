@@ -7,6 +7,10 @@
     <li class="breadcrumb-item">{{__('Proposal')}}</li>
 @endsection
 
+@section('page-subtitle')
+    {{ __('Follow proposal velocity, pending signatures and invoice conversions from one workspace.') }}
+@endsection
+
 @section('action-btn')
     <div class="float-end d-flex">
 
@@ -29,14 +33,50 @@
 
 @endpush
 @section('content')
+    @php
+        $proposalCollection = collect($proposals);
+        $proposalDraftCount = $proposalCollection->where('status', 0)->count();
+        $proposalSentCount = $proposalCollection->where('status', 1)->count();
+        $proposalAcceptedCount = $proposalCollection->where('status', 2)->count();
+        $proposalConvertedCount = $proposalCollection->where('is_convert', 1)->count();
+    @endphp
+
+    <div class="ux-kpi-grid mb-4">
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __('Active proposals') }}</span>
+            <strong class="ux-kpi-value">{{ $proposalCollection->count() }}</strong>
+            <span class="ux-kpi-meta">{{ __('Commercial scope currently tracked') }}</span>
+        </div>
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __('Drafts to finalize') }}</span>
+            <strong class="ux-kpi-value">{{ $proposalDraftCount }}</strong>
+            <span class="ux-kpi-meta">{{ __('Offers still being prepared') }}</span>
+        </div>
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __('Waiting customer decision') }}</span>
+            <strong class="ux-kpi-value">{{ $proposalSentCount }}</strong>
+            <span class="ux-kpi-meta">{{ __('Sent proposals still pending response') }}</span>
+        </div>
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __('Converted to invoice') }}</span>
+            <strong class="ux-kpi-value">{{ $proposalConvertedCount }}</strong>
+            <span class="ux-kpi-meta">{{ $proposalAcceptedCount }} {{ __('accepted opportunities won') }}</span>
+        </div>
+    </div>
 
     <div class="row">
         <div class="col-sm-12">
             <div class=" mt-2 " id="multiCollapseExample1">
-                <div class="card">
+                <div class="card ux-filter-card">
                     <div class="card-body">
-                            {{ Form::open(array('route' => array('proposal.index'),'method' => 'GET','id'=>'frm_submit')) }}
-                        <div class="d-flex align-items-center justify-content-end">
+                            <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
+                                <div>
+                                    <h6 class="mb-1">{{ __('Review proposal velocity and customer response windows') }}</h6>
+                                    <p class="text-muted mb-0">{{ __('Keep signature follow-up, conversion and renewals in the same filtering flow.') }}</p>
+                                </div>
+                            </div>
+                            {{ Form::open(array('route' => array('proposal.index'),'method' => 'GET','id'=>'frm_submit','data-autosave'=>'1')) }}
+                        <div class="d-flex align-items-center justify-content-end ux-list-toolbar">
                             <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12 me-2">
                                 <div class="btn-box">
                                     {{ Form::label('issue_date', __('Date'),['class'=>'form-label']) }}
@@ -49,7 +89,7 @@
                                     {{ Form::select('status', [ ''=>'Select Status'] + $status,isset($_GET['status'])?$_GET['status']:'', array('class' => 'form-control select')) }}
                                 </div>
                             </div>
-                            <div class="col-auto float-end ms-2 mt-4">
+                            <div class="col-auto float-end ms-2 mt-4 ux-filter-actions">
 
                                 <a href="#" class="btn btn-sm btn-primary me-1" onclick="document.getElementById('frm_submit').submit(); return false;" data-bs-toggle="tooltip" data-bs-original-title="{{__('Apply')}}">
                                     <span class="btn-inner--icon"><i class="ti ti-search"></i></span>
@@ -69,7 +109,7 @@
     </div>
     <div class="row">
         <div class="col-md-12">
-            <div class="card">
+            <div class="card ux-list-card">
                 <div class="card-body table-border-style">
                     <div class="table-responsive">
                         <table class="table datatable">
@@ -86,7 +126,7 @@
                             </thead>
                             <tbody>
                             @foreach ($proposals as $proposal)
-                                <tr class="font-style">
+                                <tr class="font-style" data-bulk-id="{{ $proposal->id }}">
                                     <td class="Id">
                                         <a href="{{ route('proposal.show',\Crypt::encrypt($proposal->id)) }}" class="btn btn-outline-primary">{{ AUth::user()->proposalNumberFormat($proposal->proposal_id) }}
                                         </a>

@@ -48,7 +48,7 @@
             <div class="tab-content" id="pills-tabContent">
                 <div class="tab-pane fade show active" id="staff" role="tabpanel" aria-labelledby="pills-home-tab">
                     @php
-                        $modules=['user','role','client','product & service','constant unit','constant tax','constant category', 'zoom meeting','company settings', 'report'];
+                        $modules=['user','role','client','product & service','constant unit','constant tax','constant category', 'zoom meeting','company settings', 'report', 'approval flow', 'approval request', 'automation rule', 'import job', 'export job', 'saved report', 'api client', 'tenant onboarding', 'plan addon', 'saved view', 'user preference', 'help center', 'security center', 'data quality issue', 'access scope', 'user session', 'two factor auth', 'managed property', 'property unit', 'property lease', 'internal itsm', 'configuration item', 'software license', 'security incident', 'gdpr activity', 'data consent', 'industrial resource', 'production routing', 'production shift team', 'industrial subcontract order', 'industrial quality plan', 'industrial maintenance order', 'industrial cost record', 'industrial planning', 'agri operations', 'retail operations', 'medical operations', 'ppm portfolio', 'ppm initiative', 'okr objective', 'okr key result', 'nps campaign', 'nps response', 'partner', 'vendor rating', 'product lifecycle record', 'lims record', 'hse incident', 'succession plan', 'event ticket', 'microfinance loan', 'leasing contract', 'transport shipment'];
                        if(\Auth::user()->type == 'company'){
                            $modules[] = 'permission';
                        }
@@ -270,7 +270,7 @@
                 </div>
                 <div class="tab-pane fade" id="crm" role="tabpanel" aria-labelledby="pills-profile-tab">
                     @php
-                        $modules=['crm dashboard','lead','convert', 'pipeline','lead stage','source','label','lead email','lead call','deal','stage','task','form builder','form response', 'form field', 'contract','contract type'];
+                        $modules=['crm dashboard','lead','convert', 'pipeline','lead stage','source','label','lead email','lead call','deal','stage','task','form builder','form response', 'form field', 'contract','contract type','knowledge base','knowledge base category','document repository','document repository category','insurance policy','insurance claim'];
                     @endphp
                     <div class="col-md-12">
                         <div class="form-group">
@@ -716,7 +716,7 @@
                 </div>
                 <div class="tab-pane fade" id="hrmpermission" role="tabpanel" aria-labelledby="pills-contact-tab">
                     @php
-                        $modules=['hrm dashboard','employee','employee profile','department','designation','branch','document type','document','payslip type','allowance','commission','allowance option','loan option','deduction option','loan','saturation deduction','other payment','overtime','set salary','pay slip','company policy','appraisal','goal tracking','goal type','indicator','event','meeting','training','education','trainer','training type','award','award type','resignation','travel','promotion','complaint','warning','termination','termination type','job application','job application note','job onBoard','job category','job','job stage','custom question','interview schedule','career','estimation','holiday','transfer','announcement','leave','leave type','attendance'];
+                        $modules=['hrm dashboard','employee','employee profile','department','designation','branch','document type','document','payslip type','allowance','commission','allowance option','loan option','deduction option','loan','saturation deduction','other payment','overtime','set salary','pay slip','company policy','appraisal','goal tracking','goal type','indicator','event','meeting','board meeting','cap table','subsidiary','customer recovery','visitor','innovation idea','patient','medical appointment','patient consultation','patient prescription','patient lab result','patient document','patient consent','medical record access log','medical service','medical invoice','medical invoice payment','pharmacy medication','pharmacy dispensation','hospital room','hospital bed','hospital admission','training','education','trainer','training type','award','award type','resignation','travel','promotion','complaint','warning','termination','termination type','job application','job application note','job onBoard','job category','job','job stage','custom question','interview schedule','career','estimation','holiday','transfer','announcement','leave','leave type','attendance'];
                     @endphp
                     <div class="col-md-12">
                         <div class="form-group">
@@ -935,7 +935,7 @@
                 </div>
                 <div class="tab-pane fade" id="account" role="tabpanel" aria-labelledby="pills-contact-tab">
                     @php
-                        $modules=['account dashboard','proposal','invoice','bill','revenue','payment','proposal product','invoice product','bill product','goal','credit note','debit note','bank account','bank transfer','transaction','customer','vender','constant custom field','assets','chart of account','journal entry'];
+                        $modules=['account dashboard','proposal','invoice','delivery note','bill','revenue','payment','proposal product','invoice product','bill product','goal','credit note','debit note','bank account','bank transfer','transaction','customer','vender','constant custom field','assets','chart of account','journal entry'];
                     @endphp
                     <div class="col-md-12">
                         <div class="form-group">

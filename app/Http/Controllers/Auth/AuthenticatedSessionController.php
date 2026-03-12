@@ -9,6 +9,7 @@ use App\Models\Plan;
 use App\Models\Vender;
 use  App\Models\Utility;
 use  App\Models\User;
+use App\Services\Core\SecurityAccessService;
 use Carbon\Carbon;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
@@ -32,7 +33,9 @@ class AuthenticatedSessionController extends Controller
      */
 
 
-    public function __construct()
+    public function __construct(
+        private readonly SecurityAccessService $securityAccess
+    )
     {
         if(!file_exists(storage_path() . "/installed"))
         {
@@ -130,6 +133,14 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
         $request->session()->regenerate();
         $user = Auth::user();
+
+        if (! $this->securityAccess->isIpAllowed($user)) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->back()->with('status', __('Access denied from this IP address.'));
+        }
 
         $companyUser = User::find($user->created_by);
         $status = $companyUser ? $companyUser->delete_status : 1;
@@ -248,6 +259,8 @@ class AuthenticatedSessionController extends Controller
         }
         //end for user log
 
+        $this->securityAccess->startSession($user, $request);
+
         if($user->type =='company' || $user->type =='super admin' || $user->type =='client')
         {
             return redirect()->intended(RouteServiceProvider::HOME);
@@ -268,7 +281,10 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request)
     {
+        $user = Auth::user();
+        $sessionId = $request->session()->getId();
         Auth::guard('web')->logout();
+        $this->securityAccess->endSession($user, $sessionId);
 
         $request->session()->invalidate();
 

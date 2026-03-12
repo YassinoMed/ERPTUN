@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Mail\CommonEmailTemplate;
 use App\Models\TransactionLines;
+use App\Services\Core\DocumentNumberService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Model;
@@ -692,73 +693,56 @@ class Utility extends Model
     }
     public static function purchaseNumberFormat($number)
     {
-        $settings = Utility::settings();
-
-        return $settings["purchase_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('purchase', $number);
     }
 
     public static function quotationNumberFormat($number)
     {
-        $settings = Utility::settings();
-
-        return $settings["quotation_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('quotation', $number);
     }
 
     public static function posNumberFormat($number)
     {
-        $settings = Utility::settings();
-
-        return $settings["pos_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('pos', $number);
     }
 
     public static function contractNumberFormat($number)
     {
-
-        $settings = self::settings();
-        return $settings["contract_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('contract', $number);
     }
 
     public static function invoiceNumberFormat($settings, $number)
     {
-
-        return $settings["invoice_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('invoice', $number, null, $settings);
     }
 
     public static function proposalNumberFormat($settings, $number)
     {
-        return $settings["proposal_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('proposal', $number, null, $settings);
     }
 
     public static function customerProposalNumberFormat($number)
     {
-        $settings = Utility::settings();
-
-        return $settings["proposal_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('proposal', $number);
     }
 
     public static function customerInvoiceNumberFormat($number)
     {
-        $settings = Utility::settings();
-
-        return $settings["invoice_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('invoice', $number);
     }
     public static function customerPosNumberFormat($number)
     {
-        $settings = Utility::settings();
-
-        return $settings["pos_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('pos', $number);
     }
 
     public static function billNumberFormat($settings, $number)
     {
-        return $settings["bill_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('bill', $number, null, $settings);
     }
 
     public static function vendorBillNumberFormat($number)
     {
-        $settings = Utility::settings();
-
-        return $settings["bill_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('bill', $number);
     }
 
     public static function getTax($tax)
@@ -4665,6 +4649,13 @@ class Utility extends Model
         }
 
         try {
+            app(\App\Services\Core\AutomationEngine::class)->handle($event, $model, $ownerId, [
+                'triggered_by' => \Auth::id(),
+            ]);
+        } catch (\Throwable $th) {
+        }
+
+        try {
             if (is_object($model)) {
                 $triggerModels = array_filter([$event, get_class($model)]);
                 $workflows = \App\Models\Workflow::where('created_by', $ownerId)
@@ -4672,7 +4663,10 @@ class Utility extends Model
                     ->where('is_active', true)
                     ->get();
                 foreach ($workflows as $workflow) {
-                    $workflow->execute($model);
+                    $workflow->execute($model, [
+                        'event' => $event,
+                        'owner_id' => $ownerId,
+                    ]);
                 }
             }
         } catch (\Throwable $th) {

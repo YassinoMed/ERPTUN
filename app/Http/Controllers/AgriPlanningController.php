@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\AgriCropPlan;
+use App\Models\AgriHarvestDelivery;
+use App\Models\AgriLot;
 use App\Models\AgriParcel;
 use App\Models\AgriRotationRule;
 use App\Models\AgriWeatherAlert;
 use App\Services\AgriPlanningService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AgriPlanningController extends Controller
 {
@@ -50,6 +53,59 @@ class AgriPlanningController extends Controller
         $rotationRecommendations = $selectedParcel ? $service->getRotationRecommendations($selectedParcel->id) : collect();
 
         return view('agri/planning', compact('parcels', 'plans', 'rotationRules', 'weatherAlerts', 'selectedParcel', 'rotationRecommendations'));
+    }
+
+    public function dashboard()
+    {
+        if (!\Auth::user()->can('manage agri planning')) {
+            return redirect()->back()->with('error', __('Permission Denied.'));
+        }
+
+        $creatorId = \Auth::user()->creatorId();
+
+        $parcelSummary = AgriParcel::where('created_by', $creatorId)
+            ->select(
+                DB::raw('count(*) as total_parcels'),
+                DB::raw('sum(area) as total_area')
+            )
+            ->first();
+
+        $planSummary = AgriCropPlan::where('created_by', $creatorId)
+            ->select('status', DB::raw('count(*) as total'))
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $weatherSummary = AgriWeatherAlert::where('created_by', $creatorId)
+            ->select('severity', DB::raw('count(*) as total'))
+            ->groupBy('severity')
+            ->pluck('total', 'severity');
+
+        $activePlans = AgriCropPlan::where('created_by', $creatorId)
+            ->latest('start_date')
+            ->limit(12)
+            ->get();
+
+        $harvestSummary = AgriHarvestDelivery::where('created_by', $creatorId)
+            ->select('member_id', DB::raw('sum(quantity) as total_weight'))
+            ->groupBy('member_id')
+            ->orderByDesc('total_weight')
+            ->limit(10)
+            ->get();
+
+        $lotAging = AgriLot::where('created_by', $creatorId)
+            ->whereNotNull('expiry_date')
+            ->orderBy('expiry_date')
+            ->limit(12)
+            ->get();
+
+        return view('agri.agriculture_dashboard', compact(
+            'parcelSummary',
+            'planSummary',
+            'weatherSummary',
+            'activePlans',
+            'harvestSummary',
+            'lotAging'
+        ));
     }
 
     public function storeParcel(Request $request)

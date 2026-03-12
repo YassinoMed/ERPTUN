@@ -3,9 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class ProductionTimeLog extends Model
+class ProductionTimeLog extends ProductionModel
 {
     use HasFactory;
 

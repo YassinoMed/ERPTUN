@@ -8,6 +8,8 @@ class Department extends Model
 {
     protected $fillable = [
         'name',
+        'code',
+        'is_active',
         'created_by',
     ];
 

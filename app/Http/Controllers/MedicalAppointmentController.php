@@ -48,8 +48,10 @@ class MedicalAppointmentController extends Controller
             'end_at' => 'required|date|after:start_at',
             'room' => 'nullable|string|max:255',
             'specialty' => 'nullable|string|max:255',
+            'appointment_type' => 'nullable|string|max:255',
             'reminder_channel' => 'nullable|string|max:50',
             'reminder_at' => 'nullable|date|before:start_at',
+            'queue_number' => 'nullable|integer|min:1',
         ]);
 
         if ($validator->fails()) {
@@ -97,14 +99,20 @@ class MedicalAppointmentController extends Controller
         $appointment->doctor_id = $request->doctor_id;
         $appointment->room = $request->room;
         $appointment->specialty = $request->specialty;
+        $appointment->appointment_type = $request->appointment_type;
         $appointment->start_at = $request->start_at;
         $appointment->end_at = $request->end_at;
         $appointment->status = 'scheduled';
         $appointment->reminder_channel = $request->reminder_channel;
+        $appointment->queue_number = $request->queue_number;
+        $appointment->is_waiting_list = $request->boolean('is_waiting_list');
         if ($request->reminder_channel) {
             $appointment->reminder_at = $request->reminder_at
                 ? \Carbon\Carbon::parse($request->reminder_at)
                 : \Carbon\Carbon::parse($request->start_at)->subHours(24);
+        }
+        if ($request->status === 'confirmed') {
+            $appointment->confirmed_at = now();
         }
         $appointment->created_by = \Auth::user()->creatorId();
         $appointment->save();
@@ -141,9 +149,11 @@ class MedicalAppointmentController extends Controller
             'room' => 'nullable|string|max:255',
             'specialty' => 'nullable|string|max:255',
             'status' => 'required|string',
+            'appointment_type' => 'nullable|string|max:255',
             'reminder_channel' => 'nullable|string|max:50',
             'reminder_at' => 'nullable|date|before:start_at',
             'cancel_reason' => 'nullable|string|max:255',
+            'queue_number' => 'nullable|integer|min:1',
         ]);
 
         if ($validator->fails()) {
@@ -191,10 +201,13 @@ class MedicalAppointmentController extends Controller
         $appointment->doctor_id = $request->doctor_id;
         $appointment->room = $request->room;
         $appointment->specialty = $request->specialty;
+        $appointment->appointment_type = $request->appointment_type;
         $appointment->start_at = $request->start_at;
         $appointment->end_at = $request->end_at;
         $appointment->status = $request->status;
         $appointment->reminder_channel = $request->reminder_channel;
+        $appointment->queue_number = $request->queue_number;
+        $appointment->is_waiting_list = $request->boolean('is_waiting_list');
         if ($request->reminder_channel) {
             $appointment->reminder_at = $request->reminder_at
                 ? \Carbon\Carbon::parse($request->reminder_at)
@@ -202,6 +215,8 @@ class MedicalAppointmentController extends Controller
         } else {
             $appointment->reminder_at = null;
         }
+        $appointment->confirmed_at = $request->status === 'confirmed' && !$appointment->confirmed_at ? now() : $appointment->confirmed_at;
+        $appointment->checked_in_at = $request->status === 'in_progress' && !$appointment->checked_in_at ? now() : $appointment->checked_in_at;
         $appointment->cancel_reason = $request->cancel_reason;
         $appointment->save();
 

@@ -1,0 +1,11 @@
+{
+    "name": "LogisticsDelivery",
+    "alias": "logisticsdelivery",
+    "description": "Pilotage exp\u00e9dition, livraison, tourn\u00e9es, transporteurs, \u00e9tiquettes et preuve de livraison.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\LogisticsDelivery\\Providers\\LogisticsDeliveryServiceProvider"
+    ],
+    "files": []
+}

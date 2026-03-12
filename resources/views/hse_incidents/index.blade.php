@@ -1,0 +1,11 @@
+@extends('layouts.admin')
+@section('page-title', __('HSE Incidents'))
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a></li><li class="breadcrumb-item">{{ __('HSE Incidents') }}</li>
+@endsection
+@section('action-btn')
+    <div class="float-end d-flex">@can('create hse incident')<a href="#" data-url="{{ route('hse-incidents.create') }}" data-size="lg" data-ajax-popup="true" data-title="{{ __('Create HSE Incident') }}" class="btn btn-sm btn-primary"><i class="ti ti-plus"></i></a>@endcan</div>
+@endsection
+@section('content')
+<div class="row"><div class="col-12"><div class="card"><div class="card-body table-border-style"><div class="table-responsive"><table class="table datatable"><thead><tr><th>{{ __('Incident') }}</th><th>{{ __('Category') }}</th><th>{{ __('Severity') }}</th><th>{{ __('Status') }}</th><th width="220px">{{ __('Action') }}</th></tr></thead><tbody>@foreach($hseIncidents as $hseIncident)<tr><td><div>{{ $hseIncident->title }}</div><small class="text-muted">{{ $hseIncident->incident_code }}</small></td><td>{{ $hseIncident->category }}</td><td>{{ __(ucfirst($hseIncident->severity)) }}</td><td>{{ __(ucfirst($hseIncident->status)) }}</td><td class="Action"><div class="action-btn me-2"><a href="{{ route('hse-incidents.show',$hseIncident) }}" class="mx-3 btn btn-sm align-items-center bg-warning"><i class="ti ti-eye text-white"></i></a></div>@can('edit hse incident')<div class="action-btn me-2"><a href="#" data-url="{{ route('hse-incidents.edit',$hseIncident) }}" data-size="lg" data-ajax-popup="true" data-title="{{ __('Edit HSE Incident') }}" class="mx-3 btn btn-sm align-items-center bg-info"><i class="ti ti-pencil text-white"></i></a></div>@endcan @can('delete hse incident')<div class="action-btn">{!! Form::open(['method'=>'DELETE','route'=>['hse-incidents.destroy',$hseIncident],'id'=>'delete-form-hse-'.$hseIncident->id]) !!}<a href="#" class="mx-3 btn btn-sm align-items-center bs-pass-para bg-danger" data-confirm="{{ __('Are You Sure?') . '|' . __('This action can not be undone. Do you want to continue?') }}" data-confirm-yes="document.getElementById('delete-form-hse-{{ $hseIncident->id }}').submit();"><i class="ti ti-trash text-white"></i></a>{!! Form::close() !!}</div>@endcan</td></tr>@endforeach</tbody></table></div></div></div></div></div>
+@endsection

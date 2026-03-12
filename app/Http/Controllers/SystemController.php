@@ -13,6 +13,8 @@ use App\Models\NOC;
 use App\Models\User;
 use App\Models\Utility;
 use App\Models\WebhookSetting;
+use App\Services\Core\AuditTrailService;
+use App\Services\Core\SystemSettingsManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
@@ -23,6 +25,12 @@ use Illuminate\Support\Facades\Mail;
 
 class SystemController extends Controller
 {
+    public function __construct(
+        private readonly SystemSettingsManager $settingsManager,
+        private readonly AuditTrailService $auditTrail
+    ) {
+    }
+
     public function index()
     {
         if (\Auth::user()->can('manage system settings')) {
@@ -117,31 +125,32 @@ class SystemController extends Controller
 
             DB::beginTransaction();
             try {
-                foreach ($post as $key => $data) {
-                    if (in_array($key, array_keys($settings))) {
-                        DB::insert(
-                            'insert into settings (`value`, `name`,`created_by`) values (?, ?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`) ',
-                            [
-                                $data,
-                                $key,
-                                \Auth::user()->creatorId(),
-                            ]
-                        );
-                    }
-                }
+                $savedKeys = $this->settingsManager->upsert($post, \Auth::user()->creatorId(), array_keys($settings));
                 DB::commit();
+
+                $this->auditTrail->record('system.settings.updated', [
+                    'auditable' => \Auth::user(),
+                    'new_values' => ['keys' => $savedKeys],
+                    'created_by' => \Auth::user()->creatorId(),
+                ]);
+
                 Log::info('system.settings.updated', [
                     'user_id' => \Auth::user()->id,
                     'created_by' => \Auth::user()->creatorId(),
-                    'keys' => array_keys($post),
+                    'keys' => $savedKeys,
                 ]);
                 Utility::dispatchAutomationEvent('system.settings.updated', [
                     'user_id' => \Auth::user()->id,
                     'created_by' => \Auth::user()->creatorId(),
-                    'keys' => array_keys($post),
+                    'keys' => $savedKeys,
                 ], \Auth::user()->creatorId());
             } catch (\Throwable $e) {
                 DB::rollBack();
+                $this->auditTrail->record('system.settings.update_failed', [
+                    'auditable' => \Auth::user(),
+                    'new_values' => ['error' => $e->getMessage()],
+                    'created_by' => \Auth::user()->creatorId(),
+                ]);
                 Log::error('system.settings.update_failed', [
                     'user_id' => \Auth::user()->id,
                     'created_by' => \Auth::user()->creatorId(),
@@ -182,18 +191,13 @@ class SystemController extends Controller
             unset($post['_token']);
             $settings = Utility::settings();
 
-            foreach ($post as $key => $data) {
-                if (in_array($key, array_keys($settings))) {
-                    \DB::insert(
-                        'insert into settings (`value`, `name`,`created_by`) values (?, ?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`) ',
-                        [
-                            $data,
-                            $key,
-                            \Auth::user()->creatorId(),
-                        ]
-                    );
-                }
-            }
+            $savedKeys = $this->settingsManager->upsert($post, \Auth::user()->creatorId(), array_keys($settings));
+
+            $this->auditTrail->record('system.email_settings.updated', [
+                'auditable' => \Auth::user(),
+                'new_values' => ['keys' => $savedKeys],
+                'created_by' => \Auth::user()->creatorId(),
+            ]);
 
             return redirect()->back()->with('success', __('Setting successfully updated.'));
         } else {
@@ -222,18 +226,13 @@ class SystemController extends Controller
             $settings = Utility::settings();
 
 
-            foreach ($post as $key => $data) {
-                if (in_array($key, array_keys($settings))) {
-                    \DB::insert(
-                        'insert into settings (`value`, `name`,`created_by`) values (?, ?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`) ',
-                        [
-                            $data,
-                            $key,
-                            \Auth::user()->creatorId(),
-                        ]
-                    );
-                }
-            }
+            $savedKeys = $this->settingsManager->upsert($post, \Auth::user()->creatorId(), array_keys($settings));
+
+            $this->auditTrail->record('system.company_email_settings.updated', [
+                'auditable' => \Auth::user(),
+                'new_values' => ['keys' => $savedKeys],
+                'created_by' => \Auth::user()->creatorId(),
+            ]);
 
             return redirect()->back()->with('success', __('Setting successfully updated.'));
         } else {
@@ -267,18 +266,13 @@ class SystemController extends Controller
             unset($post['_token']);
             $settings = Utility::settings();
 
-            foreach ($post as $key => $data) {
-                if (in_array($key, array_keys($settings))) {
-                    \DB::insert(
-                        'insert into settings (`value`, `name`,`created_by`) values (?, ?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`) ',
-                        [
-                            $data,
-                            $key,
-                            \Auth::user()->creatorId(),
-                        ]
-                    );
-                }
-            }
+            $savedKeys = $this->settingsManager->upsert($post, \Auth::user()->creatorId(), array_keys($settings));
+
+            $this->auditTrail->record('system.company_settings.updated', [
+                'auditable' => $user,
+                'new_values' => ['keys' => $savedKeys],
+                'created_by' => \Auth::user()->creatorId(),
+            ]);
             return redirect()->back()->with('success', __('Setting successfully updated.'));
         } else {
             return redirect()->back()->with('error', 'Permission denied.');

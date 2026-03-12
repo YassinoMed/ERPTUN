@@ -8,6 +8,8 @@ class ContractType extends Model
 {
     protected $fillable = [
         'name',
+        'slug',
+        'description',
         'created_by',
     ];
 }

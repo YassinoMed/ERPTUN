@@ -32,6 +32,10 @@
             {{Form::select('priority',$priority,null,array('class'=>'form-control select'))}}
         </div>
         <div class="form-group col-md-6">
+            {{Form::label('support_category_id',__('Category'),['class'=>'form-label'])}}
+            {{Form::select('support_category_id',$categories,null,array('class'=>'form-control select'))}}
+        </div>
+        <div class="form-group col-md-6">
             {{Form::label('status',__('Status'),['class'=>'form-label'])}}
             {{Form::select('status',$status,null,array('class'=>'form-control select'))}}
         </div>

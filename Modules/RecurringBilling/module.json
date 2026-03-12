@@ -1,0 +1,11 @@
+{
+    "name": "RecurringBilling",
+    "alias": "recurringbilling",
+    "description": "Facturation r\u00e9currente m\u00e9tier distincte du SaaS avec \u00e9ch\u00e9anciers, cycles et relances.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\RecurringBilling\\Providers\\RecurringBillingServiceProvider"
+    ],
+    "files": []
+}

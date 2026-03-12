@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Employee;
 use App\Models\Support;
+use App\Models\SupportCategory;
 use App\Models\SupportReply;
 use App\Models\Ticket;
 use App\Models\User;
@@ -18,7 +19,7 @@ class SupportController extends Controller
     {
         if(\Auth::user()->type == 'company')
         {
-            $supports = Support::where('created_by', \Auth::user()->creatorId())->with(['createdBy','assignUser'])->get();
+            $supports = Support::where('created_by', \Auth::user()->creatorId())->with(['createdBy','assignUser','category'])->get();
             $countTicket      = Support::where('created_by', '=', \Auth::user()->creatorId())->count();
             $countOpenTicket  = Support::where('status', '=', 'open')->where('created_by', '=', \Auth::user()->creatorId())->count();
             $countonholdTicket  = Support::where('status', '=', 'on hold')->where('created_by', '=', \Auth::user()->creatorId())->count();
@@ -27,7 +28,10 @@ class SupportController extends Controller
         }
         else {
 
-            $supports = Support::where('user', \Auth::user()->id)->orWhere('ticket_created', \Auth::user()->id)->where('created_by', \Auth::user()->creatorId())->with(['createdBy','assignUser'])->get();
+            $supports = Support::where(function ($query) {
+                $query->where('user', \Auth::user()->id)
+                    ->orWhere('ticket_created', \Auth::user()->id);
+            })->where('created_by', \Auth::user()->creatorId())->with(['createdBy','assignUser','category'])->get();
             $countTicket      = Support::where('user', \Auth::user()->id)->where('created_by', \Auth::user()->creatorId())->count();
             $countOpenTicket  = Support::where('status', '=', 'open')->where('user', \Auth::user()->id)->where('created_by', \Auth::user()->creatorId())->count();
             $countonholdTicket  = Support::where('status', '=', 'on hold')->where('user', \Auth::user()->id)->where('created_by', \Auth::user()->creatorId())->count();
@@ -48,8 +52,13 @@ class SupportController extends Controller
         //$status = Support::$status;
         $status = Support::status();
         $users = User::where('created_by', \Auth::user()->creatorId())->where('type', '!=', 'client')->get()->pluck('name', 'id');
+        $categories = SupportCategory::where('created_by', \Auth::user()->creatorId())
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->pluck('name', 'id');
+        $categories->prepend(__('Select Category'), '');
 
-        return view('support.create', compact('priority', 'users','status'));
+        return view('support.create', compact('priority', 'users','status', 'categories'));
     }
 
 
@@ -58,8 +67,9 @@ class SupportController extends Controller
 
         $validator = \Validator::make(
             $request->all(), [
-                               'subject' => 'required',
+                    'subject' => 'required',
                                'priority' => 'required',
+                               'support_category_id' => 'nullable|integer|exists:support_categories,id',
                            ]
         );
 
@@ -71,6 +81,7 @@ class SupportController extends Controller
 
         $support              = new Support();
         $support->subject     = $request->subject;
+        $support->support_category_id = $this->resolveSupportCategoryId($request->support_category_id);
         $support->priority    = $request->priority;
         $support->end_date    = $request->end_date;
         $support->ticket_code = date('hms');
@@ -197,8 +208,19 @@ class SupportController extends Controller
         //$status = Support::$status;
         $status = Support::status();
         $users = User::where('created_by', \Auth::user()->creatorId())->where('type', '!=', 'client')->get()->pluck('name', 'id');
+        $categories = SupportCategory::where('created_by', \Auth::user()->creatorId())
+            ->where(function ($query) use ($support) {
+                $query->where('is_active', true);
 
-        return view('support.edit', compact('priority', 'users', 'support','status'));
+                if (!empty($support->support_category_id)) {
+                    $query->orWhere('id', $support->support_category_id);
+                }
+            })
+            ->orderBy('name')
+            ->pluck('name', 'id');
+        $categories->prepend(__('Select Category'), '');
+
+        return view('support.edit', compact('priority', 'users', 'support','status', 'categories'));
     }
 
 
@@ -206,9 +228,10 @@ class SupportController extends Controller
     {
 
         $validator = \Validator::make(
-            $request->all(), [
+                    $request->all(), [
                                'subject' => 'required',
                                'priority' => 'required',
+                               'support_category_id' => 'nullable|integer|exists:support_categories,id',
                            ]
         );
 
@@ -221,6 +244,7 @@ class SupportController extends Controller
 
         $support->subject  = $request->subject;
         $support->user     = $request->user;
+        $support->support_category_id = $this->resolveSupportCategoryId($request->support_category_id);
         $support->priority = $request->priority;
         $support->status  = $request->status;
         $support->end_date = $request->end_date;
@@ -295,7 +319,7 @@ class SupportController extends Controller
         }
         $id      = \Crypt::decrypt($ids);
         $replyes = SupportReply::where('support_id', $id)->with(['users'])->get();
-        $support = Support::with(['assignUser','createdBy'])->find($id);
+        $support = Support::with(['assignUser','createdBy','category'])->find($id);
 
         foreach($replyes as $reply)
         {
@@ -324,23 +348,34 @@ class SupportController extends Controller
 
         if(\Auth::user()->type == 'company')
         {
-            $supports = Support::where('created_by', \Auth::user()->creatorId())->with(['assignUser','createdBy'])->get();
+            $supports = Support::where('created_by', \Auth::user()->creatorId())->with(['assignUser','createdBy','category'])->get();
 
             return view('support.grid', compact('supports'));
         }
         elseif(\Auth::user()->type == 'client')
         {
-            $supports = Support::where('user', \Auth::user()->id)->where('created_by', \Auth::user()->creatorId())->with(['createdBy','assignUser'])->get();
+            $supports = Support::where('user', \Auth::user()->id)->where('created_by', \Auth::user()->creatorId())->with(['createdBy','assignUser','category'])->get();
 
             return view('support.grid', compact('supports'));
         }
         else
         {
 
-            $supports = Support::where('user', \Auth::user()->id)->where('created_by', \Auth::user()->creatorId())->with(['createdBy','assignUser'])->get();
+            $supports = Support::where('user', \Auth::user()->id)->where('created_by', \Auth::user()->creatorId())->with(['createdBy','assignUser','category'])->get();
 
             return view('support.grid', compact('supports'));
         }
 
+    }
+
+    protected function resolveSupportCategoryId($categoryId)
+    {
+        if (empty($categoryId)) {
+            return null;
+        }
+
+        return SupportCategory::where('id', $categoryId)
+            ->where('created_by', \Auth::user()->creatorId())
+            ->value('id');
     }
 }

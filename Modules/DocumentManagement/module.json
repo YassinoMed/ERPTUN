@@ -1,0 +1,11 @@
+{
+    "name": "DocumentManagement",
+    "alias": "documentmanagement",
+    "description": "Gestion \u00e9lectronique des documents avec classement, versioning, m\u00e9tadonn\u00e9es et recherche.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\DocumentManagement\\Providers\\DocumentManagementServiceProvider"
+    ],
+    "files": []
+}

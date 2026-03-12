@@ -2,9 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 
-class HotelMaintenanceIssue extends Model
+class HotelMaintenanceIssue extends HotelModel
 {
     protected $fillable = [
         'room_id',

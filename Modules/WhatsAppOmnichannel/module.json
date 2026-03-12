@@ -1,0 +1,11 @@
+{
+    "name": "WhatsAppOmnichannel",
+    "alias": "whatsappomnichannel",
+    "description": "Hub conversationnel WhatsApp et omnicanal li\u00e9 aux objets CRM, factures, tickets et campagnes.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\WhatsAppOmnichannel\\Providers\\WhatsAppOmnichannelServiceProvider"
+    ],
+    "files": []
+}

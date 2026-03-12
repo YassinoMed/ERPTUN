@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\WorkflowEngine;
 use Illuminate\Database\Eloquent\Model;
 
 class Workflow extends Model
@@ -29,65 +30,21 @@ class Workflow extends Model
 
     public static function getAvailableTriggers()
     {
-        return [
-            \App\Models\Invoice::class => [
-                'name' => 'Invoice',
-                'description' => 'Invoice events',
-            ],
-            \App\Models\Project::class => [
-                'name' => 'Project',
-                'description' => 'Project events',
-            ],
-            \App\Models\Customer::class => [
-                'name' => 'Customer',
-                'description' => 'Customer events',
-            ],
-            \App\Models\Lead::class => [
-                'name' => 'Lead',
-                'description' => 'Lead events',
-            ],
-        ];
+        return config('advanced_features.workflow.triggers', []);
     }
 
     public static function getAvailableActions()
     {
-        return [
-            'email' => [
-                'name' => 'Email',
-                'description' => 'Send email',
-            ],
-            'notification' => [
-                'name' => 'Notification',
-                'description' => 'In-app notification',
-            ],
-            'task' => [
-                'name' => 'Task',
-                'description' => 'Create task',
-            ],
-            'update_field' => [
-                'name' => 'Update Field',
-                'description' => 'Update model field',
-            ],
-            'webhook' => [
-                'name' => 'Webhook',
-                'description' => 'Send webhook',
-            ],
-        ];
+        return config('advanced_features.workflow.actions', []);
     }
 
-    public function execute($model)
+    public static function getAvailableTemplates()
     {
-        $execution = WorkflowExecution::create([
-            'workflow_id' => $this->id,
-            'triggered_by' => \Auth::id(),
-            'model_id' => $model->id ?? null,
-            'model_type' => get_class($model),
-            'execution_data' => [
-                'actions' => $this->actions,
-            ],
-            'status' => 'success',
-        ]);
+        return config('advanced_features.workflow.templates', []);
+    }
 
-        return $execution;
+    public function execute($model, array $context = [])
+    {
+        return app(WorkflowEngine::class)->execute($this, $model, $context);
     }
 }

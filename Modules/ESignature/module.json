@@ -1,0 +1,11 @@
+{
+    "name": "ESignature",
+    "alias": "esignature",
+    "description": "Signature \u00e9lectronique transverse pour contrats, devis, achats, RH et validations formelles.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\ESignature\\Providers\\ESignatureServiceProvider"
+    ],
+    "files": []
+}

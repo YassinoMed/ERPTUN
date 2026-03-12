@@ -3,6 +3,9 @@
 @section('page-title')
     {{__('Manage Appointments')}}
 @endsection
+@section('page-subtitle')
+    {{ __('Coordinate medical schedules, waiting list pressure and reminder execution from one screen.') }}
+@endsection
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{route('dashboard')}}">{{__('Dashboard')}}</a></li>
     <li class="breadcrumb-item">{{__('Appointments')}}</li>
@@ -19,9 +22,41 @@
 @endsection
 
 @section('content')
+    @php
+        $waitingListCount = $appointments->where('is_waiting_list', 1)->count();
+        $confirmedCount = $appointments->where('status', 'confirmed')->count();
+        $checkedInCount = $appointments->where('status', 'checked_in')->count();
+        $reminderCount = $appointments->filter(function ($appointment) {
+            return !empty($appointment->reminder_channel) && !empty($appointment->reminder_at);
+        })->count();
+    @endphp
     <div class="row">
+        <div class="col-12 mb-4">
+            <div class="ux-kpi-grid">
+                <div class="ux-kpi-card">
+                    <span class="ux-kpi-label">{{ __('Confirmed appointments') }}</span>
+                    <strong class="ux-kpi-value">{{ $confirmedCount }}</strong>
+                    <span class="ux-kpi-meta">{{ __('ready for care delivery') }}</span>
+                </div>
+                <div class="ux-kpi-card">
+                    <span class="ux-kpi-label">{{ __('Checked-in patients') }}</span>
+                    <strong class="ux-kpi-value">{{ $checkedInCount }}</strong>
+                    <span class="ux-kpi-meta">{{ __('already on site') }}</span>
+                </div>
+                <div class="ux-kpi-card">
+                    <span class="ux-kpi-label">{{ __('Waiting list') }}</span>
+                    <strong class="ux-kpi-value">{{ $waitingListCount }}</strong>
+                    <span class="ux-kpi-meta">{{ __('patients still pending slot') }}</span>
+                </div>
+                <div class="ux-kpi-card">
+                    <span class="ux-kpi-label">{{ __('Reminders configured') }}</span>
+                    <strong class="ux-kpi-value">{{ $reminderCount }}</strong>
+                    <span class="ux-kpi-meta">{{ __('email, SMS or WhatsApp') }}</span>
+                </div>
+            </div>
+        </div>
         <div class="col-md-12">
-            <div class="card">
+            <div class="card ux-list-card">
                 <div class="card-body table-border-style">
                     <div class="table-responsive">
                         <table class="table datatable">
@@ -33,6 +68,8 @@
                                 <th>{{__('End')}}</th>
                                 <th>{{__('Room')}}</th>
                                 <th>{{__('Specialty')}}</th>
+                                <th>{{__('Type')}}</th>
+                                <th>{{__('Queue')}}</th>
                                 <th>{{__('Reminder')}}</th>
                                 <th>{{__('Status')}}</th>
                                 <th>{{__('Action')}}</th>
@@ -40,7 +77,7 @@
                             </thead>
                             <tbody>
                             @foreach ($appointments as $appointment)
-                                <tr>
+                                <tr data-bulk-id="{{ $appointment->id }}">
                                     <td>
                                         @if($appointment->patient)
                                             <a href="{{ route('patients.show', $appointment->patient->id) }}" class="text-primary">
@@ -55,6 +92,16 @@
                                     <td>{{ \Auth::user()->dateFormat($appointment->end_at) }} {{ \Auth::user()->timeFormat($appointment->end_at) }}</td>
                                     <td>{{ $appointment->room ?? '-' }}</td>
                                     <td>{{ $appointment->specialty ?? '-' }}</td>
+                                    <td>{{ $appointment->appointment_type ?? '-' }}</td>
+                                    <td>
+                                        @if($appointment->is_waiting_list)
+                                            {{ __('Waiting List') }}
+                                        @elseif($appointment->queue_number)
+                                            #{{ $appointment->queue_number }}
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
                                     <td>
                                         @if($appointment->reminder_channel && $appointment->reminder_at)
                                             {{ strtoupper($appointment->reminder_channel) }} · {{ \Auth::user()->dateFormat($appointment->reminder_at) }} {{ \Auth::user()->timeFormat($appointment->reminder_at) }}
@@ -62,7 +109,7 @@
                                             -
                                         @endif
                                     </td>
-                                    <td>{{ ucfirst($appointment->status) }}</td>
+                                    <td>{{ ucwords(str_replace('_', ' ', $appointment->status)) }}</td>
                                     <td>
                                         <span>
                                             @can('edit medical appointment')

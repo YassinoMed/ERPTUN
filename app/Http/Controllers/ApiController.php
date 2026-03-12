@@ -19,6 +19,7 @@ use App\Models\Customer;
 use App\Models\ProductService;
 use App\Models\Invoice;
 use App\Models\Employee;
+use App\Services\Core\ApiClientService;
 
 use Illuminate\Support\Facades\Validator;
 
@@ -27,6 +28,11 @@ class ApiController extends Controller
 {
     //
     use ApiResponser;
+
+    public function __construct(
+        private readonly ApiClientService $apiClientService
+    ) {
+    }
 
     private function tokenAllows(Request $request, string $ability): bool
     {
@@ -66,6 +72,32 @@ class ApiController extends Controller
     {
         auth()->user()->tokens()->delete();
         return $this->success([],'Tokens Revoked');
+    }
+
+    public function issueClientCredentials(Request $request)
+    {
+        if (! $request->user() || ! in_array($request->user()->type, ['company', 'super admin'])) {
+            return $this->error('Forbidden', 403);
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'abilities' => 'nullable|array',
+            'expires_at' => 'nullable|date',
+        ]);
+
+        $issued = $this->apiClientService->issue(
+            $request->user()->creatorId(),
+            $validated['name'],
+            $validated['abilities'] ?? [],
+            isset($validated['expires_at']) ? new \DateTime($validated['expires_at']) : null
+        );
+
+        return $this->success([
+            'client_key' => $issued['client']->client_key,
+            'client_secret' => $issued['plain_secret'],
+            'abilities' => $issued['client']->abilities,
+        ], 'API client issued successfully.');
     }
 
 

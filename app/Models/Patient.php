@@ -19,8 +19,20 @@ class Patient extends Model
         'email',
         'address',
         'allergies',
+        'medical_history',
+        'current_treatments',
+        'emergency_contact_name',
+        'emergency_contact_phone',
+        'emergency_contact_relationship',
         'photo_path',
         'created_by',
+        'archived_at',
+        'archived_by',
+    ];
+
+    protected $casts = [
+        'birth_date' => 'date',
+        'archived_at' => 'datetime',
     ];
 
     public function customer()
@@ -41,5 +53,20 @@ class Patient extends Model
     public function labResults()
     {
         return $this->hasMany(PatientLabResult::class);
+    }
+
+    public function documents()
+    {
+        return $this->hasMany(PatientDocument::class)->orderByDesc('id');
+    }
+
+    public function consents()
+    {
+        return $this->hasMany(PatientConsent::class)->orderByDesc('consented_at');
+    }
+
+    public function accessLogs()
+    {
+        return $this->hasMany(MedicalRecordAccessLog::class)->orderByDesc('id');
     }
 }

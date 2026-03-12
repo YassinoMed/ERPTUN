@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\Permission\Models\Role;
 use Illuminate\Validation\Rule;
+use App\Services\Core\SecurityAccessService;
 
 class CustomerController extends Controller
 {
@@ -34,7 +35,7 @@ class CustomerController extends Controller
     {
         if(\Auth::user()->can('manage customer'))
         {
-            $customers = Customer::where('created_by', \Auth::user()->creatorId())->get();
+            $customers = Customer::where('created_by', \Auth::user()->creatorId())->whereNull('archived_at')->get();
 
             return view('customer.index', compact('customers'));
         }
@@ -73,6 +74,8 @@ class CustomerController extends Controller
                         return $query->where('created_by', \Auth::user()->id);
                     })
                 ],
+                'credit_limit' => 'nullable|numeric|min:0',
+                'credit_score' => 'nullable|integer|min:0|max:100',
             ];
 
 
@@ -115,9 +118,15 @@ class CustomerController extends Controller
                 $customer->shipping_zip     = $request->shipping_zip;
                 $customer->shipping_address = $request->shipping_address;
                 $customer->balance          = $request->balance ?? 0;
+                $customer->credit_balance   = 0;
+                $customer->credit_limit     = $request->credit_limit ?? 0;
+                $customer->credit_hold      = $request->has('credit_hold') ? 1 : 0;
+                $customer->credit_score     = $request->credit_score ?? 0;
+                $customer->guarantee_notes  = $request->guarantee_notes;
                 $customer->lang = !empty($default_language) ? $default_language->value : '';
 
                 $customer->save();
+                $customer->syncCreditBalance();
                 CustomField::saveData($customer, $request->customField);
             }
             else
@@ -161,6 +170,10 @@ class CustomerController extends Controller
         $id       = \Crypt::decrypt($ids);
         $customer = Customer::find($id);
         $customer->customField = CustomField::getShowData($customer, 'customer');
+        app(SecurityAccessService::class)->logSensitiveAccess('view_customer_record', Customer::class, $customer->id, [
+            'name' => $customer->name,
+            'email' => $customer->email,
+        ]);
 
         return view('customer.show', compact('customer'));
     }
@@ -193,6 +206,8 @@ class CustomerController extends Controller
             $rules = [
                 'name' => 'required',
                 'contact' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/',
+                'credit_limit' => 'nullable|numeric|min:0',
+                'credit_score' => 'nullable|integer|min:0|max:100',
             ];
 
 
@@ -224,7 +239,12 @@ class CustomerController extends Controller
             $customer->shipping_zip     = $request->shipping_zip;
             $customer->shipping_address = $request->shipping_address;
             $customer->balance          = $request->balance ?? 0;
+            $customer->credit_limit     = $request->credit_limit ?? 0;
+            $customer->credit_hold      = $request->has('credit_hold') ? 1 : 0;
+            $customer->credit_score     = $request->credit_score ?? 0;
+            $customer->guarantee_notes  = $request->guarantee_notes;
             $customer->save();
+            $customer->syncCreditBalance();
 
             CustomField::saveData($customer, $request->customField);
 

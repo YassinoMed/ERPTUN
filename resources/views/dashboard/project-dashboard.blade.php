@@ -160,7 +160,22 @@
     <li class="breadcrumb-item"><a href="{{route('dashboard')}}">{{__('Dashboard')}}</a></li>
     <li class="breadcrumb-item">{{__('Project')}}</li>
 @endsection
+@section('page-subtitle')
+    {{ __('Monitor delivery workload, task throughput and pending actions without losing sight of cross-team priorities.') }}
+@endsection
 @section('content')
+@if(!empty($executiveSummary))
+    <div class="ux-kpi-grid mb-4">
+        @foreach($executiveSummary as $item)
+            <a href="{{ $item['route'] }}" class="ux-kpi-card executive-metric executive-metric-{{ $item['accent'] }}">
+                <span class="ux-kpi-label">{{ $item['label'] }}</span>
+                <strong class="ux-kpi-value">{{ $item['value'] }}</strong>
+                <span class="ux-kpi-caption">{{ $item['headline'] }}</span>
+                <small class="ux-kpi-meta">{{ $item['meta'] }}</small>
+            </a>
+        @endforeach
+    </div>
+@endif
 <div id="project-dashboard-widgets">
 <div class="dashboard-widget" data-widget="summary">
 <div class="row mb-4 gy-3">

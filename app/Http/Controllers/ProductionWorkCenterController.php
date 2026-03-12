@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\IndustrialResource;
 use App\Models\ProductionWorkCenter;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -40,7 +41,9 @@ class ProductionWorkCenterController extends Controller
             return response()->json(['error' => __('Permission denied.')], 401);
         }
 
-        return view('production.work_centers.create');
+        $resources = IndustrialResource::where('created_by', \Auth::user()->creatorId())->orderBy('name')->get()->pluck('name', 'id');
+
+        return view('production.work_centers.create', compact('resources'));
     }
 
     public function store(Request $request)
@@ -52,7 +55,11 @@ class ProductionWorkCenterController extends Controller
         $validator = \Validator::make($request->all(), [
             'name' => 'required|max:255',
             'type' => 'required|in:machine,workshop,employee',
+            'industrial_resource_id' => 'nullable|integer',
+            'machine_code' => 'nullable|max:255',
             'cost_per_hour' => 'nullable|numeric|min:0',
+            'capacity_hours_per_day' => 'nullable|numeric|min:0',
+            'capacity_workers' => 'nullable|integer|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -63,7 +70,12 @@ class ProductionWorkCenterController extends Controller
         ProductionWorkCenter::create([
             'name' => $request->name,
             'type' => $request->type,
+            'industrial_resource_id' => $request->industrial_resource_id,
+            'machine_code' => $request->machine_code,
             'cost_per_hour' => $request->cost_per_hour ?? 0,
+            'capacity_hours_per_day' => $request->capacity_hours_per_day ?? 0,
+            'capacity_workers' => $request->capacity_workers ?? 0,
+            'is_bottleneck' => $request->has('is_bottleneck'),
             'created_by' => \Auth::user()->creatorId(),
         ]);
 
@@ -80,7 +92,9 @@ class ProductionWorkCenterController extends Controller
             return response()->json(['error' => __('Permission denied.')], 401);
         }
 
-        return view('production.work_centers.edit', compact('workCenter'));
+        $resources = IndustrialResource::where('created_by', \Auth::user()->creatorId())->orderBy('name')->get()->pluck('name', 'id');
+
+        return view('production.work_centers.edit', compact('workCenter', 'resources'));
     }
 
     public function update(Request $request, ProductionWorkCenter $workCenter)
@@ -96,7 +110,11 @@ class ProductionWorkCenterController extends Controller
         $validator = \Validator::make($request->all(), [
             'name' => 'required|max:255',
             'type' => 'required|in:machine,workshop,employee',
+            'industrial_resource_id' => 'nullable|integer',
+            'machine_code' => 'nullable|max:255',
             'cost_per_hour' => 'nullable|numeric|min:0',
+            'capacity_hours_per_day' => 'nullable|numeric|min:0',
+            'capacity_workers' => 'nullable|integer|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -106,7 +124,12 @@ class ProductionWorkCenterController extends Controller
 
         $workCenter->name = $request->name;
         $workCenter->type = $request->type;
+        $workCenter->industrial_resource_id = $request->industrial_resource_id;
+        $workCenter->machine_code = $request->machine_code;
         $workCenter->cost_per_hour = $request->cost_per_hour ?? 0;
+        $workCenter->capacity_hours_per_day = $request->capacity_hours_per_day ?? 0;
+        $workCenter->capacity_workers = $request->capacity_workers ?? 0;
+        $workCenter->is_bottleneck = $request->has('is_bottleneck');
         $workCenter->save();
 
         return redirect()->route('production.work-centers.index')->with('success', __('Work center successfully updated.'));

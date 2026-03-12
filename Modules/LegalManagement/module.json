@@ -1,0 +1,11 @@
+{
+    "name": "LegalManagement",
+    "alias": "legalmanagement",
+    "description": "Suivi des contrats, litiges, \u00e9ch\u00e9ances l\u00e9gales, contentieux et dossiers juridiques.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\LegalManagement\\Providers\\LegalManagementServiceProvider"
+    ],
+    "files": []
+}

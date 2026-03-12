@@ -2,12 +2,16 @@
 @push('script-page')
 @endpush
 @section('page-title')
-    {{__('Manage Customer-Detail')}}
+    {{__('Customer Detail')}}
 @endsection
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{route('dashboard')}}">{{__('Dashboard')}}</a></li>
     <li class="breadcrumb-item"><a href="{{route('customer.index')}}">{{__('Customer')}}</a></li>
     <li class="breadcrumb-item">{{$customer['name']}}</li>
+@endsection
+
+@section('page-subtitle')
+    {{ __('Keep customer identity, commercial history and credit exposure visible from one profile.') }}
 @endsection
 @push('script-page')
     <script>
@@ -66,6 +70,37 @@
 @endsection
 
 @section('content')
+    @php
+        $totalInvoiceSum = $customer->customerTotalInvoiceSum($customer['id']);
+        $totalInvoice = $customer->customerTotalInvoice($customer['id']);
+        $averageSale = ($totalInvoiceSum != 0) ? $totalInvoiceSum / max($totalInvoice, 1) : 0;
+        $customerOverdue = $customer->customerOverdue($customer['id']);
+        $creditLimitLabel = (float) ($customer->credit_limit ?? 0) > 0 ? \Auth::user()->priceFormat($customer->credit_limit) : __('Unlimited');
+    @endphp
+
+    <div class="ux-kpi-grid mb-4">
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __('Lifetime invoiced') }}</span>
+            <strong class="ux-kpi-value">{{ \Auth::user()->priceFormat($totalInvoiceSum) }}</strong>
+            <span class="ux-kpi-meta">{{ __('Across') }} {{ $totalInvoice }} {{ __('issued invoices') }}</span>
+        </div>
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __('Current balance') }}</span>
+            <strong class="ux-kpi-value">{{ \Auth::user()->priceFormat($customer['balance']) }}</strong>
+            <span class="ux-kpi-meta">{{ __('Open receivable still due from this customer') }}</span>
+        </div>
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __('Credit exposure') }}</span>
+            <strong class="ux-kpi-value">{{ \Auth::user()->priceFormat($customer->credit_balance ?? 0) }}</strong>
+            <span class="ux-kpi-meta">{{ __('Limit') }}: {{ $creditLimitLabel }}</span>
+        </div>
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __('Overdue amount') }}</span>
+            <strong class="ux-kpi-value">{{ \Auth::user()->priceFormat($customerOverdue) }}</strong>
+            <span class="ux-kpi-meta">{{ __('Average sale') }} {{ \Auth::user()->priceFormat($averageSale) }}</span>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-md-4 col-lg-4 col-xl-4 mb-4">
             <div class="card customer-detail-box customer_card">
@@ -112,16 +147,11 @@
     </div>
     <div class="row">
         <div class="col-md-12">
-            <div class="card pb-0">
+            <div class="card ux-list-card pb-0">
                 <div class="card-body">
                     <h5 class="card-title">{{__('Company Info')}}</h5>
 
                     <div class="row">
-                        @php
-                            $totalInvoiceSum=$customer->customerTotalInvoiceSum($customer['id']);
-                            $totalInvoice=$customer->customerTotalInvoice($customer['id']);
-                            $averageSale=($totalInvoiceSum!=0)?$totalInvoiceSum/$totalInvoice:0;
-                        @endphp
                         <div class="col-md-3 col-sm-6">
                             <div class="p-4">
                                 <p class="card-text mb-1">{{__('Customer Id')}}</p>
@@ -149,10 +179,30 @@
                         <div class="col-md-3 col-sm-6">
                             <div class="p-4">
                                 <p class="card-text mb-1">{{__('Overdue')}}</p>
-                                <h6 class="report-text mb-3">{{\Auth::user()->priceFormat($customer->customerOverdue($customer['id']))}}</h6>
+                                <h6 class="report-text mb-3">{{\Auth::user()->priceFormat($customerOverdue)}}</h6>
+                                <p class="card-text mb-1">{{__('Credit Limit')}}</p>
+                                <h6 class="report-text mb-0">{{ (float)($customer->credit_limit ?? 0) > 0 ? \Auth::user()->priceFormat($customer->credit_limit) : __('Unlimited') }}</h6>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="p-4">
+                                <p class="card-text mb-1">{{__('Credit Used')}}</p>
+                                <h6 class="report-text mb-3">{{\Auth::user()->priceFormat($customer->credit_balance ?? 0)}}</h6>
+                                <p class="card-text mb-1">{{__('Credit Score')}}</p>
+                                <h6 class="report-text mb-0">{{ $customer->credit_score ?? 0 }}/100</h6>
                             </div>
                         </div>
                     </div>
+                    @if(!empty($customer->guarantee_notes))
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="px-4 pb-4">
+                                    <p class="card-text mb-1">{{__('Guarantees / Notes')}}</p>
+                                    <h6 class="report-text mb-0">{{ $customer->guarantee_notes }}</h6>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -160,7 +210,7 @@
 
     <div class="row">
         <div class="col-12">
-            <div class="card">
+            <div class="card ux-list-card">
                 <div class="card-body table-border-style table-border-style">
                     <h5 class="d-inline-block mb-5">{{__('Proposal')}}</h5>
 

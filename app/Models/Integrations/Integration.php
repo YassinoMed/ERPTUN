@@ -2,9 +2,10 @@
 
 namespace App\Models\Integrations;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\IntegrationModel;
 
-class Integration extends Model
+
+class Integration extends IntegrationModel
 {
     protected $fillable = [
         'user_id',

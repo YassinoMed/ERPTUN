@@ -49,14 +49,32 @@
         </div>
         <div class="col-md-6">
             <div class="form-group">
+                {{ Form::label('appointment_type', __('Appointment Type'), ['class' => 'form-label']) }}
+                {{ Form::text('appointment_type', null, ['class' => 'form-control']) }}
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                {{ Form::label('queue_number', __('Queue Number'), ['class' => 'form-label']) }}
+                {{ Form::number('queue_number', null, ['class' => 'form-control', 'min' => 1]) }}
+            </div>
+        </div>
+        <div class="col-md-4 d-flex align-items-center">
+            <div class="form-check mt-4">
+                {{ Form::checkbox('is_waiting_list', 1, $appointment->is_waiting_list, ['class' => 'form-check-input', 'id' => 'is_waiting_list']) }}
+                {{ Form::label('is_waiting_list', __('Waiting List'), ['class' => 'form-check-label']) }}
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
                 {{ Form::label('status', __('Status'), ['class' => 'form-label']) }}
-                {{ Form::select('status', ['scheduled' => __('Scheduled'), 'completed' => __('Completed'), 'canceled' => __('Canceled')], $appointment->status, ['class' => 'form-control']) }}
+                {{ Form::select('status', ['scheduled' => __('Scheduled'), 'confirmed' => __('Confirmed'), 'in_progress' => __('Checked In'), 'completed' => __('Completed'), 'canceled' => __('Canceled')], $appointment->status, ['class' => 'form-control']) }}
             </div>
         </div>
         <div class="col-md-6">
             <div class="form-group">
                 {{ Form::label('reminder_channel', __('Reminder Channel'), ['class' => 'form-label']) }}
-                {{ Form::select('reminder_channel', ['email' => __('Email'), 'sms' => __('SMS')], $appointment->reminder_channel, ['class' => 'form-control', 'placeholder' => __('None')]) }}
+                {{ Form::select('reminder_channel', ['email' => __('Email'), 'sms' => __('SMS'), 'whatsapp' => __('WhatsApp')], $appointment->reminder_channel, ['class' => 'form-control', 'placeholder' => __('None')]) }}
             </div>
         </div>
         <div class="col-md-6">

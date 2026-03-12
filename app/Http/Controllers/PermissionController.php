@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Core\AuditTrailService;
 use Auth;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
@@ -56,6 +57,15 @@ class PermissionController extends Controller
             }
         }
 
+        app(AuditTrailService::class)->record('security.permission.created', [
+            'auditable' => $permission,
+            'new_values' => [
+                'name' => $permission->name,
+                'roles' => array_values($roles ?? []),
+            ],
+            'created_by' => \Auth::user()->creatorId(),
+        ]);
+
         return redirect()->route('permissions.index')->with(
             'success', 'Permission ' . $permission->name . ' added!'
         );
@@ -85,7 +95,19 @@ class PermissionController extends Controller
                     ]
         );
         $input = $request->all();
+        $before = [
+            'name' => $permission->name,
+        ];
         $permission->fill($input)->save();
+
+        app(AuditTrailService::class)->record('security.permission.updated', [
+            'auditable' => $permission,
+            'old_values' => $before,
+            'new_values' => [
+                'name' => $permission->name,
+            ],
+            'created_by' => \Auth::user()->creatorId(),
+        ]);
 
         return redirect()->route('permissions.index')->with(
             'success', 'Permission ' . $permission->name . ' updated!'
@@ -97,7 +119,15 @@ class PermissionController extends Controller
     public function destroy($id)
     {
         $permission = Permission::findOrFail($id);
+        $snapshot = ['name' => $permission->name];
         $permission->delete();
+
+        app(AuditTrailService::class)->record('security.permission.deleted', [
+            'auditable_type' => Permission::class,
+            'auditable_id' => $id,
+            'old_values' => $snapshot,
+            'created_by' => \Auth::user()->creatorId(),
+        ]);
 
         return redirect()->route('permissions.index')->with( 'success', 'Permission successfully deleted.' );
 

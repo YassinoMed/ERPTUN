@@ -2,9 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 
-class HotelHousekeepingChecklistItem extends Model
+class HotelHousekeepingChecklistItem extends HotelModel
 {
     protected $fillable = [
         'checklist_id',

@@ -1,0 +1,11 @@
+{
+    "name": "EcommerceConnectors",
+    "alias": "ecommerceconnectors",
+    "description": "Connecteurs Shopify, WooCommerce et Prestashop pour produits, commandes et stock.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\EcommerceConnectors\\Providers\\EcommerceConnectorsServiceProvider"
+    ],
+    "files": []
+}

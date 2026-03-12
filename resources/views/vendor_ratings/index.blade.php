@@ -1,0 +1,11 @@
+@extends('layouts.admin')
+@section('page-title', __('Vendor Ratings'))
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a></li><li class="breadcrumb-item">{{ __('Vendor Ratings') }}</li>
+@endsection
+@section('action-btn')
+    <div class="float-end d-flex">@can('create vendor rating')<a href="#" data-url="{{ route('vendor-ratings.create') }}" data-size="lg" data-ajax-popup="true" data-title="{{ __('Create Vendor Rating') }}" class="btn btn-sm btn-primary"><i class="ti ti-plus"></i></a>@endcan</div>
+@endsection
+@section('content')
+<div class="row"><div class="col-12"><div class="card"><div class="card-body table-border-style"><div class="table-responsive"><table class="table datatable"><thead><tr><th>{{ __('Vendor') }}</th><th>{{ __('Period') }}</th><th>{{ __('Total Score') }}</th><th>{{ __('Status') }}</th><th width="220px">{{ __('Action') }}</th></tr></thead><tbody>@foreach($vendorRatings as $vendorRating)<tr><td>{{ optional($vendorRating->vender)->name ?: '-' }}</td><td>{{ $vendorRating->period_label }}</td><td>{{ $vendorRating->total_score }}</td><td>{{ __(ucfirst($vendorRating->status)) }}</td><td class="Action"><div class="action-btn me-2"><a href="{{ route('vendor-ratings.show',$vendorRating) }}" class="mx-3 btn btn-sm align-items-center bg-warning"><i class="ti ti-eye text-white"></i></a></div>@can('edit vendor rating')<div class="action-btn me-2"><a href="#" data-url="{{ route('vendor-ratings.edit',$vendorRating) }}" data-size="lg" data-ajax-popup="true" data-title="{{ __('Edit Vendor Rating') }}" class="mx-3 btn btn-sm align-items-center bg-info"><i class="ti ti-pencil text-white"></i></a></div>@endcan @can('delete vendor rating')<div class="action-btn">{!! Form::open(['method'=>'DELETE','route'=>['vendor-ratings.destroy',$vendorRating],'id'=>'delete-form-vendor-rating-'.$vendorRating->id]) !!}<a href="#" class="mx-3 btn btn-sm align-items-center bs-pass-para bg-danger" data-confirm="{{ __('Are You Sure?') . '|' . __('This action can not be undone. Do you want to continue?') }}" data-confirm-yes="document.getElementById('delete-form-vendor-rating-{{ $vendorRating->id }}').submit();"><i class="ti ti-trash text-white"></i></a>{!! Form::close() !!}</div>@endcan</td></tr>@endforeach</tbody></table></div></div></div></div></div>
+@endsection

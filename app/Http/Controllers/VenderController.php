@@ -34,7 +34,7 @@ class VenderController extends Controller
     {
         if(\Auth::user()->can('manage vender'))
         {
-            $venders = Vender::where('created_by', \Auth::user()->creatorId())->get();
+            $venders = Vender::where('created_by', \Auth::user()->creatorId())->whereNull('archived_at')->get();
 
             return view('vender.index', compact('venders'));
         }

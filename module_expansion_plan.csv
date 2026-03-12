@@ -1,0 +1,26 @@
+module,valeur_business,difficulte_technique,priorite,dependances,statut
+Portail client fournisseur,Tres elevee,Moyenne,P1,"CRM;Ventes;Achats;Support;Paiements;Documents",Planifie
+GED DMS,Tres elevee,Elevee,P1,"RH;Finance;Qualite;Projets;Support",Planifie
+Signature electronique,Elevee,Moyenne,P1,"GED;Contrats;Devis;RH;Achats",Planifie
+Workflow designer visuel,Tres elevee,Tres elevee,P1,"Approvals;Achats;RH;Compta;Support",Planifie
+Notes de frais,Elevee,Moyenne,P1,"RH;Compta;Workflow;Paiements",Planifie
+Procurement avance,Tres elevee,Elevee,P1,"Achats;Fournisseurs;Stock;Workflow",Planifie
+Portail employe ESS MSS,Elevee,Moyenne,P1,"RH;Paie;Documents;Conges;Pointage",Planifie
+BI avancee,Tres elevee,Tres elevee,P1,"Dashboards;Finance;Ventes;Stock;RH;Projets",Planifie
+Contrats revenus recurrents,Elevee,Moyenne,P1,"Ventes;Achats;Billing;Abonnements",Planifie
+WhatsApp omnicanal,Elevee,Moyenne,P1,"CRM;Support;Notifications;Factures",Planifie
+Field Service SAV,Elevee,Elevee,P2,"Maintenance;Support;Planning;Stock",Planifie
+Immobilisations actifs,Elevee,Moyenne,P2,"Compta;Maintenance;Achats",Planifie
+Knowledge base,Moyenne elevee,Faible,P2,"Support;RH;GED",Planifie
+Booking transverse,Elevee,Moyenne,P2,"Calendrier;Clinique;Support;RH",Planifie
+LMS eLearning,Elevee,Elevee,P2,"RH;Formation;Portail employe",Planifie
+GRC audit conformite,Elevee,Elevee,P2,"Qualite;GED;Workflows",Planifie
+Connecteurs e commerce,Tres elevee,Elevee,P2,"Ventes;Stock;CRM;Livraison",Planifie
+Logistique livraison,Elevee,Elevee,P2,"WMS;Stock;Ventes",Planifie
+Flotte vehicules,Moyenne elevee,Moyenne,P3,"Maintenance;Operations;BTP",Planifie
+CMMS avancee,Elevee,Elevee,P3,"Maintenance;Stock;IoT;Actifs",Planifie
+IoT telemetrie,Tres elevee,Tres elevee,P3,"Maintenance;Agriculture;Qualite;BI",Planifie
+ESG carbone,Moyenne elevee,Elevee,P3,"BI;Achats;Flotte;Energie",Planifie
+Franchise multi site,Elevee,Elevee,P3,"POS;SaaS;Stock;Ventes",Planifie
+Loyalty fidelite,Elevee,Moyenne,P3,"POS;CRM;Ventes",Planifie
+Module juridique,Moyenne elevee,Moyenne,P3,"GED;Signature;Contrats",Planifie

@@ -16,6 +16,12 @@
 
 @section('action-btn')
     <div class="float-end">
+        @if (\Auth::user()->type == 'company')
+            <a href="{{ route('support-categories.index') }}" class="btn btn-sm btn-primary-subtle me-1"
+                data-bs-toggle="tooltip" title="{{ __('Categories') }}">
+                <i class="ti ti-category"></i>
+            </a>
+        @endif
         <a href="{{ route('support.grid') }}" class="btn btn-sm btn-primary-subtle me-1" data-bs-toggle="tooltip"
             title="{{ __('Grid View') }}">
             <i class="ti ti-layout-grid text-white"></i>
@@ -177,6 +183,7 @@
                                     <th scope="col">{{ __('Created By') }}</th>
                                     <th scope="col">{{ __('Ticket') }}</th>
                                     <th scope="col">{{ __('Code') }}</th>
+                                    <th scope="col">{{ __('Category') }}</th>
                                     <th scope="col">{{ __('Attachment') }}</th>
                                     <th scope="col">{{ __('Assign User') }}</th>
                                     <th scope="col">{{ __('Status') }}</th>
@@ -236,6 +243,16 @@
                                             </div>
                                         </td>
                                         <td>{{ $support->ticket_code }}</td>
+                                        <td>
+                                            @if (!empty($support->category))
+                                                <span class="badge p-2 px-3 rounded text-white"
+                                                    style="background-color: {{ $support->category->color }};">
+                                                    {{ $support->category->name }}
+                                                </span>
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
                                         <td>
                                             @if (!empty($support->attachment))
                                                 <a class="bg-primary ms-2 btn btn-sm align-items-center"

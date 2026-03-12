@@ -9,12 +9,21 @@ class Support extends Model
     protected $fillable = [
         'subject',
         'user',
+        'configuration_item_id',
+        'support_category_id',
         'priority',
         'end_date',
+        'resolution_due_at',
+        'resolved_at',
         'ticket_code',
         'ticket_created',
         'status',
+        'is_internal',
+        'ticket_type',
+        'impact_level',
+        'urgency_level',
         'created_by',
+        'description',
     ];
 
     public static $priority = [
@@ -32,6 +41,16 @@ class Support extends Model
     public function assignUser()
     {
         return $this->hasOne('App\Models\user', 'id', 'user');
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(SupportCategory::class, 'support_category_id');
+    }
+
+    public function configurationItem()
+    {
+        return $this->belongsTo(ConfigurationItem::class, 'configuration_item_id');
     }
 
     public static $status = [

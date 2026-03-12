@@ -11,3 +11,28 @@ F09,Planifier les ressources RH et la charge,P2,Proposé,Moyen,Moyen,Moyenne
 F10,Automatiser les relances et le scoring de risque,P1,Proposé,Élevé,Moyen,Moyenne
 F11,Planifier des exports et rapports programmés,P1,Proposé,Élevé,Moyen,Moyenne
 F12,Industrialiser l’onboarding des entreprises,P2,Proposé,Moyen,Moyen,Moyenne
+F13,Déployer un portail client et fournisseur avancé,P1,Proposé,Très élevé,Élevé,Haute
+F14,Mettre en place une GED structurée avec versioning,P1,Proposé,Très élevé,Élevé,Haute
+F15,Ajouter la signature électronique transverse,P1,Proposé,Élevé,Moyen,Moyenne
+F16,Concevoir un workflow designer visuel BPM,P1,Proposé,Très élevé,Très élevé,Haute
+F17,Créer un module notes de frais et remboursement,P1,Proposé,Élevé,Moyen,Moyenne
+F18,Étendre les achats avec un procurement avancé,P1,Proposé,Très élevé,Élevé,Haute
+F19,Créer un portail employé ESS MSS complet,P1,Proposé,Élevé,Moyen,Moyenne
+F20,Construire une BI avancée et un data mart décisionnel,P1,Proposé,Très élevé,Très élevé,Haute
+F21,Gérer contrats et revenus récurrents métier,P1,Proposé,Élevé,Moyen,Moyenne
+F22,Ajouter un hub WhatsApp omnicanal,P1,Proposé,Élevé,Moyen,Moyenne
+F23,Déployer un SAV et field service mobile,P2,Proposé,Élevé,Élevé,Haute
+F24,Gérer immobilisations et actifs d entreprise,P2,Proposé,Élevé,Moyen,Moyenne
+F25,Créer une base de connaissances liée au support,P2,Proposé,Moyen,Faible,Basse
+F26,Ajouter un moteur de réservation transverse,P2,Proposé,Élevé,Moyen,Moyenne
+F27,Créer un LMS eLearning et certifications,P2,Proposé,Élevé,Élevé,Haute
+F28,Implémenter GRC audit risques et conformité,P2,Proposé,Élevé,Élevé,Haute
+F29,Ajouter une gestion de flotte et véhicules,P3,Proposé,Moyen,Moyen,Moyenne
+F30,Renforcer la maintenance avec une CMMS avancée,P3,Proposé,Élevé,Élevé,Haute
+F31,Ajouter IoT capteurs et télémétrie,P3,Proposé,Très élevé,Très élevé,Haute
+F32,Créer un module ESG carbone et durabilité,P3,Proposé,Moyen,Élevé,Haute
+F33,Gérer franchise multi site et réseau retail,P3,Proposé,Élevé,Élevé,Haute
+F34,Ajouter fidélité cashback et cartes cadeaux,P3,Proposé,Élevé,Moyen,Moyenne
+F35,Créer un module juridique et contentieux,P3,Proposé,Moyen,Moyen,Moyenne
+F36,Intégrer des connecteurs e commerce et marketplaces,P2,Proposé,Très élevé,Élevé,Haute
+F37,Étendre WMS vers logistique livraison et expédition,P2,Proposé,Élevé,Élevé,Haute

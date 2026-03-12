@@ -3,8 +3,10 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ApiController;
+use App\Http\Controllers\ApiClientGatewayController;
 use App\Http\Controllers\HotelApiController;
 use App\Http\Controllers\AgriApiController;
+use App\Http\Controllers\TenantInvoiceController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -21,6 +23,7 @@ Route::post('login', [ApiController::class, 'login']);
 Route::group(['middleware' => ['auth:sanctum']], function () {
 
     Route::post('logout', [ApiController::class, 'logout']);
+    Route::post('clients/credentials', [ApiController::class, 'issueClientCredentials']);
     Route::get('hotel/channels', [HotelApiController::class, 'channels']);
     Route::post('hotel/channels/sync', [HotelApiController::class, 'syncChannels']);
     Route::get('hotel/recommendations', [HotelApiController::class, 'recommendations']);
@@ -46,3 +49,27 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('agri/contracts/hedges', [AgriApiController::class, 'createHedge']);
     Route::post('agri/price-indices', [AgriApiController::class, 'createPriceIndex']);
 });
+
+Route::prefix('tenants/{tenant}')
+    ->middleware(['auth:sanctum', 'tenant.access'])
+    ->group(function () {
+        Route::get('finance/invoices', [TenantInvoiceController::class, 'index'])
+            ->middleware('scope:erp.finance.read');
+
+        Route::get('finance/invoices/{invoice}', [TenantInvoiceController::class, 'show'])
+            ->middleware('scope:erp.finance.read');
+
+        Route::post('finance/invoices', [TenantInvoiceController::class, 'store'])
+            ->middleware('scope:erp.finance.write');
+    });
+
+Route::prefix('client/v1')
+    ->middleware(['api.client'])
+    ->group(function () {
+        Route::get('customers', [ApiClientGatewayController::class, 'customers']);
+        Route::get('products', [ApiClientGatewayController::class, 'products']);
+        Route::get('invoices', [ApiClientGatewayController::class, 'invoices']);
+        Route::get('purchases', [ApiClientGatewayController::class, 'purchases']);
+        Route::get('patients', [ApiClientGatewayController::class, 'patients']);
+        Route::get('delivery-notes', [ApiClientGatewayController::class, 'deliveryNotes']);
+    });

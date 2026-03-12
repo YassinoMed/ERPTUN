@@ -21,6 +21,12 @@ class ProductService extends Model
         'sale_chartaccount_id',
         'expense_chartaccount_id',
         'created_by',
+        'archived_at',
+        'archived_by',
+    ];
+
+    protected $casts = [
+        'archived_at' => 'datetime',
     ];
 
     public function taxes()

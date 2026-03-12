@@ -2,6 +2,9 @@
 @section('page-title')
     {{__('Dashboard')}}
 @endsection
+@section('page-subtitle')
+    {{ __('Monitor attendance, calendar activity and operational alerts from one workspace.') }}
+@endsection
 @push('script-page')
     <script>
         $(document).ready(function()
@@ -97,8 +100,33 @@
 @endsection
 @php
     $setting = \App\Models\Utility::settings();
+    $announcementCount = isset($announcements) ? count($announcements) : 0;
+    $meetingCount = isset($meetings) ? count($meetings) : 0;
+    $notClockedCount = isset($notClockIns) ? count($notClockIns) : 0;
 @endphp
 @section('content')
+    <div class="ux-kpi-grid mb-4">
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __('Announcements') }}</span>
+            <strong class="ux-kpi-value">{{ $announcementCount }}</strong>
+            <span class="ux-kpi-meta">{{ __('visible company notices') }}</span>
+        </div>
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __('Meetings') }}</span>
+            <strong class="ux-kpi-value">{{ $meetingCount }}</strong>
+            <span class="ux-kpi-meta">{{ __('upcoming internal meetings') }}</span>
+        </div>
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __("Not clocked in") }}</span>
+            <strong class="ux-kpi-value">{{ $notClockedCount }}</strong>
+            <span class="ux-kpi-meta">{{ __('today attention points') }}</span>
+        </div>
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __('Office hours') }}</span>
+            <strong class="ux-kpi-value">{{ $officeTime['startTime'] ?? '--:--' }} - {{ $officeTime['endTime'] ?? '--:--' }}</strong>
+            <span class="ux-kpi-meta">{{ __('current working window') }}</span>
+        </div>
+    </div>
     @if(\Auth::user()->type != 'client' && \Auth::user()->type != 'company')
         <div class="row">
             <div class="col-sm-12">
@@ -561,5 +589,4 @@
         </div>
     @endif
 @endsection
-
 

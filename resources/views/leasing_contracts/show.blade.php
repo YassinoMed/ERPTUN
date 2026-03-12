@@ -1,0 +1,8 @@
+@extends('layouts.admin')
+@section('page-title', __('Leasing Contract'))
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('leasing-contracts.index') }}">{{ __('Leasing Contracts') }}</a></li><li class="breadcrumb-item">{{ $leasingContract->contract_number }}</li>
+@endsection
+@section('content')
+<div class="row"><div class="col-12"><div class="card"><div class="card-body"><div class="row gy-3"><div class="col-md-4"><strong>{{ __('Contract Number') }}:</strong> {{ $leasingContract->contract_number }}</div><div class="col-md-4"><strong>{{ __('Customer') }}:</strong> {{ optional($leasingContract->customer)->name ?: '-' }}</div><div class="col-md-4"><strong>{{ __('Status') }}:</strong> {{ __(ucfirst($leasingContract->status)) }}</div><div class="col-md-4"><strong>{{ __('Asset Name') }}:</strong> {{ $leasingContract->asset_name }}</div><div class="col-md-4"><strong>{{ __('Lease Amount') }}:</strong> {{ Auth::user()->priceFormat($leasingContract->lease_amount) }}</div><div class="col-md-4"><strong>{{ __('Residual Amount') }}:</strong> {{ Auth::user()->priceFormat($leasingContract->residual_amount) }}</div><div class="col-md-4"><strong>{{ __('Start Date') }}:</strong> {{ $leasingContract->start_date ? Auth::user()->dateFormat($leasingContract->start_date) : '-' }}</div><div class="col-md-4"><strong>{{ __('End Date') }}:</strong> {{ $leasingContract->end_date ? Auth::user()->dateFormat($leasingContract->end_date) : '-' }}</div><div class="col-md-4"><strong>{{ __('Payment Frequency') }}:</strong> {{ $leasingContract->payment_frequency ?: '-' }}</div><div class="col-12"><strong>{{ __('Notes') }}:</strong><div class="text-muted">{{ $leasingContract->notes ?: '-' }}</div></div></div></div></div></div></div>
+@endsection

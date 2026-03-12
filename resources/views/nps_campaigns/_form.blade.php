@@ -1,0 +1,9 @@
+<div class="row">
+    <div class="col-md-6 mb-3"><label class="form-label">{{ __('Name') }}</label><input type="text" name="name" class="form-control" value="{{ old('name', $npsCampaign->name ?? '') }}" required></div>
+    <div class="col-md-3 mb-3"><label class="form-label">{{ __('Channel') }}</label><input type="text" name="channel" class="form-control" value="{{ old('channel', $npsCampaign->channel ?? 'email') }}" required></div>
+    <div class="col-md-3 mb-3"><label class="form-label">{{ __('Status') }}</label><select name="status" class="form-control">@foreach($statuses as $statusKey => $statusLabel)<option value="{{ $statusKey }}" @selected(old('status', $npsCampaign->status ?? 'draft') == $statusKey)>{{ __($statusLabel) }}</option>@endforeach</select></div>
+    <div class="col-md-3 mb-3"><label class="form-label">{{ __('Audience') }}</label><input type="text" name="audience_type" class="form-control" value="{{ old('audience_type', $npsCampaign->audience_type ?? 'customers') }}"></div>
+    <div class="col-md-3 mb-3"><label class="form-label">{{ __('Sent at') }}</label><input type="datetime-local" name="sent_at" class="form-control" value="{{ old('sent_at', isset($npsCampaign) && $npsCampaign->sent_at ? \Carbon\Carbon::parse($npsCampaign->sent_at)->format('Y-m-d\\TH:i') : '') }}"></div>
+    <div class="col-md-3 mb-3"><label class="form-label">{{ __('Closes at') }}</label><input type="datetime-local" name="closes_at" class="form-control" value="{{ old('closes_at', isset($npsCampaign) && $npsCampaign->closes_at ? \Carbon\Carbon::parse($npsCampaign->closes_at)->format('Y-m-d\\TH:i') : '') }}"></div>
+    <div class="col-md-12 mb-3"><label class="form-label">{{ __('Description') }}</label><textarea name="description" class="form-control" rows="4">{{ old('description', $npsCampaign->description ?? '') }}</textarea></div>
+</div>

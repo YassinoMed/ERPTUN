@@ -6,15 +6,23 @@ use App\Models\Branch;
 use App\Models\Department;
 use App\Models\Designation;
 use App\Models\Employee;
+use App\Services\Core\AccessScopeService;
 use Illuminate\Http\Request;
 
 class BranchController extends Controller
 {
+    public function __construct(
+        private readonly AccessScopeService $accessScopes
+    ) {
+    }
+
     public function index()
     {
         if(\Auth::user()->can('manage branch'))
         {
-            $branches = Branch::where('created_by', '=', \Auth::user()->creatorId())->get();
+            $branches = $this->accessScopes
+                ->filterOwnedQuery(Branch::query(), \Auth::user(), 'branch')
+                ->get();
 
             return view('branch.index', compact('branches'));
         }
@@ -77,6 +85,7 @@ class BranchController extends Controller
         {
             if($branch->created_by == \Auth::user()->creatorId())
             {
+                $this->accessScopes->assertScopeAccess(\Auth::user(), 'branch', $branch->id);
 
                 return view('branch.edit', compact('branch'));
             }
@@ -97,6 +106,7 @@ class BranchController extends Controller
         {
             if($branch->created_by == \Auth::user()->creatorId())
             {
+                $this->accessScopes->assertScopeAccess(\Auth::user(), 'branch', $branch->id);
                 $validator = \Validator::make(
                     $request->all(), [
                                        'name' => 'required',
@@ -131,6 +141,7 @@ class BranchController extends Controller
         {
             if($branch->created_by == \Auth::user()->creatorId())
             {
+                $this->accessScopes->assertScopeAccess(\Auth::user(), 'branch', $branch->id);
                 $employee     = Employee::where('branch_id', $branch->id)->get();
                 if (count($employee) == 0) {
                     $department = Department::where('branch_id', $branch->id)->first();

@@ -6,6 +6,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Services\Core\DocumentNumberService;
 use Spatie\Permission\Traits\HasRoles;
 
 class Customer extends Authenticatable
@@ -39,11 +40,24 @@ class Customer extends Authenticatable
         'shipping_phone',
         'shipping_zip',
         'shipping_address',
+        'tax_number',
+        'balance',
+        'credit_balance',
+        'credit_limit',
+        'credit_hold',
+        'credit_score',
+        'guarantee_notes',
+        'archived_at',
+        'archived_by',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+    ];
+
+    protected $casts = [
+        'archived_at' => 'datetime',
     ];
 
 
@@ -102,16 +116,12 @@ class Customer extends Authenticatable
 
     public function invoiceNumberFormat($number)
     {
-        $settings = Utility::settings();
-
-        return $settings["invoice_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('invoice', $number, $this->creatorId());
     }
 
     public function proposalNumberFormat($number)
     {
-        $settings = Utility::settings();
-
-        return $settings["proposal_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('proposal', $number, $this->creatorId());
     }
 
     public function invoiceChartData()
@@ -254,6 +264,11 @@ class Customer extends Authenticatable
         return $this->hasMany(Invoice::class, 'customer_id');
     }
 
+    public function deliveryNotes()
+    {
+        return $this->hasMany(DeliveryNote::class, 'customer_id');
+    }
+
     public function customerTotalInvoiceSum($customerId)
     {
         return $this->invoices()
@@ -278,6 +293,44 @@ class Customer extends Authenticatable
         ->first();
 
         return ($customer != null) ? $customer->id : 0;
+    }
+
+    public function currentCreditExposure($excludeInvoiceId = null)
+    {
+        $query = $this->invoices()->whereIn('status', [0, 1, 2, 3]);
+
+        if (!empty($excludeInvoiceId)) {
+            $query->where('id', '!=', $excludeInvoiceId);
+        }
+
+        return $query->get()->sum(function ($invoice) {
+            return max(0, (float) $invoice->getDue());
+        });
+    }
+
+    public function availableCredit($excludeInvoiceId = null)
+    {
+        $limit = (float) ($this->credit_limit ?? 0);
+        if ($limit <= 0) {
+            return null;
+        }
+
+        return $limit - $this->currentCreditExposure($excludeInvoiceId);
+    }
+
+    public function canUseCredit($additionalAmount = 0, $excludeInvoiceId = null)
+    {
+        if ((int) ($this->credit_hold ?? 0) !== 1 || (float) ($this->credit_limit ?? 0) <= 0) {
+            return true;
+        }
+
+        return ($this->currentCreditExposure($excludeInvoiceId) + (float) $additionalAmount) <= (float) $this->credit_limit;
+    }
+
+    public function syncCreditBalance()
+    {
+        $this->credit_balance = $this->currentCreditExposure();
+        $this->save();
     }
 
 }

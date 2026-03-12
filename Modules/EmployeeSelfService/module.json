@@ -1,0 +1,11 @@
+{
+    "name": "EmployeeSelfService",
+    "alias": "employeeselfservice",
+    "description": "Self-service RH pour cong\u00e9s, documents, bulletins, attestations, notes de frais et onboarding.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\EmployeeSelfService\\Providers\\EmployeeSelfServiceServiceProvider"
+    ],
+    "files": []
+}

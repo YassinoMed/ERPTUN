@@ -34,6 +34,30 @@
                 {{Form::number('balance',null,array('class'=>'form-control' , 'placeholder' => __('Enter Balance')))}}
             </div>
         </div>
+        <div class="col-lg-4 col-md-4 col-sm-6">
+            <div class="form-group">
+                {{Form::label('credit_limit',__('Credit Limit'),['class'=>'form-label'])}}
+                {{Form::number('credit_limit',0,array('class'=>'form-control' , 'placeholder' => __('Enter Credit Limit'),'step'=>'0.01','min'=>'0'))}}
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-4 col-sm-6">
+            <div class="form-group">
+                {{Form::label('credit_score',__('Credit Score'),['class'=>'form-label'])}}
+                {{Form::number('credit_score',0,array('class'=>'form-control' , 'placeholder' => __('0 to 100'),'min'=>'0','max'=>'100'))}}
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-4 col-sm-6">
+            <div class="form-group form-check form-switch mt-4 pt-2">
+                <input type="checkbox" class="form-check-input" name="credit_hold" id="credit_hold">
+                <label class="form-check-label" for="credit_hold">{{__('Block On Credit Limit')}}</label>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="form-group">
+                {{Form::label('guarantee_notes',__('Guarantees / Notes'),['class'=>'form-label'])}}
+                {{Form::textarea('guarantee_notes',null,array('class'=>'form-control','rows'=>2 , 'placeholder' => __('Guarantees, caution, payment terms...')))}}
+            </div>
+        </div>
         @if(!$customFields->isEmpty())
                     @include('customFields.formBuilder')
         @endif

@@ -1,0 +1,11 @@
+{
+    "name": "SupplierPortal",
+    "alias": "supplierportal",
+    "description": "Portail fournisseur pour commandes, factures, litiges, paiements et collaboration achat.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\SupplierPortal\\Providers\\SupplierPortalServiceProvider"
+    ],
+    "files": []
+}

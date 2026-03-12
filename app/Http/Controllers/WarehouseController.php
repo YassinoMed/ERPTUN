@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Core\AccessScopeService;
 use App\Models\Utility;
 use App\Models\warehouse;
 use App\Models\WarehouseProduct;
@@ -10,6 +11,11 @@ use Illuminate\Http\Request;
 
 class WarehouseController extends Controller
 {
+    public function __construct(
+        private readonly AccessScopeService $accessScopes
+    ) {
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -17,8 +23,9 @@ class WarehouseController extends Controller
      */
     public function index()
     {
-
-        $warehouses = warehouse::where('created_by', '=', \Auth::user()->creatorId())->get();
+        $warehouses = $this->accessScopes
+            ->filterOwnedQuery(warehouse::query(), \Auth::user(), 'warehouse')
+            ->get();
 
         return view('warehouse.index',compact('warehouses'));
 
@@ -89,6 +96,7 @@ class WarehouseController extends Controller
 
             if(WarehouseProduct::where('warehouse_id' , $warehouse->id)->exists())
             {
+                $this->accessScopes->assertScopeAccess(\Auth::user(), 'warehouse', $warehouse->id);
                 $warehouse = WarehouseProduct::where('warehouse_id' , $warehouse->id)->where('created_by', '=', \Auth::user()->creatorId())->with(['product'])->get();
 
                 return view('warehouse.show', compact('warehouse'));
@@ -117,6 +125,7 @@ class WarehouseController extends Controller
         {
             if($warehouse->created_by == \Auth::user()->creatorId())
             {
+                $this->accessScopes->assertScopeAccess(\Auth::user(), 'warehouse', $warehouse->id);
                 return view('warehouse.edit', compact('warehouse'));
             }
             else
@@ -143,6 +152,7 @@ class WarehouseController extends Controller
         {
             if($warehouse->created_by == \Auth::user()->creatorId())
             {
+                $this->accessScopes->assertScopeAccess(\Auth::user(), 'warehouse', $warehouse->id);
                 $validator = \Validator::make(
                     $request->all(), [
                         'name' => 'required',
@@ -186,6 +196,7 @@ class WarehouseController extends Controller
         {
             if($warehouse->created_by == \Auth::user()->creatorId())
             {
+                $this->accessScopes->assertScopeAccess(\Auth::user(), 'warehouse', $warehouse->id);
                 $warehouse->delete();
 
 

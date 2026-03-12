@@ -1,0 +1,11 @@
+{
+    "name": "LoyaltyRewards",
+    "alias": "loyaltyrewards",
+    "description": "Programme de fid\u00e9lit\u00e9, cashback, coupons, points et cartes cadeaux.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\LoyaltyRewards\\Providers\\LoyaltyRewardsServiceProvider"
+    ],
+    "files": []
+}

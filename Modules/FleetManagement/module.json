@@ -1,0 +1,11 @@
+{
+    "name": "FleetManagement",
+    "alias": "fleetmanagement",
+    "description": "Gestion des v\u00e9hicules, chauffeurs, entretien, carburant, assurances et sinistres.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\FleetManagement\\Providers\\FleetManagementServiceProvider"
+    ],
+    "files": []
+}

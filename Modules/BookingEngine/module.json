@@ -1,0 +1,11 @@
+{
+    "name": "BookingEngine",
+    "alias": "bookingengine",
+    "description": "Moteur de r\u00e9servation transverse pour agents, salles, \u00e9quipements, m\u00e9decins ou techniciens.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\BookingEngine\\Providers\\BookingEngineServiceProvider"
+    ],
+    "files": []
+}

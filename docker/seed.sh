@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 # =====================================================================
-# ERPGo SaaS — Docker Seed Script
+# ERPGo SaaS — Docker Seed Script (BD unique)
 # =====================================================================
-# Standalone Docker script for seeding all microservice databases.
-# Used by CI/CD pipelines and Docker Compose.
+# Script pour seeder la base de données centralisée.
 #
 # Usage:
 #   docker/seed.sh [--env=dev] [--reset] [--force]
@@ -42,7 +41,7 @@ success() { echo -e "${GREEN}[SEED]${NC} ✅ $*"; }
 warn()    { echo -e "${YELLOW}[SEED]${NC} ⚠️  $*"; }
 error()   { echo -e "${RED}[SEED]${NC} ❌ $*"; }
 
-# ── Parse CLI Arguments (override env vars) ────────────────────────────
+# ── Parse CLI Arguments ────────────────────────────────────────────────
 for arg in "$@"; do
     case $arg in
         --env=*)       SEED_ENV="${arg#*=}" ;;
@@ -69,64 +68,47 @@ fi
 echo -e ""
 echo -e "${CYAN}╔═══════════════════════════════════════════════════════╗${NC}"
 echo -e "${CYAN}║${NC}  ${GREEN}🐳 ERPGo SaaS — Docker Seed Script${NC}                 ${CYAN}║${NC}"
+echo -e "${CYAN}║${NC}  ${GREEN}   BD unique centralisée${NC}                            ${CYAN}║${NC}"
 echo -e "${CYAN}╚═══════════════════════════════════════════════════════╝${NC}"
 echo -e ""
 info "Environment: ${SEED_ENV}"
 info "Reset: ${SEED_RESET}"
 info "Service: ${SEED_SERVICE:-all}"
 
-# Step 1: Define all DB services
-DB_SERVICES=(
-    core-db billing-db approvals-db mrp-db quality-db maintenance-db
-    chatgpt-db hotel-db traceability-db cropplanning-db cooperative-db
-    hedging-db hrops-db operations-db platform-db industry-db btp-db
-    integrations-db saas-db
-)
+# Step 1: Start MySQL + Redis
+info "Starting MySQL and Redis..."
+${COMPOSE_CMD} up -d mysql redis 2>&1
 
-# Step 2: Start DB services
-info "Starting database services..."
-${COMPOSE_CMD} up -d "${DB_SERVICES[@]}" redis 2>&1
-
-# Step 3: Wait for databases to be healthy
-info "Waiting for databases to become healthy..."
-MAX_WAIT=180
+# Step 2: Wait for MySQL to be healthy
+info "Waiting for MySQL to become healthy..."
+MAX_WAIT=120
 WAITED=0
-INTERVAL=10
+INTERVAL=5
 
 while [[ $WAITED -lt $MAX_WAIT ]]; do
-    HEALTHY_DBS=0
-    TOTAL_DBS=${#DB_SERVICES[@]}
-
-    for db in "${DB_SERVICES[@]}"; do
-        # Check if service is healthy
-        if ${COMPOSE_CMD} ps "${db}" 2>/dev/null | grep -q "healthy"; then
-            HEALTHY_DBS=$((HEALTHY_DBS + 1))
-        fi
-    done
-
-    if [[ $HEALTHY_DBS -ge $TOTAL_DBS ]]; then
-        success "All ${TOTAL_DBS} databases are healthy!"
+    if ${COMPOSE_CMD} ps mysql 2>/dev/null | grep -q "healthy"; then
+        success "MySQL is healthy!"
         break
     fi
-
-    echo -ne "\r  ⏳ ${HEALTHY_DBS}/${TOTAL_DBS} databases healthy... (${WAITED}s / ${MAX_WAIT}s)  "
+    echo -ne "\r  ⏳ Waiting for MySQL... (${WAITED}s / ${MAX_WAIT}s)  "
     sleep $INTERVAL
     WAITED=$((WAITED + INTERVAL))
 done
 echo -e ""
 
 if [[ $WAITED -ge $MAX_WAIT ]]; then
-    warn "Timeout! Not all databases are ready. Proceeding with available ones..."
+    error "Timeout! MySQL is not ready after ${MAX_WAIT}s."
+    exit 1
 fi
 
-# Step 4: Start the core service
+# Step 3: Start the core service
 info "Ensuring core service is running..."
 ${COMPOSE_CMD} up -d core 2>&1
 
 # Wait for core to be ready
 sleep 10
 
-# Step 5: Build artisan command
+# Step 4: Build artisan command
 ARTISAN_ARGS="seed:orchestrate --env=${SEED_ENV}"
 [[ "$SEED_RESET" == "true" ]]       && ARTISAN_ARGS+=" --reset"
 [[ -n "$SEED_SERVICE" ]]            && ARTISAN_ARGS+=" --service=${SEED_SERVICE}"
@@ -134,7 +116,7 @@ ARTISAN_ARGS="seed:orchestrate --env=${SEED_ENV}"
 [[ "$SEED_NO_MIGRATE" == "true" ]]  && ARTISAN_ARGS+=" --no-migrate"
 [[ "$SEED_FORCE" == "true" ]]       && ARTISAN_ARGS+=" --force"
 
-# Step 6: Execute seeding inside core container
+# Step 5: Execute seeding inside core container
 info "Executing seed orchestrator inside 'core' container..."
 echo -e ""
 
@@ -143,15 +125,9 @@ EXIT_CODE=$?
 
 echo -e ""
 
-# Step 7: Extract and display report
+# Step 6: Report
 if [[ $EXIT_CODE -eq 0 ]]; then
     success "🎉 Database seeding completed successfully!"
-
-    # Copy the latest report to host
-    LATEST_REPORT=$(${COMPOSE_CMD} exec -T core bash -c "ls -1t /var/www/html/storage/logs/seed-report-*.json 2>/dev/null | head -1" 2>/dev/null || echo "")
-    if [[ -n "$LATEST_REPORT" ]]; then
-        info "Report available in container at: ${LATEST_REPORT}"
-    fi
 else
     error "Database seeding FAILED with exit code: ${EXIT_CODE}"
     warn "Check logs with: ${COMPOSE_CMD} logs core"

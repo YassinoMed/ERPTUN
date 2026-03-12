@@ -9,6 +9,10 @@
     <li class="breadcrumb-item">{{ __('Traceability') }}</li>
 @endsection
 
+@section('page-subtitle')
+    {{ __('Track upstream origins, downstream transformations and export proofs for each agricultural lot.') }}
+@endsection
+
 @section('content')
     <div class="row">
         <div class="col-lg-4">
@@ -32,8 +36,20 @@
                             <input type="text" name="crop_type" class="form-control" required>
                         </div>
                         <div class="form-group mb-3">
+                            <label class="form-label">{{ __('Source Reference') }}</label>
+                            <input type="text" name="source_reference" class="form-control">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label">{{ __('Parcel Origin') }}</label>
+                            <input type="text" name="parcel_origin" class="form-control">
+                        </div>
+                        <div class="form-group mb-3">
                             <label class="form-label">{{ __('Harvest Date') }}</label>
                             <input type="date" name="harvest_date" class="form-control">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label">{{ __('Expiry Date') }}</label>
+                            <input type="date" name="expiry_date" class="form-control">
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label">{{ __('Quantity') }}</label>
@@ -110,6 +126,10 @@
         </div>
 
         <div class="col-lg-8">
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <a href="{{ route('agri.traceability.network') }}" class="btn btn-outline-primary">{{ __('Open Network View') }}</a>
+                <a href="{{ route('agri.reports.index') }}" class="btn btn-outline-secondary">{{ __('Open Agro Reports') }}</a>
+            </div>
             <div class="card">
                 <div class="card-header">
                     <h5>{{ __('Lots') }}</h5>
@@ -132,7 +152,7 @@
                                     <td>{{ $lot->name }}</td>
                                     <td>{{ $lot->crop_type }}</td>
                                     <td>{{ $lot->quantity }} {{ $lot->unit }}</td>
-                                    <td>{{ $lot->status }}</td>
+                                    <td>{{ $lot->status }} / {{ $lot->quality_status }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -233,6 +253,103 @@
                                         <td>{{ $event->current_hash }}</td>
                                     </tr>
                                 @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @if($selectedLot)
+                        <div class="mt-4">
+                            <h6>{{ __('Selected Lot Context') }}</h6>
+                            <div class="small text-muted mb-2">
+                                {{ __('Source') }}: {{ $selectedLot->source_reference ?: '-' }} /
+                                {{ __('Parcel') }}: {{ $selectedLot->parcel_origin ?: '-' }} /
+                                {{ __('Expiry') }}: {{ optional($selectedLot->expiry_date)->format('Y-m-d') ?: '-' }}
+                            </div>
+                            @foreach($coldAlerts as $alert)
+                                <div class="alert alert-warning py-2">
+                                    {{ $alert['message'] }} {{ optional($alert['expiry_date'])->format('Y-m-d') }}
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h5>{{ __('Upstream / Downstream') }}</h5></div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>{{ __('Upstream Batches') }}</h6>
+                            @forelse($upstreamBatches as $batch)
+                                <div class="border-bottom py-2">
+                                    <strong>{{ $batch->batch_number }}</strong>
+                                    <div class="small text-muted">{{ optional($batch->inputLot)->code ?? '-' }} -> {{ optional($batch->outputLot)->code ?? '-' }}</div>
+                                </div>
+                            @empty
+                                <p class="text-muted">{{ __('No upstream transformation.') }}</p>
+                            @endforelse
+                        </div>
+                        <div class="col-md-6">
+                            <h6>{{ __('Downstream Batches') }}</h6>
+                            @forelse($downstreamBatches as $batch)
+                                <div class="border-bottom py-2">
+                                    <strong>{{ $batch->batch_number }}</strong>
+                                    <div class="small text-muted">{{ optional($batch->inputLot)->code ?? '-' }} -> {{ optional($batch->outputLot)->code ?? '-' }}</div>
+                                </div>
+                            @empty
+                                <p class="text-muted">{{ __('No downstream transformation.') }}</p>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h5>{{ __('Compliance & Export') }}</h5></div>
+                <div class="card-body">
+                    <div class="table-responsive mb-3">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>{{ __('Control') }}</th>
+                                    <th>{{ __('Result') }}</th>
+                                    <th>{{ __('Checked At') }}</th>
+                                    <th>{{ __('Certificate') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($complianceChecks as $check)
+                                    <tr>
+                                        <td>{{ $check->control_type }}</td>
+                                        <td>{{ ucfirst($check->result) }}</td>
+                                        <td>{{ $check->checked_at?->format('Y-m-d H:i') }}</td>
+                                        <td>{{ $check->certificate_ref ?: '-' }}</td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="4" class="text-center text-muted">{{ __('No compliance checks for this lot.') }}</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>{{ __('Shipment') }}</th>
+                                    <th>{{ __('Country') }}</th>
+                                    <th>{{ __('Qty') }}</th>
+                                    <th>{{ __('Status') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($shipments as $shipment)
+                                    <tr>
+                                        <td>{{ $shipment->shipment_ref }}</td>
+                                        <td>{{ $shipment->destination_country }}</td>
+                                        <td>{{ $shipment->shipped_quantity }}</td>
+                                        <td>{{ ucfirst($shipment->status) }}</td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="4" class="text-center text-muted">{{ __('No export movement for this lot.') }}</td></tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>

@@ -2,9 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 
-class HotelChannelSyncLog extends Model
+class HotelChannelSyncLog extends HotelModel
 {
     protected $fillable = [
         'channel_id',

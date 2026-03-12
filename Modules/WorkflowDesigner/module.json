@@ -1,0 +1,11 @@
+{
+    "name": "WorkflowDesigner",
+    "alias": "workflowdesigner",
+    "description": "Moteur BPM et designer visuel pour approbations, escalades, SLA et automatisations m\u00e9tier.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\WorkflowDesigner\\Providers\\WorkflowDesignerServiceProvider"
+    ],
+    "files": []
+}

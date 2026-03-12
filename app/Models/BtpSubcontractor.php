@@ -3,9 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class BtpSubcontractor extends Model
+class BtpSubcontractor extends BtpModel
 {
     use HasFactory;
 

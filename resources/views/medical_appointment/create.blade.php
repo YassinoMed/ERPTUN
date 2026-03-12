@@ -47,10 +47,28 @@
                 {{ Form::text('specialty', null, ['class' => 'form-control']) }}
             </div>
         </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                {{ Form::label('appointment_type', __('Appointment Type'), ['class' => 'form-label']) }}
+                {{ Form::text('appointment_type', null, ['class' => 'form-control', 'placeholder' => __('Consultation, follow-up, emergency...')]) }}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                {{ Form::label('queue_number', __('Queue Number'), ['class' => 'form-label']) }}
+                {{ Form::number('queue_number', null, ['class' => 'form-control', 'min' => 1]) }}
+            </div>
+        </div>
+        <div class="col-md-3 d-flex align-items-center">
+            <div class="form-check mt-4">
+                {{ Form::checkbox('is_waiting_list', 1, false, ['class' => 'form-check-input', 'id' => 'is_waiting_list']) }}
+                {{ Form::label('is_waiting_list', __('Waiting List'), ['class' => 'form-check-label']) }}
+            </div>
+        </div>
         <div class="col-md-12">
             <div class="form-group">
                 {{ Form::label('reminder_channel', __('Reminder Channel'), ['class' => 'form-label']) }}
-                {{ Form::select('reminder_channel', ['email' => __('Email'), 'sms' => __('SMS')], null, ['class' => 'form-control', 'placeholder' => __('None')]) }}
+                {{ Form::select('reminder_channel', ['email' => __('Email'), 'sms' => __('SMS'), 'whatsapp' => __('WhatsApp')], null, ['class' => 'form-control', 'placeholder' => __('None')]) }}
             </div>
         </div>
         <div class="col-md-12">

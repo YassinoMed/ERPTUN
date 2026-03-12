@@ -17,6 +17,12 @@
 
 @section('action-btn')
     <div class="float-end">
+        @if (\Auth::user()->type == 'company')
+            <a href="{{ route('support-categories.index') }}" class="btn btn-sm btn-primary-subtle me-1"
+                data-bs-toggle="tooltip" title="{{ __('Categories') }}">
+                <i class="ti ti-category"></i>
+            </a>
+        @endif
         <a href="{{ route('support.index') }}" class="btn btn-sm btn-primary-subtle me-1" data-bs-toggle="tooltip" title="{{__('List View')}}">
             <i class="ti ti-list"></i>
         </a>
@@ -85,6 +91,14 @@
                                 @endif
                             </div>
                         </div>
+                        @if (!empty($support->category))
+                            <div class="mb-3">
+                                <span class="text-muted">{{ __('Category: ') }}</span>
+                                <span class="badge text-white" style="background-color: {{ $support->category->color }};">
+                                    {{ $support->category->name }}
+                                </span>
+                            </div>
+                        @endif
                         <div class="date-wrp d-flex flex-wrap align-items-center justify-content-between gap-2">
                             <div class="date d-flex align-items-center gap-2">
                                 <div class="date-icon d-flex align-items-center justify-content-center">
@@ -137,4 +151,3 @@
         @endif
     </div>
 @endsection
-

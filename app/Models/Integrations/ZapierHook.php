@@ -2,9 +2,10 @@
 
 namespace App\Models\Integrations;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\IntegrationModel;
 
-class ZapierHook extends Model
+
+class ZapierHook extends IntegrationModel
 {
     protected $fillable = [
         'user_id',

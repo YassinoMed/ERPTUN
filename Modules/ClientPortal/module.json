@@ -1,0 +1,11 @@
+{
+    "name": "ClientPortal",
+    "alias": "clientportal",
+    "description": "Portail client self-service pour devis, factures, paiements, documents, tickets et suivi des demandes.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\ClientPortal\\Providers\\ClientPortalServiceProvider"
+    ],
+    "files": []
+}

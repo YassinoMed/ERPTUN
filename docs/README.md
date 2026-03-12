@@ -18,6 +18,9 @@
 14. [Portail Client](./portal.md)
 15. [Assistant IA](./ai-assistant.md)
 16. [Onboarding Entreprises](./onboarding.md)
+17. [Roadmap d’extension modules](./module-expansion-roadmap.md)
+18. [Catalogue généré des modules étendus](./generated-modules-catalog.md)
+19. [Documentation LaTeX complete ERP](./erp-complete-functional-reference.tex)
 
 ## Convention
 

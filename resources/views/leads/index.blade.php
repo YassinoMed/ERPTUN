@@ -89,6 +89,10 @@
     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a></li>
     <li class="breadcrumb-item">{{ __('Lead') }}</li>
 @endsection
+
+@section('page-subtitle')
+    {{ __('Drive prospect progression visually, rebalance pipeline load and spot stalled stages sooner.') }}
+@endsection
 @section('action-btn')
     <div class="float-end ">
         {{ Form::open(['route' => 'deals.change.pipeline', 'id' => 'change-pipeline', 'class' => 'btn btn-sm']) }}
@@ -117,6 +121,49 @@
 @endsection
 
 @section('content')
+    @php
+        $leadStagesCollection = collect($pipeline->leadStages);
+        $totalLeads = 0;
+        $activeStages = 0;
+        $assignedUsers = [];
+        foreach ($leadStagesCollection as $leadStage) {
+            $stageLeads = $leadStage->lead();
+            $stageCount = count($stageLeads);
+            $totalLeads += $stageCount;
+            if ($stageCount > 0) {
+                $activeStages++;
+            }
+            foreach ($stageLeads as $stageLead) {
+                foreach ($stageLead->users as $user) {
+                    $assignedUsers[$user->id] = true;
+                }
+            }
+        }
+    @endphp
+
+    <div class="ux-kpi-grid mb-4">
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __('Pipeline in focus') }}</span>
+            <strong class="ux-kpi-value">{{ $pipeline->name }}</strong>
+            <span class="ux-kpi-meta">{{ __('Current lead funnel selected for the team') }}</span>
+        </div>
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __('Open leads') }}</span>
+            <strong class="ux-kpi-value">{{ $totalLeads }}</strong>
+            <span class="ux-kpi-meta">{{ __('Prospects currently moving across stages') }}</span>
+        </div>
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __('Active stages') }}</span>
+            <strong class="ux-kpi-value">{{ $activeStages }}/{{ $leadStagesCollection->count() }}</strong>
+            <span class="ux-kpi-meta">{{ __('Columns containing at least one lead') }}</span>
+        </div>
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __('Assigned sales users') }}</span>
+            <strong class="ux-kpi-value">{{ count($assignedUsers) }}</strong>
+            <span class="ux-kpi-meta">{{ __('Contributors currently engaged in this pipeline') }}</span>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-sm-12">
             @php

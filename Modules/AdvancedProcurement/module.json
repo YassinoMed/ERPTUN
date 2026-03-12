@@ -1,0 +1,11 @@
+{
+    "name": "AdvancedProcurement",
+    "alias": "advancedprocurement",
+    "description": "Achats avanc\u00e9s avec demandes internes, RFQ, scoring fournisseurs et contrats-cadres.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\AdvancedProcurement\\Providers\\AdvancedProcurementServiceProvider"
+    ],
+    "files": []
+}

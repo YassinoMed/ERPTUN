@@ -13,14 +13,31 @@ class Notification extends Model
         'is_read',
     ];
 
+    protected $casts = [
+        'data' => 'array',
+        'is_read' => 'boolean',
+    ];
+
     public function toHtml()
     {
-        $data       = json_decode($this->data);
+        $data       = is_array($this->data) ? (object) $this->data : json_decode($this->data);
         $link       = '#';
         $icon       = 'ti ti-bell';
         $icon_color = 'notif-system';
         $text       = '';
         $usr        = null;
+
+        if (!empty($data?->url)) {
+            $link = $data->url;
+        }
+
+        if (!empty($data?->icon)) {
+            $icon = $data->icon;
+        }
+
+        if (!empty($data?->icon_color)) {
+            $icon_color = $data->icon_color;
+        }
 
         if(isset($data->updated_by) && !empty($data->updated_by))
         {
@@ -158,7 +175,19 @@ class Notification extends Model
         }
         else
         {
-            $html = '';
+            $message = $data->message ?? $data->title ?? null;
+            if (empty($message)) {
+                return '';
+            }
+
+            $date = optional($this->created_at)->diffForHumans() ?? '';
+            $html = '<a href="' . $link . '" class="notification-item ' . ($this->is_read ? '' : 'unread') . '" data-notification-id="' . $this->id . '">
+                        <div class="notif-icon ' . $icon_color . '"><i class="' . $icon . '"></i></div>
+                        <div class="notif-content">
+                            <div class="notif-title">' . e($message) . '</div>
+                            <div class="notif-time">' . e($date) . '</div>
+                        </div>
+                    </a>';
         }
 
         return $html;

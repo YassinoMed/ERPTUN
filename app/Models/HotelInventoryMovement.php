@@ -2,9 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 
-class HotelInventoryMovement extends Model
+class HotelInventoryMovement extends HotelModel
 {
     protected $fillable = [
         'inventory_item_id',

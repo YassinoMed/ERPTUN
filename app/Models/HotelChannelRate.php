@@ -2,9 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 
-class HotelChannelRate extends Model
+class HotelChannelRate extends HotelModel
 {
     protected $fillable = [
         'channel_id',

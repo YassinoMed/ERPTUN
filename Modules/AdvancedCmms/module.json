@@ -1,0 +1,11 @@
+{
+    "name": "AdvancedCmms",
+    "alias": "advancedcmms",
+    "description": "Maintenance industrielle avanc\u00e9e avec pr\u00e9ventif, conditionnel, pi\u00e8ces et indicateurs MTBF MTTR.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\AdvancedCmms\\Providers\\AdvancedCmmsServiceProvider"
+    ],
+    "files": []
+}

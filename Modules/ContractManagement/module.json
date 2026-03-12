@@ -1,0 +1,11 @@
+{
+    "name": "ContractManagement",
+    "alias": "contractmanagement",
+    "description": "Gestion des contrats clients et fournisseurs avec clauses, annexes, \u00e9ch\u00e9ances et renouvellements.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\ContractManagement\\Providers\\ContractManagementServiceProvider"
+    ],
+    "files": []
+}

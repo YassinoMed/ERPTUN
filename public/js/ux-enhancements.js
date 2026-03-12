@@ -623,7 +623,9 @@
         var auditExportCsvUrl = getMetaContent('audit-log-export-csv-url') || '/audit-log/export/csv';
         var cacheItems = [];
         var cacheAudit = [];
+        var summary = {};
         var activeTab = 'all';
+        var searchQuery = '';
 
         var panel = document.createElement('div');
         panel.className = 'notification-panel';
@@ -631,12 +633,25 @@
         panel.setAttribute('data-active-tab', activeTab);
         var lang = (document.documentElement.getAttribute('lang') || '').toLowerCase();
         panel.innerHTML = '<div class="notification-panel-header"><h5>' + labelFor(lang, 'Notifications', 'Notifications') + '</h5>' +
+            '<div class="notification-panel-actions">' +
+            '<button class="panel-action-btn" id="notifRefreshBtn" type="button" title="' + labelFor(lang, 'Rafraichir', 'Refresh') + '">' +
+            '<i class="ti ti-refresh"></i></button>' +
             '<button class="close-btn" onclick="document.getElementById(\'notificationPanel\').classList.remove(\'open\')">' +
-            '<i class="ti ti-x"></i></button></div>' +
+            '<i class="ti ti-x"></i></button></div></div>' +
             '<div class="notification-tabs">' +
             '<div class="notification-tab active" data-tab="all">' + labelFor(lang, 'Tout', 'All') + '</div>' +
             '<div class="notification-tab" data-tab="unread">' + labelFor(lang, 'Non lus', 'Unread') + '</div>' +
             '<div class="notification-tab" data-tab="audit">' + labelFor(lang, 'Audit', 'Audit') + '</div></div>' +
+            '<div class="notification-panel-search">' +
+            '<i class="ti ti-search"></i>' +
+            '<input type="search" id="notifSearchInput" placeholder="' + labelFor(lang, 'Filtrer les notifications ou logs', 'Filter notifications or logs') + '">' +
+            '</div>' +
+            '<div class="notification-summary" id="notifSummary"></div>' +
+            '<div class="notification-quick-links">' +
+            '<a href="/approval-requests">' + labelFor(lang, 'Approvals', 'Approvals') + '</a>' +
+            '<a href="/executive-dashboard">' + labelFor(lang, 'Executive', 'Executive') + '</a>' +
+            '<a href="/core/help-center">' + labelFor(lang, 'Help', 'Help') + '</a>' +
+            '</div>' +
             '<div class="notification-list" id="notifList"></div>' +
             '<div class="notification-panel-footer">' +
             '<a href="#" id="notifMarkAllRead">' + labelFor(lang, 'Tout marquer comme lu', 'Mark all as read') + '</a>' +
@@ -663,16 +678,61 @@
 
         function render() {
             var list = panel.querySelector('#notifList');
+            var summaryEl = panel.querySelector('#notifSummary');
+            var quickLinks = panel.querySelector('.notification-quick-links');
             if (!list) return;
+            if (summaryEl) {
+                var summaryCards = [
+                    {
+                        label: labelFor(lang, 'Total', 'Total'),
+                        value: parseInt(summary.total || 0, 10) || 0,
+                        tone: 'system'
+                    },
+                    {
+                        label: labelFor(lang, 'Non lus', 'Unread'),
+                        value: parseInt(summary.unread || 0, 10) || 0,
+                        tone: 'finance'
+                    },
+                    {
+                        label: labelFor(lang, 'Workflow', 'Workflow'),
+                        value: parseInt(summary.workflow || 0, 10) || 0,
+                        tone: 'project'
+                    },
+                    {
+                        label: labelFor(lang, 'CRM', 'CRM'),
+                        value: parseInt(summary.crm || 0, 10) || 0,
+                        tone: 'crm'
+                    }
+                ];
+                summaryEl.innerHTML = summaryCards.map(function (card) {
+                    return '<div class="notif-summary-card notif-summary-' + escapeHtml(card.tone) + '">' +
+                        '<span>' + escapeHtml(card.label) + '</span>' +
+                        '<strong>' + escapeHtml(String(card.value)) + '</strong>' +
+                        '</div>';
+                }).join('');
+                summaryEl.style.display = activeTab === 'audit' ? 'none' : '';
+            }
+            if (quickLinks) {
+                quickLinks.style.display = activeTab === 'audit' ? 'none' : '';
+            }
 
             if (activeTab === 'audit') {
-                if (!cacheAudit.length) {
+                var filteredAudit = cacheAudit.filter(function (item) {
+                    if (!searchQuery) return true;
+                    var haystack = [
+                        item.title || '',
+                        item.time || '',
+                        item.html || ''
+                    ].join(' ').toLowerCase();
+                    return haystack.indexOf(searchQuery) !== -1;
+                });
+                if (!filteredAudit.length) {
                     list.innerHTML = '<div class="search-no-results"><i class="ti ti-activity"></i><p>' +
                         labelFor(lang, 'Aucune activité', 'No activity') + '</p></div>';
                     return;
                 }
 
-                list.innerHTML = cacheAudit.map(function (item) {
+                list.innerHTML = filteredAudit.map(function (item) {
                     return '<div class="notification-item">' +
                         '<div class="notif-icon notif-system"><i class="ti ' + escapeHtml(item.icon || 'ti-activity') + '"></i></div>' +
                         '<div class="notif-content">' +
@@ -687,6 +747,16 @@
             if (activeTab === 'unread') {
                 filtered = cacheItems.filter(function (i) { return parseInt(i.is_read || 0, 10) === 0; });
             }
+            filtered = filtered.filter(function (item) {
+                if (!searchQuery) return true;
+                var haystack = [
+                    item.title || '',
+                    item.description || '',
+                    item.time || '',
+                    item.html || ''
+                ].join(' ').toLowerCase();
+                return haystack.indexOf(searchQuery) !== -1;
+            });
 
             if (!filtered.length) {
                 list.innerHTML = '<div class="search-no-results"><i class="ti ti-bell"></i><p>' +
@@ -703,6 +773,7 @@
                 headers: { 'Accept': 'application/json' }
             }).then(function (r) { return r.json(); }).then(function (payload) {
                 cacheItems = (payload && payload.items) ? payload.items : [];
+                summary = (payload && payload.summary) ? payload.summary : {};
                 setBadge(payload && payload.unread_count);
                 render();
             }).catch(function () {
@@ -758,6 +829,24 @@
                 }).then(function () {
                     refresh();
                 });
+            });
+        }
+
+        var searchInput = panel.querySelector('#notifSearchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                searchQuery = String(this.value || '').trim().toLowerCase();
+                render();
+            });
+        }
+        var refreshBtn = panel.querySelector('#notifRefreshBtn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', function () {
+                if (activeTab === 'audit') {
+                    refreshAudit();
+                    return;
+                }
+                refresh();
             });
         }
 
@@ -1406,8 +1495,154 @@
         });
     }
 
+    function initSidebarPinning() {
+        var toggles = document.querySelectorAll('[data-sidebar-pin-toggle="1"]');
+        if (!toggles.length) return;
+
+        var key = 'erpgo_sidebar_compact';
+        var readState = function () {
+            try {
+                return localStorage.getItem(key) === '1';
+            } catch (e) {
+                return document.body.classList.contains('sidebar-pinned-compact');
+            }
+        };
+        var writeState = function (compact) {
+            try {
+                localStorage.setItem(key, compact ? '1' : '0');
+            } catch (e) { }
+        };
+        var apply = function (compact) {
+            document.body.classList.toggle('sidebar-pinned-compact', !!compact);
+            toggles.forEach(function (toggle) {
+                toggle.setAttribute('aria-pressed', compact ? 'true' : 'false');
+            });
+        };
+
+        apply(readState());
+
+        document.addEventListener('click', function (e) {
+            var toggle = e.target && e.target.closest ? e.target.closest('[data-sidebar-pin-toggle="1"]') : null;
+            if (!toggle) return;
+            e.preventDefault();
+            var compact = !document.body.classList.contains('sidebar-pinned-compact');
+            writeState(compact);
+            apply(compact);
+        });
+    }
+
+    function initListShells() {
+        var lang = (document.documentElement.getAttribute('lang') || '').toLowerCase();
+        var isFr = lang.indexOf('fr') === 0;
+        var pageTitle = document.querySelector('.page-header-title h4');
+        var pageLabel = pageTitle ? pageTitle.textContent.trim() : (isFr ? 'Liste' : 'List');
+
+        document.querySelectorAll('.card').forEach(function (card) {
+            var tableWrap = card.querySelector('.table-responsive, .dataTable-wrapper');
+            if (!tableWrap || card.querySelector('.ux-list-toolbar')) return;
+
+            card.classList.add('ux-list-card');
+            var toolbar = document.createElement('div');
+            toolbar.className = 'ux-list-toolbar';
+            var table = tableWrap.querySelector('table') || card.querySelector('table');
+            var rowCount = table ? table.querySelectorAll('tbody tr').length : 0;
+            toolbar.innerHTML = '<div><strong>' + pageLabel + '</strong></div>' +
+                '<div class="ux-list-toolbar-meta">' +
+                (isFr ? 'Tableau optimisé pour le tri et les actions rapides' : 'Optimized table for sorting and quick actions') +
+                '</div>' +
+                '<div class="ux-list-toolbar-actions">' +
+                '<div class="ux-inline-search">' +
+                '<i class="ti ti-search"></i>' +
+                '<input type="search" class="ux-list-search-input" placeholder="' + (isFr ? 'Filtrer cette liste' : 'Filter this list') + '">' +
+                '</div>' +
+                '<span class="ux-list-count">' + rowCount + ' ' + (isFr ? 'lignes' : 'rows') + '</span>' +
+                '<a href="/core/saved-views" class="ux-toolbar-link">' + (isFr ? 'Vues' : 'Views') + '</a>' +
+                '</div>';
+            tableWrap.parentNode.insertBefore(toolbar, tableWrap);
+
+            if (table) {
+                var headers = Array.prototype.slice.call(table.querySelectorAll('thead th')).map(function (th) {
+                    return (th.textContent || '').trim();
+                });
+                table.querySelectorAll('tbody tr').forEach(function (row) {
+                    row.querySelectorAll('td').forEach(function (cell, idx) {
+                        if (!cell.getAttribute('data-cell-label') && headers[idx]) {
+                            cell.setAttribute('data-cell-label', headers[idx]);
+                        }
+                    });
+                });
+            }
+
+            var searchInput = toolbar.querySelector('.ux-list-search-input');
+            if (searchInput && table) {
+                searchInput.addEventListener('input', function () {
+                    var query = String(this.value || '').trim().toLowerCase();
+                    var visible = 0;
+                    table.querySelectorAll('tbody tr').forEach(function (row) {
+                        var text = (row.textContent || '').toLowerCase();
+                        var match = !query || text.indexOf(query) !== -1;
+                        row.style.display = match ? '' : 'none';
+                        if (match) visible += 1;
+                    });
+                    var countNode = toolbar.querySelector('.ux-list-count');
+                    if (countNode) {
+                        countNode.textContent = visible + ' ' + (isFr ? 'lignes' : 'rows');
+                    }
+                });
             }
         });
+
+        document.querySelectorAll('.table-responsive tbody tr, .dataTable-table tbody tr').forEach(function (row) {
+            if (!row.hasAttribute('data-bulk-id') && row.getAttribute('data-id')) {
+                row.setAttribute('data-bulk-id', row.getAttribute('data-id'));
+            }
+        });
+    }
+
+    function initFormSurfaces() {
+        document.querySelectorAll('form').forEach(function (form) {
+            var method = (form.getAttribute('method') || 'get').toLowerCase();
+            if (method === 'get') return;
+            if (form.id === 'frm-logout') return;
+            if ((form.id || '').indexOf('delete-form-') === 0) return;
+            if (!form.querySelector('input:not([type="hidden"]), select, textarea')) return;
+
+            form.classList.add('ux-form');
+            if (!form.hasAttribute('data-ux-submit-guard')) {
+                form.setAttribute('data-ux-submit-guard', '1');
+            }
+            if (!form.hasAttribute('data-ux-dirty')) {
+                form.setAttribute('data-ux-dirty', '1');
+            }
+            if (form.querySelector('textarea') && !form.hasAttribute('data-autosave')) {
+                form.setAttribute('data-autosave', '1');
+            }
+
+            form.querySelectorAll('input[type="file"]').forEach(function (input) {
+                if (!input.hasAttribute('data-ux-fileinfo')) {
+                    input.setAttribute('data-ux-fileinfo', '1');
+                }
+            });
+        });
+    }
+
+    function initDashboardSurfaces() {
+        document.querySelectorAll('.dashboard-widget').forEach(function (widget) {
+            widget.classList.add('ux-dashboard-widget');
+        });
+    }
+
+    function initSidebarSmartSections() {
+        var body = document.body;
+        if (!body) return;
+        var path = window.location.pathname || '';
+        body.setAttribute('data-ux-route-group',
+            /^\/(invoice|customer|purchase|bill|revenue|expense|delivery-note)/.test(path) ? 'finance' :
+            /^\/(leads|deals|clients|proposal)/.test(path) ? 'crm' :
+            /^\/(employee|leave|payslip|attendanceemployee)/.test(path) ? 'hr' :
+            /^\/(projects|tasks|time-tracker)/.test(path) ? 'projects' :
+            /^\/(medical|patients|medical-appointments)/.test(path) ? 'medical' : 'workspace'
+        );
     }
 
     // ==========================================
@@ -1927,6 +2162,7 @@
     // INIT ALL
     // ==========================================
     document.addEventListener('DOMContentLoaded', function () {
+        initSidebarPinning();
         initGlobalSearch();
         initNotificationCenter();
         initLocalRecentsTracking();
@@ -1946,6 +2182,10 @@
         initSubmitGuard();
         initDirtyIndicator();
         initFileInfo();
+        initListShells();
+        initFormSurfaces();
+        initDashboardSurfaces();
+        initSidebarSmartSections();
         initPWA();
     });
 })();

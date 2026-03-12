@@ -2,9 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 
-class HotelUpsellConversion extends Model
+class HotelUpsellConversion extends HotelModel
 {
     protected $fillable = [
         'offer_id',

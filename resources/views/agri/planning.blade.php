@@ -163,6 +163,10 @@
         </div>
 
         <div class="col-lg-8">
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <a href="{{ route('agri.planning.dashboard') }}" class="btn btn-outline-primary">{{ __('Open Agriculture Dashboard') }}</a>
+                <a href="{{ route('agri.operations.fefo') }}" class="btn btn-outline-secondary">{{ __('Review FEFO Queue') }}</a>
+            </div>
             <div class="card">
                 <div class="card-header">
                     <h5>{{ __('Parcels') }}</h5>

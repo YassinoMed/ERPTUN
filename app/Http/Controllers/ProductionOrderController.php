@@ -7,9 +7,11 @@ use App\Models\ProductService;
 use App\Models\ProductionBom;
 use App\Models\ProductionBomLine;
 use App\Models\ProductionBomVersion;
+use App\Models\ProductionShiftTeam;
 use App\Models\ProductionMaterialMove;
 use App\Models\ProductionOrder;
 use App\Models\ProductionOrderOperation;
+use App\Models\ProductionRouting;
 use App\Models\ProductionWorkCenter;
 use App\Models\StockReport;
 use App\Models\User;
@@ -43,7 +45,7 @@ class ProductionOrderController extends Controller
         }
 
         $query = ProductionOrder::where('created_by', \Auth::user()->creatorId())
-            ->with(['product', 'workCenter', 'employee'])
+            ->with(['product', 'workCenter', 'employee', 'shiftTeam', 'routing'])
             ->orderBy('id', 'desc');
 
         if (!empty($request->status)) {
@@ -69,8 +71,10 @@ class ProductionOrderController extends Controller
 
         $workCenters = ProductionWorkCenter::where('created_by', \Auth::user()->creatorId())->orderBy('name')->get()->pluck('name', 'id');
         $employees = Employee::where('created_by', \Auth::user()->creatorId())->orderBy('name')->get()->pluck('name', 'id');
+        $shiftTeams = ProductionShiftTeam::where('created_by', \Auth::user()->creatorId())->orderBy('name')->get()->pluck('name', 'id');
+        $routings = ProductionRouting::where('created_by', \Auth::user()->creatorId())->orderBy('name')->get()->pluck('name', 'id');
 
-        return view('production.orders.index', compact('orders', 'workCenters', 'employees'));
+        return view('production.orders.index', compact('orders', 'workCenters', 'employees', 'shiftTeams', 'routings'));
     }
 
     public function create()
@@ -88,8 +92,10 @@ class ProductionOrderController extends Controller
         $warehouses = warehouse::where('created_by', \Auth::user()->creatorId())->orderBy('name')->get()->pluck('name', 'id');
         $workCenters = ProductionWorkCenter::where('created_by', \Auth::user()->creatorId())->orderBy('name')->get()->pluck('name', 'id');
         $employees = Employee::where('created_by', \Auth::user()->creatorId())->orderBy('name')->get()->pluck('name', 'id');
+        $shiftTeams = ProductionShiftTeam::where('created_by', \Auth::user()->creatorId())->orderBy('name')->get()->pluck('name', 'id');
+        $routings = ProductionRouting::where('created_by', \Auth::user()->creatorId())->orderBy('name')->get()->pluck('name', 'id');
 
-        return view('production.orders.create', compact('products', 'warehouses', 'workCenters', 'employees'));
+        return view('production.orders.create', compact('products', 'warehouses', 'workCenters', 'employees', 'shiftTeams', 'routings'));
     }
 
     public function store(Request $request)
@@ -103,7 +109,11 @@ class ProductionOrderController extends Controller
             'warehouse_id' => 'nullable|integer',
             'work_center_id' => 'nullable|integer',
             'employee_id' => 'nullable|integer',
+            'production_shift_team_id' => 'nullable|integer',
+            'production_routing_id' => 'nullable|integer',
             'quantity_planned' => 'required|numeric|min:0.0001',
+            'planned_machine_hours' => 'nullable|numeric|min:0',
+            'planned_labor_hours' => 'nullable|numeric|min:0',
             'planned_start_date' => 'nullable|date',
             'planned_end_date' => 'nullable|date',
             'priority' => 'required|in:low,normal,high,urgent',
@@ -131,11 +141,15 @@ class ProductionOrderController extends Controller
                 'order_number' => $nextNumber,
                 'product_id' => $request->product_id,
                 'production_bom_version_id' => $bomVersionId,
+                'production_routing_id' => $request->production_routing_id,
                 'warehouse_id' => $request->warehouse_id,
                 'work_center_id' => $request->work_center_id,
                 'employee_id' => $request->employee_id,
+                'production_shift_team_id' => $request->production_shift_team_id,
                 'quantity_planned' => $request->quantity_planned,
                 'quantity_produced' => 0,
+                'planned_machine_hours' => $request->planned_machine_hours ?? 0,
+                'planned_labor_hours' => $request->planned_labor_hours ?? 0,
                 'planned_start_date' => $request->planned_start_date,
                 'planned_end_date' => $request->planned_end_date,
                 'priority' => $request->priority,
@@ -192,13 +206,15 @@ class ProductionOrderController extends Controller
             return redirect()->back()->with('error', __('Permission denied.'));
         }
 
-        $order->load(['product', 'warehouse', 'workCenter', 'employee', 'bomVersion.lines.component', 'materials.component', 'operations.workCenter', 'operations.timeLogs', 'qualityChecks']);
+        $order->load(['product', 'warehouse', 'workCenter.resource', 'employee', 'shiftTeam', 'routing.steps.workCenter', 'bomVersion.lines.component', 'materials.component', 'operations.workCenter', 'operations.timeLogs', 'qualityChecks', 'subcontractOrders.vendor', 'costRecords']);
 
         $warehouses = warehouse::where('created_by', \Auth::user()->creatorId())->orderBy('name')->get()->pluck('name', 'id');
         $workCenters = ProductionWorkCenter::where('created_by', \Auth::user()->creatorId())->orderBy('name')->get()->pluck('name', 'id');
         $employees = Employee::where('created_by', \Auth::user()->creatorId())->orderBy('name')->get()->pluck('name', 'id');
+        $shiftTeams = ProductionShiftTeam::where('created_by', \Auth::user()->creatorId())->orderBy('name')->get()->pluck('name', 'id');
+        $routings = ProductionRouting::where('created_by', \Auth::user()->creatorId())->orderBy('name')->get()->pluck('name', 'id');
 
-        return view('production.orders.show', compact('order', 'warehouses', 'workCenters', 'employees'));
+        return view('production.orders.show', compact('order', 'warehouses', 'workCenters', 'employees', 'shiftTeams', 'routings'));
     }
 
     public function edit(ProductionOrder $order)
@@ -220,8 +236,10 @@ class ProductionOrderController extends Controller
         $warehouses = warehouse::where('created_by', \Auth::user()->creatorId())->orderBy('name')->get()->pluck('name', 'id');
         $workCenters = ProductionWorkCenter::where('created_by', \Auth::user()->creatorId())->orderBy('name')->get()->pluck('name', 'id');
         $employees = Employee::where('created_by', \Auth::user()->creatorId())->orderBy('name')->get()->pluck('name', 'id');
+        $shiftTeams = ProductionShiftTeam::where('created_by', \Auth::user()->creatorId())->orderBy('name')->get()->pluck('name', 'id');
+        $routings = ProductionRouting::where('created_by', \Auth::user()->creatorId())->orderBy('name')->get()->pluck('name', 'id');
 
-        return view('production.orders.edit', compact('order', 'products', 'warehouses', 'workCenters', 'employees'));
+        return view('production.orders.edit', compact('order', 'products', 'warehouses', 'workCenters', 'employees', 'shiftTeams', 'routings'));
     }
 
     public function update(Request $request, ProductionOrder $order)
@@ -238,6 +256,10 @@ class ProductionOrderController extends Controller
             'warehouse_id' => 'nullable|integer',
             'work_center_id' => 'nullable|integer',
             'employee_id' => 'nullable|integer',
+            'production_shift_team_id' => 'nullable|integer',
+            'production_routing_id' => 'nullable|integer',
+            'planned_machine_hours' => 'nullable|numeric|min:0',
+            'planned_labor_hours' => 'nullable|numeric|min:0',
             'planned_start_date' => 'nullable|date',
             'planned_end_date' => 'nullable|date',
             'priority' => 'required|in:low,normal,high,urgent',
@@ -252,6 +274,10 @@ class ProductionOrderController extends Controller
         $order->warehouse_id = $request->warehouse_id;
         $order->work_center_id = $request->work_center_id;
         $order->employee_id = $request->employee_id;
+        $order->production_shift_team_id = $request->production_shift_team_id;
+        $order->production_routing_id = $request->production_routing_id;
+        $order->planned_machine_hours = $request->planned_machine_hours ?? 0;
+        $order->planned_labor_hours = $request->planned_labor_hours ?? 0;
         $order->planned_start_date = $request->planned_start_date;
         $order->planned_end_date = $request->planned_end_date;
         $order->priority = $request->priority;

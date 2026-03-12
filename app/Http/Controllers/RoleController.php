@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Core\AuditTrailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Spatie\Permission\Models\Permission;
@@ -88,6 +89,15 @@ class RoleController extends Controller
                 $role->givePermissionTo($p);
             }
 
+            app(AuditTrailService::class)->record('security.role.created', [
+                'auditable' => $role,
+                'new_values' => [
+                    'name' => $role->name,
+                    'permissions' => array_values($permissions),
+                ],
+                'created_by' => \Auth::user()->creatorId(),
+            ]);
+
             return redirect()->route('roles.index')->with('success' , 'Role successfully created.', 'Role ' . $role->name . ' added!');
         }
         else
@@ -146,6 +156,10 @@ class RoleController extends Controller
 
             $input       = $request->except(['permissions']);
             $permissions = $request['permissions'];
+            $before = [
+                'name' => $role->name,
+                'permissions' => $role->permissions()->pluck('id')->map(fn ($id) => (int) $id)->all(),
+            ];
             $role->fill($input)->save();
 
             $p_all = Permission::all();
@@ -162,6 +176,16 @@ class RoleController extends Controller
                 $role->givePermissionTo($p);
             }
 
+            app(AuditTrailService::class)->record('security.role.updated', [
+                'auditable' => $role,
+                'old_values' => $before,
+                'new_values' => [
+                    'name' => $role->name,
+                    'permissions' => array_map('intval', $permissions),
+                ],
+                'created_by' => \Auth::user()->creatorId(),
+            ]);
+
             return redirect()->route('roles.index')->with('success' , 'Role successfully updated.', 'Role ' . $role->name . ' updated!');
         }
         else
@@ -176,7 +200,18 @@ class RoleController extends Controller
     {
         if(\Auth::user()->can('delete role'))
         {
+            $snapshot = [
+                'name' => $role->name,
+                'permissions' => $role->permissions()->pluck('id')->map(fn ($id) => (int) $id)->all(),
+            ];
             $role->delete();
+
+            app(AuditTrailService::class)->record('security.role.deleted', [
+                'auditable_type' => Role::class,
+                'auditable_id' => $role->id,
+                'old_values' => $snapshot,
+                'created_by' => \Auth::user()->creatorId(),
+            ]);
 
             return redirect()->route('roles.index')->with('success', __('Role successfully deleted.'));
         }

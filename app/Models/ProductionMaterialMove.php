@@ -3,9 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class ProductionMaterialMove extends Model
+class ProductionMaterialMove extends MrpModel
 {
     use HasFactory;
 

@@ -1,0 +1,11 @@
+{
+    "name": "FieldService",
+    "alias": "fieldservice",
+    "description": "Gestion des interventions terrain, affectations techniciens, rapports et signatures mobiles.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\FieldService\\Providers\\FieldServiceServiceProvider"
+    ],
+    "files": []
+}

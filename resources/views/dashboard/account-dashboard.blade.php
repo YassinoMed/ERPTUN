@@ -292,9 +292,24 @@
     <li class="breadcrumb-item"><a href="{{route('dashboard')}}">{{__('Dashboard')}}</a></li>
     <li class="breadcrumb-item">{{__('Account')}}</li>
 @endsection
+@section('page-subtitle')
+    {{ __('Follow revenue, expenses, cash posture and the most recent billing movements from one finance-first dashboard.') }}
+@endsection
 @section('content')
     <div class="row">
         <div class="col-sm-12">
+            @if(!empty($executiveSummary))
+                <div class="ux-kpi-grid mb-4">
+                    @foreach($executiveSummary as $item)
+                        <a href="{{ $item['route'] }}" class="ux-kpi-card executive-metric executive-metric-{{ $item['accent'] }}">
+                            <span class="ux-kpi-label">{{ $item['label'] }}</span>
+                            <strong class="ux-kpi-value">{{ $item['value'] }}</strong>
+                            <span class="ux-kpi-caption">{{ $item['headline'] }}</span>
+                            <small class="ux-kpi-meta">{{ $item['meta'] }}</small>
+                        </a>
+                    @endforeach
+                </div>
+            @endif
             <div class="row" id="account-dashboard-main-row">
                 <div class="col-xxl-7 dashboard-widget" data-widget="account-summary">
                     <div class="row gy-4 mb-4 dash-row">

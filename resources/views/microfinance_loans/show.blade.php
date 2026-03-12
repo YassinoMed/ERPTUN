@@ -1,0 +1,8 @@
+@extends('layouts.admin')
+@section('page-title', __('Microfinance Loan'))
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('microfinance-loans.index') }}">{{ __('Microfinance Loans') }}</a></li><li class="breadcrumb-item">{{ $microfinanceLoan->loan_number }}</li>
+@endsection
+@section('content')
+<div class="row"><div class="col-12"><div class="card"><div class="card-body"><div class="row gy-3"><div class="col-md-4"><strong>{{ __('Loan Number') }}:</strong> {{ $microfinanceLoan->loan_number }}</div><div class="col-md-4"><strong>{{ __('Customer') }}:</strong> {{ optional($microfinanceLoan->customer)->name ?: '-' }}</div><div class="col-md-4"><strong>{{ __('Status') }}:</strong> {{ __(ucfirst($microfinanceLoan->status)) }}</div><div class="col-md-4"><strong>{{ __('Principal') }}:</strong> {{ Auth::user()->priceFormat($microfinanceLoan->principal_amount) }}</div><div class="col-md-4"><strong>{{ __('Interest Rate') }}:</strong> {{ $microfinanceLoan->interest_rate }}</div><div class="col-md-4"><strong>{{ __('Installment') }}:</strong> {{ Auth::user()->priceFormat($microfinanceLoan->installment_amount) }}</div><div class="col-md-4"><strong>{{ __('Start Date') }}:</strong> {{ $microfinanceLoan->start_date ? Auth::user()->dateFormat($microfinanceLoan->start_date) : '-' }}</div><div class="col-md-4"><strong>{{ __('Maturity Date') }}:</strong> {{ $microfinanceLoan->maturity_date ? Auth::user()->dateFormat($microfinanceLoan->maturity_date) : '-' }}</div><div class="col-md-4"><strong>{{ __('Purpose') }}:</strong> {{ $microfinanceLoan->purpose ?: '-' }}</div><div class="col-12"><strong>{{ __('Notes') }}:</strong><div class="text-muted">{{ $microfinanceLoan->notes ?: '-' }}</div></div></div></div></div></div></div>
+@endsection

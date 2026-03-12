@@ -2,6 +2,9 @@
 @section('page-title')
     {{__('Manage Invoices')}}
 @endsection
+@section('page-subtitle')
+    {{ __('Track billing status, due exposure and collection pressure from one finance workspace.') }}
+@endsection
 @push('script-page')
     <script>
         function copyToClipboard(element) {
@@ -207,12 +210,26 @@
 
 
 @section('content')
+    @php
+        $draftInvoices = $invoices->where('status', 0)->count();
+        $unpaidInvoices = $invoices->whereIn('status', [1, 2])->count();
+        $paidInvoices = $invoices->where('status', 4)->count();
+        $dueExposure = $invoices->sum(function ($invoice) {
+            return (float) $invoice->getDue();
+        });
+    @endphp
     <div class="row">
         <div class="col-sm-12">
             <div class="mt-2 " id="multiCollapseExample1">
-                <div class="card">
+                <div class="card ux-filter-card">
                     <div class="card-body">
-                        {{ Form::open(['route' => ['invoice.index'], 'method' => 'GET', 'id' => 'customer_submit']) }}
+                        <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
+                            <div>
+                                <h6 class="mb-1">{{ __('Filter receivables and billing activity') }}</h6>
+                                <p class="text-muted mb-0">{{ __('Use saved views for recurring review sessions and keep collection follow-up consistent across teams.') }}</p>
+                            </div>
+                        </div>
+                        {{ Form::open(['route' => ['invoice.index'], 'method' => 'GET', 'id' => 'customer_submit', 'data-autosave' => '1']) }}
                         <div class="row d-flex align-items-center justify-content-end">
                             <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12 mr-2">
                                 <div class="btn-box">
@@ -240,7 +257,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-auto float-end ms-2 mt-4">
+                            <div class="col-auto float-end ms-2 mt-4 ux-filter-actions">
                                 <a href="#" class="btn btn-sm btn-primary me-1"
                                    onclick="document.getElementById('customer_submit').submit(); return false;"
                                    data-bs-toggle="tooltip" data-bs-original-title="{{ __('Apply') }}">
@@ -267,9 +284,32 @@
         </div>
     </div>
 
+    <div class="ux-kpi-grid mb-4">
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __('Draft invoices') }}</span>
+            <strong class="ux-kpi-value">{{ $draftInvoices }}</strong>
+            <span class="ux-kpi-meta">{{ __('awaiting validation') }}</span>
+        </div>
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __('Invoices to collect') }}</span>
+            <strong class="ux-kpi-value">{{ $unpaidInvoices }}</strong>
+            <span class="ux-kpi-meta">{{ __('open or partially paid') }}</span>
+        </div>
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __('Paid invoices') }}</span>
+            <strong class="ux-kpi-value">{{ $paidInvoices }}</strong>
+            <span class="ux-kpi-meta">{{ __('closed cash cycle') }}</span>
+        </div>
+        <div class="ux-kpi-card">
+            <span class="ux-kpi-label">{{ __('Due exposure') }}</span>
+            <strong class="ux-kpi-value">{{ \Auth::user()->priceFormat($dueExposure) }}</strong>
+            <span class="ux-kpi-meta">{{ __('remaining receivable amount') }}</span>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-md-12">
-            <div class="card">
+            <div class="card ux-list-card">
                 <div class="card-body table-border-style">
                     <h5></h5>
                     <div class="table-responsive">

@@ -6,15 +6,23 @@ use App\Models\Branch;
 use App\Models\Department;
 use App\Models\Designation;
 use App\Models\Employee;
+use App\Services\Core\AccessScopeService;
 use Illuminate\Http\Request;
 
 class DepartmentController extends Controller
 {
+    public function __construct(
+        private readonly AccessScopeService $accessScopes
+    ) {
+    }
+
     public function index()
     {
         if(\Auth::user()->can('manage department'))
         {
-            $departments = Department::where('created_by', '=', \Auth::user()->creatorId())->get();
+            $departments = $this->accessScopes
+                ->filterOwnedQuery(Department::query(), \Auth::user(), 'department')
+                ->get();
 
             return view('department.index', compact('departments'));
         }
@@ -28,7 +36,10 @@ class DepartmentController extends Controller
     {
         if(\Auth::user()->can('create department'))
         {
-            $branch = Branch::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
+            $branch = $this->accessScopes
+                ->filterOwnedQuery(Branch::query(), \Auth::user(), 'branch')
+                ->get()
+                ->pluck('name', 'id');
 
             return view('department.create', compact('branch'));
         }
@@ -42,6 +53,7 @@ class DepartmentController extends Controller
     {
         if(\Auth::user()->can('create department'))
         {
+            $this->accessScopes->assertScopeAccess(\Auth::user(), 'branch', (int) $request->branch_id);
 
             $validator = \Validator::make(
                 $request->all(), [
@@ -81,7 +93,11 @@ class DepartmentController extends Controller
         {
             if($department->created_by == \Auth::user()->creatorId())
             {
-                $branch = Branch::where('created_by', \Auth::user()->creatorId())->get()->pluck('name', 'id');
+                $this->accessScopes->assertScopeAccess(\Auth::user(), 'department', $department->id);
+                $branch = $this->accessScopes
+                    ->filterOwnedQuery(Branch::query(), \Auth::user(), 'branch')
+                    ->get()
+                    ->pluck('name', 'id');
 
                 return view('department.edit', compact('department', 'branch'));
             }
@@ -102,6 +118,8 @@ class DepartmentController extends Controller
         {
             if($department->created_by == \Auth::user()->creatorId())
             {
+                $this->accessScopes->assertScopeAccess(\Auth::user(), 'department', $department->id);
+                $this->accessScopes->assertScopeAccess(\Auth::user(), 'branch', (int) $request->branch_id);
                 $validator = \Validator::make(
                     $request->all(), [
                                        'branch_id' => 'required',
@@ -138,6 +156,7 @@ class DepartmentController extends Controller
         {
             if($department->created_by == \Auth::user()->creatorId())
             {
+                $this->accessScopes->assertScopeAccess(\Auth::user(), 'department', $department->id);
                 $employee     = Employee::where('department_id', $department->id)->get();
                 if (count($employee) == 0) {
                     Designation::where('department_id', $department->id)->delete();

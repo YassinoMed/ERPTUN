@@ -1,0 +1,11 @@
+{
+    "name": "CustomerSubscriptions",
+    "alias": "customersubscriptions",
+    "description": "Gestion des abonnements clients m\u00e9tier, cycles, options, renouvellements et usage.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\CustomerSubscriptions\\Providers\\CustomerSubscriptionsServiceProvider"
+    ],
+    "files": []
+}

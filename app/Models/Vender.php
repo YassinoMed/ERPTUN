@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Services\Core\DocumentNumberService;
 use Spatie\Permission\Traits\HasRoles;
 
 class Vender extends Authenticatable
@@ -36,11 +37,17 @@ class Vender extends Authenticatable
         'shipping_phone',
         'shipping_zip',
         'shipping_address',
+        'archived_at',
+        'archived_by',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+    ];
+
+    protected $casts = [
+        'archived_at' => 'datetime',
     ];
 
 
@@ -100,23 +107,17 @@ class Vender extends Authenticatable
     }
     public function purchaseNumberFormat($number)
     {
-        $settings = Utility::settings();
-
-        return $settings["purchase_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('purchase', $number, $this->creatorId());
     }
 
     public function invoiceNumberFormat($number)
     {
-        $settings = Utility::settings();
-
-        return $settings["invoice_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('invoice', $number, $this->creatorId());
     }
 
     public function billNumberFormat($number)
     {
-        $settings = Utility::settings();
-
-        return $settings["bill_prefix"] . sprintf("%05d", $number);
+        return app(DocumentNumberService::class)->format('bill', $number, $this->creatorId());
     }
 
     public function billChartData()

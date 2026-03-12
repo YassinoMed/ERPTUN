@@ -14,15 +14,21 @@
     $setting = \App\Models\Utility::settings();
 
     $unseenCounter=App\Models\ChMessage::where('to_id', Auth::user()->id)->where('seen', 0)->count();
+    $savedViews = \App\Models\SavedView::query()
+        ->where('user_id', Auth::id())
+        ->latest('is_default')
+        ->latest('id')
+        ->limit(6)
+        ->get();
 @endphp
 @if (isset($setting['cust_theme_bg']) && $setting['cust_theme_bg'] == 'on')
-    <header class="dash-header transprent-bg">
+    <header class="dash-header transprent-bg erp-header-shell">
 @else
-    <header class="dash-header">
+    <header class="dash-header erp-header-shell">
 @endif
-    <div class="header-wrapper">
+    <div class="header-wrapper erp-header-wrapper">
         <div class="me-auto dash-mob-drp">
-            <ul class="list-unstyled">
+            <ul class="list-unstyled erp-header-cluster erp-header-cluster-start">
                 <li class="dash-h-item mob-hamburger">
                     <a href="#!" class="dash-head-link" id="mobile-collapse">
                         <div class="hamburger hamburger--arrowturn">
@@ -30,6 +36,11 @@
                                 <div class="hamburger-inner"></div>
                             </div>
                         </div>
+                    </a>
+                </li>
+                <li class="dash-h-item d-none d-lg-inline-flex">
+                    <a href="#!" class="dash-head-link" data-sidebar-pin-toggle="1" aria-label="{{ __('Toggle compact sidebar') }}">
+                        <i class="ti ti-layout-sidebar-left-collapse"></i>
                     </a>
                 </li>
 
@@ -61,7 +72,7 @@
             </ul>
         </div>
         <div class="ms-auto">
-            <ul class="list-unstyled">
+            <ul class="list-unstyled erp-header-cluster erp-header-cluster-end">
                 @if(\Auth::user()->type == 'company' )
                 @impersonating($guard = null)
                 <li class="dropdown dash-h-item drp-company">
@@ -111,9 +122,76 @@
                     </li>
                 @endif
 
+                <li class="dropdown dash-h-item drp-workspace">
+                    <a class="dash-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
+                        <i class="ti ti-layout-grid"></i>
+                        <span class="drp-text hide-mob">{{ __('Workspace') }}</span>
+                        <i class="ti ti-chevron-down drp-arrow nocolor"></i>
+                    </a>
+                    <div class="dropdown-menu dash-h-dropdown dropdown-menu-end">
+                        <span class="dropdown-item-text workspace-menu-label">{{ __('Navigate') }}</span>
+                        <a href="{{ route('executive.dashboard') }}" class="dropdown-item">
+                            <i class="ti ti-layout-dashboard text-dark"></i><span>{{ __('Executive Overview') }}</span>
+                        </a>
+                        @can('manage invoice')
+                            <a href="{{ route('invoice.index') }}" class="dropdown-item">
+                                <i class="ti ti-file-invoice text-dark"></i><span>{{ __('Finance Desk') }}</span>
+                            </a>
+                        @endcan
+                        @can('manage lead')
+                            <a href="{{ route('leads.index') }}" class="dropdown-item">
+                                <i class="ti ti-users text-dark"></i><span>{{ __('CRM Pipeline') }}</span>
+                            </a>
+                        @endcan
+                        @can('manage employee')
+                            <a href="{{ route('employee.index') }}" class="dropdown-item">
+                                <i class="ti ti-user-heart text-dark"></i><span>{{ __('People Hub') }}</span>
+                            </a>
+                        @endcan
+                        @can('manage projects')
+                            <a href="{{ route('projects.index') }}" class="dropdown-item">
+                                <i class="ti ti-briefcase text-dark"></i><span>{{ __('Projects') }}</span>
+                            </a>
+                        @endcan
+                        <div class="dropdown-divider"></div>
+                        <span class="dropdown-item-text workspace-menu-label">{{ __('Shortcuts') }}</span>
+                        <a href="{{ route('core.saved-views.index') }}" class="dropdown-item">
+                            <i class="ti ti-bookmarks text-dark"></i><span>{{ __('Saved Views') }}</span>
+                        </a>
+                        <a href="javascript:void(0)" class="dropdown-item" onclick="if(window.toggleNotifPanel){window.toggleNotifPanel();}">
+                            <i class="ti ti-bell-ringing text-dark"></i><span>{{ __('Notifications') }}</span>
+                        </a>
+                        <a href="{{ route('core.onboarding') }}" class="dropdown-item">
+                            <i class="ti ti-building-store text-dark"></i><span>{{ __('Tenant Cockpit') }}</span>
+                        </a>
+                        <a href="{{ route('core.security.index') }}" class="dropdown-item">
+                            <i class="ti ti-shield-lock text-dark"></i><span>{{ __('Security Center') }}</span>
+                        </a>
+                        <a href="{{ route('core.help-center') }}" class="dropdown-item">
+                            <i class="ti ti-lifebuoy text-dark"></i><span>{{ __('Help Center') }}</span>
+                        </a>
+                        @if($savedViews->isNotEmpty())
+                            <div class="dropdown-divider"></div>
+                            <span class="dropdown-item-text workspace-menu-label">{{ __('Recent Views') }}</span>
+                            @foreach($savedViews as $savedView)
+                                <a href="{{ route('core.saved-views.index') }}" class="dropdown-item">
+                                    <i class="ti ti-arrow-forward-up text-dark"></i>
+                                    <span>{{ $savedView->name }}</span>
+                                </a>
+                            @endforeach
+                        @endif
+                    </div>
+                </li>
+
                 <li class="dropdown dash-h-item">
-                    <a class="dash-head-link arrow-none me-0" href="javascript:void(0)" onclick="openSearch()" data-global-search-trigger="1" aria-haspopup="false" aria-expanded="false">
-                        <i class="ti ti-search"></i>
+                    <a class="dash-head-link arrow-none me-0 dash-command-launcher" href="javascript:void(0)" onclick="openSearch()" data-global-search-trigger="1" aria-haspopup="false" aria-expanded="false">
+                        <span class="command-icon">
+                            <i class="ti ti-search"></i>
+                        </span>
+                        <span class="command-copy d-none d-xl-flex">
+                            <span class="command-title">{{ __('Search, commands, clients...') }}</span>
+                            <span class="command-shortcut">Ctrl K</span>
+                        </span>
                     </a>
                 </li>
 
@@ -139,7 +217,7 @@
                         aria-expanded="false"
                     >
                         <i class="ti ti-world nocolor"></i>
-                        <span class="drp-text hide-mob">{{ucfirst($LangName->full_name)}}</span>
+                        <span class="drp-text hide-mob">{{ ucfirst(optional($LangName)->full_name ?? ($languages[$lang] ?? $lang ?? 'en')) }}</span>
                         <i class="ti ti-chevron-down drp-arrow nocolor"></i>
                     </a>
                     <div class="dropdown-menu dash-h-dropdown dropdown-menu-end">

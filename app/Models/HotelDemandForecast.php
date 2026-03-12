@@ -2,9 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 
-class HotelDemandForecast extends Model
+class HotelDemandForecast extends HotelModel
 {
     protected $fillable = [
         'room_type_id',

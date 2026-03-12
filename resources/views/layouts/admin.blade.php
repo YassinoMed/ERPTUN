@@ -38,6 +38,19 @@
             break;
         }
     }
+    $moduleLabels = [
+        'default' => __('Workspace'),
+        'account' => __('Finance'),
+        'crm' => __('CRM'),
+        'hrm' => __('HR'),
+        'project' => __('Projects'),
+        'pos' => __('POS'),
+    ];
+    $currentModuleLabel = $moduleLabels[$moduleKey] ?? $moduleLabels['default'];
+    $pageSubtitle = trim($__env->yieldContent('page-subtitle'));
+    if ($pageSubtitle === '') {
+        $pageSubtitle = __('Faster navigation, clearer actions and a cleaner workspace across modules.');
+    }
 
     $lightStyle = $SITE_RTL == 'on' ? asset('assets/css/style-rtl.css') : asset('assets/css/style.css');
     $darkStyle = asset('assets/css/style-dark.css');
@@ -66,6 +79,7 @@
 <meta name="audit-log-export-csv-url" content="{{ route('audit.log.export.csv') }}">
 <meta name="dark-layout-setting" content="{{ $setting['cust_darklayout'] ?? 'off' }}">
 <meta name="dark-layout-auto" content="{{ $setting['cust_darklayout_auto'] ?? 'off' }}">
+<meta name="global-search-placeholder" content="{{ __('Search modules, records, commands or pages...') }}">
 
 <head>
     <title>{{ $setting['title_text'] ? $setting['title_text'] : config('app.name', 'ERPGo SaaS') }} - @yield('page-title')
@@ -149,7 +163,7 @@
 
 
 
-<body class="{{ $themeColor }}" data-module="{{ $moduleKey }}">
+<body class="{{ $themeColor }}" data-module="{{ $moduleKey }}" data-layout="admin-premium">
 
     <!-- [ Pre-loader ] start -->
     <div class="loader-bg">
@@ -227,24 +241,31 @@
     <!-- [ Main Content ] start -->
     <div class="dash-container">
         <div class="dash-content">
-            <div class="page-header">
+            <div class="page-header ux-page-header">
                 <div class="page-block">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                        <div>
+                        <div class="ux-page-context">
+                            <div class="ux-page-kicker">
+                                <span class="ux-module-pill">{{ $currentModuleLabel }}</span>
+                                <span class="ux-page-helper">{{ __('ERP workspace') }}</span>
+                            </div>
                             <div class="page-header-title">
                                 <h4 class="mb-2">@yield('page-title')</h4>
                             </div>
+                            <p class="ux-page-subtitle mb-0">{{ $pageSubtitle }}</p>
                             <ul class="breadcrumb">
                                 @yield('breadcrumb')
                             </ul>
                         </div>
-                        <div class="action-btn-col">
+                        <div class="action-btn-col ux-page-actions">
                             @yield('action-btn')
                         </div>
                     </div>
                 </div>
             </div>
-            @yield('content')
+            <div class="ux-page-content">
+                @yield('content')
+            </div>
             <!-- [ Main Content ] end -->
         </div>
     </div>

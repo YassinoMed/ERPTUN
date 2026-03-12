@@ -1,0 +1,11 @@
+{
+    "name": "AssetManagement",
+    "alias": "assetmanagement",
+    "description": "Gestion des actifs et immobilisations, amortissements, transferts et inventaires.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\AssetManagement\\Providers\\AssetManagementServiceProvider"
+    ],
+    "files": []
+}

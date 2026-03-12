@@ -1,0 +1,11 @@
+{
+    "name": "LearningManagement",
+    "alias": "learningmanagement",
+    "description": "Plateforme de formation avec cours, modules, quiz, certifications et suivi de progression.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\LearningManagement\\Providers\\LearningManagementServiceProvider"
+    ],
+    "files": []
+}

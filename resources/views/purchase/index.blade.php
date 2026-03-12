@@ -2,6 +2,9 @@
 @section('page-title')
     {{__('Manage Purchase')}}
 @endsection
+@section('page-subtitle')
+    {{ __('Follow supplier commitments, approval stages and procurement throughput in a single list.') }}
+@endsection
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{route('dashboard')}}">{{__('Dashboard')}}</a></li>
     <li class="breadcrumb-item">{{__('Purchase')}}</li>
@@ -39,11 +42,41 @@
 
 
 @section('content')
+    @php
+        $pendingPurchases = $purchases->whereIn('status', [0, 1])->count();
+        $rejectedPurchases = $purchases->where('status', 2)->count();
+        $completedPurchases = $purchases->whereIn('status', [3, 4])->count();
+        $vendorCount = $purchases->pluck('vender_id')->filter()->unique()->count();
+    @endphp
 
 
     <div class="row">
+        <div class="col-12 mb-4">
+            <div class="ux-kpi-grid">
+                <div class="ux-kpi-card">
+                    <span class="ux-kpi-label">{{ __('Pending purchases') }}</span>
+                    <strong class="ux-kpi-value">{{ $pendingPurchases }}</strong>
+                    <span class="ux-kpi-meta">{{ __('draft or waiting approval') }}</span>
+                </div>
+                <div class="ux-kpi-card">
+                    <span class="ux-kpi-label">{{ __('Rejected purchases') }}</span>
+                    <strong class="ux-kpi-value">{{ $rejectedPurchases }}</strong>
+                    <span class="ux-kpi-meta">{{ __('blocked requests') }}</span>
+                </div>
+                <div class="ux-kpi-card">
+                    <span class="ux-kpi-label">{{ __('Completed flow') }}</span>
+                    <strong class="ux-kpi-value">{{ $completedPurchases }}</strong>
+                    <span class="ux-kpi-meta">{{ __('received or billed') }}</span>
+                </div>
+                <div class="ux-kpi-card">
+                    <span class="ux-kpi-label">{{ __('Active vendors') }}</span>
+                    <strong class="ux-kpi-value">{{ $vendorCount }}</strong>
+                    <span class="ux-kpi-meta">{{ __('suppliers used in this list') }}</span>
+                </div>
+            </div>
+        </div>
         <div class="col-md-12">
-            <div class="card">
+            <div class="card ux-list-card">
                 <div class="card-body table-border-style">
                     <div class="table-responsive">
                         <table class="table datatable">
@@ -64,7 +97,7 @@
 
                             @foreach ($purchases as $purchase)
 
-                                <tr>
+                                <tr data-bulk-id="{{ $purchase->id }}">
                                     <td class="Id">
                                         <a href="{{ route('purchase.show',\Crypt::encrypt($purchase->id)) }}" class="btn btn-outline-primary">{{ Auth::user()->purchaseNumberFormat($purchase->purchase_id) }}</a>
 
@@ -133,4 +166,3 @@
         </div>
     </div>
 @endsection
-

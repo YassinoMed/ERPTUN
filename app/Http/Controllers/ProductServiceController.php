@@ -38,9 +38,9 @@ class ProductServiceController extends Controller
 
             if (!empty($request->category)) {
 
-                $productServices = ProductService::where('created_by', '=', \Auth::user()->creatorId())->where('category_id', $request->category)->with(['category', 'unit'])->get();
+                $productServices = ProductService::where('created_by', '=', \Auth::user()->creatorId())->whereNull('archived_at')->where('category_id', $request->category)->with(['category', 'unit'])->get();
             } else {
-                $productServices = ProductService::where('created_by', '=', \Auth::user()->creatorId())->with(['category', 'unit'])->get();
+                $productServices = ProductService::where('created_by', '=', \Auth::user()->creatorId())->whereNull('archived_at')->with(['category', 'unit'])->get();
             }
 
             return view('productservice.index', compact('productServices', 'category'));

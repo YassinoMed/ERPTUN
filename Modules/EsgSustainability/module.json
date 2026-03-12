@@ -1,0 +1,11 @@
+{
+    "name": "EsgSustainability",
+    "alias": "esgsustainability",
+    "description": "Suivi \u00e9nergie, eau, d\u00e9chets, \u00e9missions carbone et objectifs RSE.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\EsgSustainability\\Providers\\EsgSustainabilityServiceProvider"
+    ],
+    "files": []
+}

@@ -1,0 +1,11 @@
+{
+    "name": "KnowledgeBase",
+    "alias": "knowledgebase",
+    "description": "FAQ, articles, proc\u00e9dures et documentation interne avec recherche intelligente.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\KnowledgeBase\\Providers\\KnowledgeBaseServiceProvider"
+    ],
+    "files": []
+}

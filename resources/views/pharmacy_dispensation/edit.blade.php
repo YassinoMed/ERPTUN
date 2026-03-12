@@ -1,0 +1,19 @@
+{{ Form::model($dispensation, ['route' => ['pharmacy-dispensations.update', $dispensation->id], 'method' => 'put']) }}
+<div class="modal-body"><div class="row">
+    <div class="col-md-6"><label class="form-label">{{ __('Patient') }}</label><select name="patient_id" class="form-control" required>@foreach($patients as $patient)<option value="{{ $patient->id }}" {{ $dispensation->patient_id == $patient->id ? 'selected' : '' }}>{{ $patient->first_name }} {{ $patient->last_name }}</option>@endforeach</select></div>
+    <div class="col-md-6">{{ Form::label('status', __('Status'), ['class' => 'form-label']) }}{{ Form::select('status', ['dispensed' => __('Dispensed'), 'returned' => __('Returned')], $dispensation->status, ['class' => 'form-control']) }}</div>
+    <div class="col-md-6 mt-2"><label class="form-label">{{ __('Consultation') }}</label><select name="consultation_id" class="form-control"><option value="">{{ __('Select consultation') }}</option>@foreach($consultations as $consultation)<option value="{{ $consultation->id }}" {{ $dispensation->consultation_id == $consultation->id ? 'selected' : '' }}>{{ optional($consultation->patient)->first_name }} {{ optional($consultation->patient)->last_name }} - {{ \Auth::user()->dateFormat($consultation->consultation_date) }}</option>@endforeach</select></div>
+    <div class="col-md-6 mt-2"><label class="form-label">{{ __('Prescription') }}</label><select name="prescription_id" class="form-control"><option value="">{{ __('Select prescription') }}</option>@foreach($prescriptions as $prescription)<option value="{{ $prescription->id }}" {{ $dispensation->prescription_id == $prescription->id ? 'selected' : '' }}>{{ $prescription->medication_name }}</option>@endforeach</select></div>
+    <div class="col-md-12 mt-2">{{ Form::label('dispensed_at', __('Dispensed At'), ['class' => 'form-label']) }}{{ Form::datetimeLocal('dispensed_at', $dispensation->dispensed_at?->format('Y-m-d\TH:i'), ['class' => 'form-control']) }}</div>
+    @php($items = $dispensation->items->values())
+    @for($i = 0; $i < max(3, $items->count()); $i++)
+        <div class="col-md-4 mt-3"><label class="form-label">{{ __('Medication') }} {{ $i + 1 }}</label><select name="items[{{ $i }}][pharmacy_medication_id]" class="form-control"><option value="">{{ __('Select medication') }}</option>@foreach($medications as $medication)<option value="{{ $medication->id }}" {{ optional($items->get($i))->pharmacy_medication_id == $medication->id ? 'selected' : '' }}>{{ $medication->name }}</option>@endforeach</select></div>
+        <div class="col-md-2 mt-3">{{ Form::label("items[$i][quantity]", __('Qty'), ['class' => 'form-label']) }}{{ Form::number("items[$i][quantity]", $items->get($i)->quantity ?? 1, ['class' => 'form-control', 'step' => '0.01']) }}</div>
+        <div class="col-md-2 mt-3">{{ Form::label("items[$i][dosage]", __('Dosage'), ['class' => 'form-label']) }}{{ Form::text("items[$i][dosage]", $items->get($i)->dosage ?? null, ['class' => 'form-control']) }}</div>
+        <div class="col-md-2 mt-3">{{ Form::label("items[$i][frequency]", __('Frequency'), ['class' => 'form-label']) }}{{ Form::text("items[$i][frequency]", $items->get($i)->frequency ?? null, ['class' => 'form-control']) }}</div>
+        <div class="col-md-2 mt-3">{{ Form::label("items[$i][duration]", __('Duration'), ['class' => 'form-label']) }}{{ Form::text("items[$i][duration]", $items->get($i)->duration ?? null, ['class' => 'form-control']) }}</div>
+    @endfor
+    <div class="col-12 mt-3">{{ Form::label('notes', __('Notes'), ['class' => 'form-label']) }}{{ Form::textarea('notes', null, ['class' => 'form-control', 'rows' => 2]) }}</div>
+</div></div>
+<div class="modal-footer"><input type="button" value="{{ __('Cancel') }}" class="btn btn-secondary" data-bs-dismiss="modal"><input type="submit" value="{{ __('Update') }}" class="btn btn-primary"></div>
+{{ Form::close() }}

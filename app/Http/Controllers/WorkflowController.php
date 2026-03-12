@@ -169,4 +169,9 @@ class WorkflowController extends Controller
     {
         return response()->json(Workflow::getAvailableActions());
     }
+
+    public function getAvailableTemplates()
+    {
+        return response()->json(Workflow::getAvailableTemplates());
+    }
 }

@@ -1,11 +1,18 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Utility;
+use App\Services\Core\DataExchangeService;
 use Illuminate\Http\Request;
 
 class ImportController extends Controller
 {
+    public function __construct(
+        private readonly DataExchangeService $dataExchange
+    ) {
+    }
+
     public function getTableWiseFields($table)
     {
         $error = '';
@@ -77,12 +84,14 @@ class ImportController extends Controller
 
         $fields = [];
         $route = '';
+        $importJob = null;
 
         if ($request->hasFile('file') && $request->file->getClientOriginalName() != '') {
             $file_array = explode(".", $request->file->getClientOriginalName());
 
             $extension = end($file_array);
             if ($extension == 'csv') {
+                $preview = $this->dataExchange->previewCsv($request->file->getRealPath());
                 $file_data = fopen($request->file->getRealPath(), 'r');
                 $file_header = fgetcsv($file_data);
 
@@ -106,6 +115,16 @@ class ImportController extends Controller
                 }
 
                 $_SESSION['file_data'] = $temp_data;
+                if (\Auth::check()) {
+                    $importJob = $this->dataExchange->startImport([
+                        'created_by' => \Auth::user()->creatorId(),
+                        'user_id' => \Auth::id(),
+                        'module' => $request->table,
+                        'file_name' => $request->file->getClientOriginalName(),
+                        'preview_data' => $preview,
+                        'status' => 'previewed',
+                    ]);
+                }
             } else {
                 $error = 'Only <b>.csv</b> file allowed';
             }
@@ -117,6 +136,7 @@ class ImportController extends Controller
             'error' => $error,
             'output' => $html,
             'fields' => $fields,
+            'import_job_id' => $importJob?->id,
         );
 
         return json_encode($output);

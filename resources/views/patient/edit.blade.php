@@ -75,6 +75,36 @@
         </div>
         <div class="col-lg-12 col-md-12 col-sm-12">
             <div class="form-group">
+                {{ Form::label('medical_history', __('Medical History'), ['class' => 'form-label']) }}
+                {{ Form::textarea('medical_history', null, ['class' => 'form-control', 'rows' => 3]) }}
+            </div>
+        </div>
+        <div class="col-lg-12 col-md-12 col-sm-12">
+            <div class="form-group">
+                {{ Form::label('current_treatments', __('Current Treatments'), ['class' => 'form-label']) }}
+                {{ Form::textarea('current_treatments', null, ['class' => 'form-control', 'rows' => 3]) }}
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-4 col-sm-12">
+            <div class="form-group">
+                {{ Form::label('emergency_contact_name', __('Emergency Contact Name'), ['class' => 'form-label']) }}
+                {{ Form::text('emergency_contact_name', null, ['class' => 'form-control']) }}
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-4 col-sm-12">
+            <div class="form-group">
+                {{ Form::label('emergency_contact_phone', __('Emergency Contact Phone'), ['class' => 'form-label']) }}
+                {{ Form::text('emergency_contact_phone', null, ['class' => 'form-control']) }}
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-4 col-sm-12">
+            <div class="form-group">
+                {{ Form::label('emergency_contact_relationship', __('Relationship'), ['class' => 'form-label']) }}
+                {{ Form::text('emergency_contact_relationship', null, ['class' => 'form-control']) }}
+            </div>
+        </div>
+        <div class="col-lg-12 col-md-12 col-sm-12">
+            <div class="form-group">
                 {{ Form::label('photo', __('Photo'), ['class' => 'form-label']) }}
                 {{ Form::file('photo', ['class' => 'form-control']) }}
             </div>

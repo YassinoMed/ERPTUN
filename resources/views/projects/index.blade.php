@@ -2,6 +2,9 @@
 @section('page-title')
     {{__('Manage Projects')}}
 @endsection
+@section('page-subtitle')
+    {{ __('Prioritize delivery, monitor portfolio context and review execution risk from a single project control plane.') }}
+@endsection
 @push('script-page')
 @endpush
 @section('breadcrumb')
@@ -64,6 +67,21 @@
 @endsection
 
 @section('content')
+    <div class="card ux-filter-card mb-4">
+        <div class="card-body">
+            <div class="row align-items-end">
+                <div class="col-lg-5">
+                    <label for="project_keyword" class="form-label">{{ __('Search projects') }}</label>
+                    <input type="text" id="project_keyword" class="form-control" placeholder="{{ __('Search by project name, sponsor or delivery context') }}" data-autosave="1">
+                </div>
+                <div class="col-lg-7">
+                    <div class="text-muted small">
+                        {{ __('Use the toolbar to switch between grid and list, then refine by keyword, status and sort order without leaving the workspace.') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="row min-750" id="project_view"></div>
 @endsection
 

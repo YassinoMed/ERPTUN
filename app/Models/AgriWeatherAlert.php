@@ -3,9 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class AgriWeatherAlert extends Model
+class AgriWeatherAlert extends CropPlanningModel
 {
     use HasFactory;
 

@@ -1,0 +1,3 @@
+@extends('layouts.admin')
+@section('page-title', __('Import Jobs'))
+@section('content')<div class="card"><div class="card-body table-border-style"><table class="table"><thead><tr><th>ID</th><th>{{ __('Module') }}</th><th>{{ __('File') }}</th><th>{{ __('Status') }}</th><th>{{ __('Action') }}</th></tr></thead><tbody>@foreach($imports as $job)<tr><td>#{{ $job->id }}</td><td>{{ $job->module }}</td><td>{{ $job->file_name }}</td><td>{{ ucfirst($job->status) }}</td><td><a class="btn btn-sm btn-warning" href="{{ route('core.imports.show', $job) }}">{{ __('Open') }}</a></td></tr>@endforeach</tbody></table>{{ $imports->links() }}</div></div>@endsection

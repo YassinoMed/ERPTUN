@@ -1,0 +1,11 @@
+{
+    "name": "SlaManagement",
+    "alias": "slamanagement",
+    "description": "Gestion des SLA, engagements de service, priorit\u00e9s, escalades et suivi des d\u00e9passements.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\SlaManagement\\Providers\\SlaManagementServiceProvider"
+    ],
+    "files": []
+}

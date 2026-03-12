@@ -1,0 +1,11 @@
+{
+    "name": "FranchiseMultisite",
+    "alias": "franchisemultisite",
+    "description": "Pilotage des r\u00e9seaux multi-sites, franchises, consolidations, redevances et performances par point de vente.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\FranchiseMultisite\\Providers\\FranchiseMultisiteServiceProvider"
+    ],
+    "files": []
+}

@@ -28,18 +28,27 @@ return Application::configure(basePath: dirname(__DIR__))
             'XSS' => \App\Http\Middleware\XSS::class,
             'revalidate' => \App\Http\Middleware\RevalidateBackHistory::class,
             'pusher' => \App\Http\Middleware\pusherConfig::class,
+            'scope' => \App\Http\Middleware\EnsureTokenScopes::class,
+            'tenant.access' => \App\Http\Middleware\EnsureTenantAccess::class,
+            'api.logs' => \App\Http\Middleware\LogApiRequests::class,
+            'ip.restrictions' => \App\Http\Middleware\EnforceUserIpRestrictions::class,
+            'api.client' => \App\Http\Middleware\AuthenticateApiClient::class,
+            'entity.scope' => \App\Http\Middleware\EnsureScopedAccess::class,
         ]);
 
         // middlewareGroups / Group Middleware
         $middleware->web(append: [
             \App\Http\Middleware\FilterRequest::class,
             \App\Http\Middleware\ServiceRoutingGuard::class,
+            \App\Http\Middleware\EnforceUserIpRestrictions::class,
         ]);
 
         // Append middleware to the 'api' group
         $middleware->appendToGroup('api', [
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             \App\Http\Middleware\ServiceRoutingGuard::class,
+            \App\Http\Middleware\EnforceUserIpRestrictions::class,
+            \App\Http\Middleware\LogApiRequests::class,
         ]);
 
 
